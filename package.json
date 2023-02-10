@@ -1,0 +1,16 @@
+{
+  "name": "efield_simulator",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./src/scene.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Benjamin Cates, Jerricho Ensign, Joey Battistoni",
+  "license": "MIT",
+  "dependencies": {
+    "ts-loader": "^9.4.2",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1"
+  }
+}
