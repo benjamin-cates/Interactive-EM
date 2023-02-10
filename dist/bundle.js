@@ -16,7 +16,7 @@
   \**********************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\nclass Scene {\n    render() {\n    }\n}\n\n\n\n//# sourceURL=webpack://efield_simulator/./src/scene.ts?");
+eval("__webpack_require__.r(__webpack_exports__);\nclass Scene {\r\n    render() {\r\n    }\r\n}\r\n\r\n\n\n//# sourceURL=webpack://efield_simulator/./src/scene.ts?");
 
 /***/ })
 
