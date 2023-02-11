@@ -9,13 +9,14 @@ export default class Object {
     angularVelocity: number;
 
 
-    constructor(mass: number, position: Vector) {
+    constructor(mass: number, position: Vector, rotation: number = 0) {
         this.velocity = new Vector(0, 0);
         this.position = position;
         this.mass = mass;
+        this.rotation = rotation;
     }
 
-    render = () => {
+    render = (ctx: CanvasRenderingContext2D) => {
 
     }
 
