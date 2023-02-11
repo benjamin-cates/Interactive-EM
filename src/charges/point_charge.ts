@@ -6,8 +6,8 @@ export default class PointCharge extends Object {
     charge: number;
     displayRadius: number;
 
-    feildAt = (pos: Vector) => {
+    fieldAt = (pos: Vector): Vector => {
         let nVec = pos.unit();
-        return 0;
+        return Vector.origin();
     }
 }
