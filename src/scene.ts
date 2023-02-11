@@ -25,10 +25,8 @@ export default class Scene {
         this.element = element;
         this.context = element.getContext("2d");
         this.updateAspectRatio();
+        this.sceneDefaults();
         this.render();
-        this.context.textAlign = "center";
-        this.context.textBaseline = "middle";
-        this.context.font = "bold 30px Lato";
     }
 
     updateAspectRatio = () => {
@@ -38,11 +36,17 @@ export default class Scene {
         this.element.width = window.innerWidth;
         this.element.height = window.innerHeight;
         this.context.resetTransform();
-        this.context.translate(0.5, 0.5);
         this.context.translate(window.innerWidth / 2, window.innerHeight / 2);
         let scale = window.innerHeight / 2 / Scene.parameters.viewportHeight / 100;
         this.context.scale(scale, scale);
     }
+
+    sceneDefaults = () => {
+        this.context.font = "bold 30px Lato";
+        this.context.textAlign = "center";
+        this.context.textBaseline = "middle";
+    }
+
 
     render = () => {
         requestAnimationFrame(this.render);
@@ -91,4 +95,8 @@ document.addEventListener("DOMContentLoaded", () => {
     scene.objects.push(new FiniteLine(3, 1, new Vector(2, 4), 0.1, 4));
     scene.objects.push(new FiniteLine(5, 1, new Vector(4, 4), 0.1, 4));
     scene.objects.push(new InfinitePlane(5, 1, new Vector(6, -4), -0.4));
+});
+window.addEventListener("resize", () => {
+    scene.updateAspectRatio();
+    scene.sceneDefaults();
 });
