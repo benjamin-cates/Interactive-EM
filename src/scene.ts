@@ -90,4 +90,5 @@ document.addEventListener("DOMContentLoaded", () => {
     scene.objects.push(new FiniteLine(1, 1, new Vector(-2, 4), 0.1, 4));
     scene.objects.push(new FiniteLine(3, 1, new Vector(2, 4), 0.1, 4));
     scene.objects.push(new FiniteLine(5, 1, new Vector(4, 4), 0.1, 4));
+    scene.objects.push(new InfinitePlane(5, 1, new Vector(6, -4), -0.4));
 });

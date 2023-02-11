@@ -8,9 +8,8 @@ export default class FiniteLine extends Object {
     length: number;
 
     constructor(chargeDensity: number, mass: number, position: Vector, rotation: number, length: number) {
-        super(mass, position);
+        super(mass, position, rotation);
         this.chargeDensity = chargeDensity;
-        this.rotation = rotation;
         this.length = length;
     }
 
