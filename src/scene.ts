@@ -13,6 +13,20 @@ export default class Scene {
         timeSpeed: 1,
 
     };
+    static colors = {
+        background: "#ffffff",
+        gridLines: "#666666",
+        neutral: "#000000",
+        positive: "#ff0000",
+        negative: "#0000ff",
+        equipotential: "#ff0000",
+        fieldLines: "#cccccc",
+    }
+    static getChargeColor(charge: number) {
+        if (charge < 0) return Scene.colors.negative;
+        if (charge > 0) return Scene.colors.positive;
+        return Scene.colors.neutral;
+    }
     objects: Object[];
     timeSpeed: number;
     width: number;

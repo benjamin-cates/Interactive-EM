@@ -1,5 +1,6 @@
 import Object from "../base";
 import Vector from "../vector";
+import Scene from "../scene";
 
 export default class InfinitePlane extends Object {
     //Measured in microcoulombs per meter
@@ -11,7 +12,7 @@ export default class InfinitePlane extends Object {
     }
 
     render = (ctx: CanvasRenderingContext2D) => {
-        ctx.strokeStyle = this.chargeDensity > 0 ? "red" : (this.chargeDensity == 0 ? "black" : "blue");
+        ctx.strokeStyle = Scene.getChargeColor(this.chargeDensity);
         //Line width is non linear wrt to charge density
         ctx.lineWidth = this.chargeDensity * 75 / (this.chargeDensity + 3);
         ctx.beginPath();
