@@ -11,7 +11,7 @@ export default class Scene {
         viewportHeight: 10,
         physicsPerSecond: 100,
         timeSpeed: 1,
-
+        showGridLines: true,
     };
     static colors = {
         background: "#ffffff",
@@ -63,8 +63,27 @@ export default class Scene {
 
 
     render = () => {
+        //Request next animation frame
         requestAnimationFrame(this.render);
+        //Clear rectangle
         this.context.clearRect(-100 * this.width, -100 * this.height, this.width * 200, this.height * 200);
+        //Render grid lines if enabled
+        if (Scene.parameters.showGridLines) {
+            this.context.lineWidth = 1.5;
+            this.context.strokeStyle = Scene.colors.gridLines;
+            this.context.beginPath();
+            for (let i = Math.floor(-this.width); i < this.width; i++) {
+                this.context.moveTo(i * 100, -this.height * 100);
+                this.context.lineTo(i * 100, this.height * 100);
+            }
+            for (let i = Math.floor(-this.height); i < this.height; i++) {
+                this.context.moveTo(-this.width * 100, i * 100);
+                this.context.lineTo(this.width * 100, i * 100);
+            }
+            this.context.stroke();
+            this.context.closePath();
+        }
+        //Render each object
         this.objects.forEach((object) => {
             object.render(this.context);
         });
