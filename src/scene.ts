@@ -8,9 +8,26 @@ import Vector from "./vector";
 class Scene {
     objects: Object[];
     timeSpeed: number;
+    width: number;
+    height: number;
 
     render() {
 
+    }
+    fieldAt = (pos: Vector): Vector => {
+        let out = Vector.origin();
+        this.objects.forEach((object) => {
+            out.add(object.fieldAt(pos));
+        });
+        return out;
+    }
+
+    voltageAt = (pos: Vector): number => {
+        let potential = 0;
+        this.objects.forEach((object) => {
+            potential += object.voltageAt(pos);
+        });
+        return potential;
     }
 
 }

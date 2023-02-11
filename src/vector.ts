@@ -20,6 +20,10 @@ export default class Vector {
     copy = (): Vector => {
         return new Vector(this.x, this.y);
     }
+    add = (v: Vector) => {
+        this.x += v.x;
+        this.y += v.y;
+    }
     static add = (a: Vector, b: Vector): Vector => {
         return new Vector(a.x + b.x, a.y + b.y);
     };

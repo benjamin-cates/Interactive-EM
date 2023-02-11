@@ -1,0 +1,25 @@
+## Physics
+- Base class that has physics state and methods
+- Subclass for each object
+- Code voltage and field caused by each object
+- Force and torque calculations for each shape
+- F = ma
+- Time step size
+- Gravity
+- Magnetic force
+- Conductors (using iterative state)
+- Pins / axles
+- Simple collisions (wall collisions)
+
+## Objects
+- Point charge
+- Finite line
+- Infinite plane
+- Conductor
+- Ball charge
+
+## Graphics
+- Equal potential lines
+- Electric field lines
+-
+
