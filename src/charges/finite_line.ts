@@ -21,7 +21,7 @@ export default class FiniteLine extends Object {
         let start = Vector.add(this.position, halfLen);
         let end = Vector.add(this.position, Vector.multiply(halfLen, -1));
         //Non linear thickness
-        ctx.lineWidth = this.chargeDensity * 25 / (this.chargeDensity + 3);
+        ctx.lineWidth = Math.abs(this.chargeDensity) * 25 / (Math.abs(this.chargeDensity) + 3);
         //Path from start to end
         ctx.beginPath();
         ctx.moveTo(start.x * 100, start.y * 100);
