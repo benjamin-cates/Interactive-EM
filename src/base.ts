@@ -34,9 +34,12 @@ export default class Object {
 
     //Position properties
     incrementPosition = (dt: number) => {
-
         this.position.x += this.velocity.x * dt;
         this.position.y += this.velocity.y * dt;
+    }
+    physics = (dt: number, force: Vector, torque: number) => {
+        this.incrementPosition(dt);
+        this.velocity.add(Vector.multiply(force, dt / this.mass));
     }
 
 }
