@@ -5,17 +5,50 @@ import InfinitePlane from "./charges/infinite_plane";
 import PointCharge from "./charges/point_charge";
 import Vector from "./vector";
 
-class Scene {
+
+export default class Scene {
+    static parameters = {
+        viewportHeight: 10,
+        physicsPerSecond: 100,
+        timeSpeed: 1,
+
+    };
     objects: Object[];
     timeSpeed: number;
     width: number;
     height: number;
     physicsPerSecond: number;
+    element: HTMLCanvasElement;
+    context: CanvasRenderingContext2D;
+    constructor(element: HTMLCanvasElement) {
+        this.objects = [];
+        this.element = element;
+        this.context = element.getContext("2d");
+        this.updateAspectRatio();
+        this.render();
+        this.context.textAlign = "center";
+        this.context.textBaseline = "middle";
+        this.context.font = "bold 30px Lato";
+    }
 
-    render() {
+    updateAspectRatio = () => {
+        let aspectRatio = window.innerWidth / window.innerHeight;
+        this.height = Scene.parameters.viewportHeight * 2;
+        this.width = aspectRatio * this.height;
+        this.element.width = window.innerWidth;
+        this.element.height = window.innerHeight;
+        this.context.resetTransform();
+        this.context.translate(0.5, 0.5);
+        this.context.translate(window.innerWidth / 2, window.innerHeight / 2);
+        let scale = window.innerHeight / 2 / Scene.parameters.viewportHeight / 100;
+        this.context.scale(scale, scale);
+    }
+
+    render = () => {
         requestAnimationFrame(this.render);
+        this.context.clearRect(-100 * this.width, -100 * this.height, this.width * 200, this.height * 200);
         this.objects.forEach((object) => {
-            object.render();
+            object.render(this.context);
         });
     }
     fieldAt = (pos: Vector): Vector => {
@@ -48,3 +81,14 @@ class Scene {
     }
 
 }
+
+var scene: Scene;
+document.addEventListener("DOMContentLoaded", () => {
+    let canvas = document.getElementById("canvas") as HTMLCanvasElement;
+    scene = new Scene(canvas);
+    scene.objects.push(new PointCharge(1, 1, new Vector(0, 0)));
+    scene.objects.push(new FiniteLine(1, 1, new Vector(-2, 4), 0.1, 4));
+    scene.objects.push(new FiniteLine(3, 1, new Vector(2, 4), 0.1, 4));
+    scene.objects.push(new FiniteLine(5, 1, new Vector(4, 4), 0.1, 4));
+    scene.objects.push(new InfinitePlane(5, 1, new Vector(6, -4), -0.4));
+});
