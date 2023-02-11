@@ -27,6 +27,8 @@ export default class Scene {
         this.updateAspectRatio();
         this.render();
         this.context.textAlign = "center";
+        this.context.textBaseline = "middle";
+        this.context.font = "bold 30px Lato";
     }
 
     updateAspectRatio = () => {
@@ -36,14 +38,15 @@ export default class Scene {
         this.element.width = window.innerWidth;
         this.element.height = window.innerHeight;
         this.context.resetTransform();
+        this.context.translate(0.5, 0.5);
         this.context.translate(window.innerWidth / 2, window.innerHeight / 2);
-        let scale = window.innerHeight / 2 / Scene.parameters.viewportHeight;
+        let scale = window.innerHeight / 2 / Scene.parameters.viewportHeight / 100;
         this.context.scale(scale, scale);
     }
 
     render = () => {
         requestAnimationFrame(this.render);
-        this.context.clearRect(0, 0, this.width, this.height);
+        this.context.clearRect(-100 * this.width, -100 * this.height, this.width * 200, this.height * 200);
         this.objects.forEach((object) => {
             object.render(this.context);
         });
