@@ -15,7 +15,7 @@ export default class Object {
         this.mass = mass;
     }
 
-    render = () => {
+    render = (ctx: CanvasRenderingContext2D) => {
 
     }
 
