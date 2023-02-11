@@ -61,7 +61,13 @@ export default class Scene {
         this.context.textBaseline = "middle";
     }
 
-
+    getCursorPosition = (event: MouseEvent): Vector => {
+        let rect = this.element.getBoundingClientRect();
+        let x = event.clientX - rect.left - this.element.width / 2;
+        let y = event.clientY - rect.top - this.element.height / 2;
+        let aspectRatio = this.element.width / this.element.height;
+        return new Vector(x / this.element.width * 2 * Scene.parameters.viewportHeight * aspectRatio, -y / this.element.height * 2 * Scene.parameters.viewportHeight);
+    }
     render = () => {
         //Request next animation frame
         requestAnimationFrame(this.render);
@@ -133,3 +139,7 @@ window.addEventListener("resize", () => {
     scene.updateAspectRatio();
     scene.sceneDefaults();
 });
+window.addEventListener("click", (e) => {
+    console.log(scene.getCursorPosition(e as MouseEvent).toString());
+});
+
