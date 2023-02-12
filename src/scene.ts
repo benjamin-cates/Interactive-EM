@@ -11,8 +11,22 @@ export default class Scene {
         viewportHeight: 10,
         physicsPerSecond: 100,
         timeSpeed: 1,
-
+        showGridLines: true,
     };
+    static colors = {
+        background: "#ffffff",
+        gridLines: "#666666",
+        neutral: "#000000",
+        positive: "#ff0000",
+        negative: "#0000ff",
+        equipotential: "#ff0000",
+        fieldLines: "#cccccc",
+    }
+    static getChargeColor(charge: number) {
+        if (charge < 0) return Scene.colors.negative;
+        if (charge > 0) return Scene.colors.positive;
+        return Scene.colors.neutral;
+    }
     objects: Object[];
     timeSpeed: number;
     width: number;
@@ -25,10 +39,8 @@ export default class Scene {
         this.element = element;
         this.context = element.getContext("2d");
         this.updateAspectRatio();
+        this.sceneDefaults();
         this.render();
-        this.context.textAlign = "center";
-        this.context.textBaseline = "middle";
-        this.context.font = "bold 30px Lato";
     }
 
     updateAspectRatio = () => {
@@ -38,15 +50,46 @@ export default class Scene {
         this.element.width = window.innerWidth;
         this.element.height = window.innerHeight;
         this.context.resetTransform();
-        this.context.translate(0.5, 0.5);
         this.context.translate(window.innerWidth / 2, window.innerHeight / 2);
         let scale = window.innerHeight / 2 / Scene.parameters.viewportHeight / 100;
         this.context.scale(scale, scale);
     }
 
+    sceneDefaults = () => {
+        this.context.font = "bold 30px Lato";
+        this.context.textAlign = "center";
+        this.context.textBaseline = "middle";
+    }
+
+    getCursorPosition = (event: MouseEvent): Vector => {
+        let rect = this.element.getBoundingClientRect();
+        let x = event.clientX - rect.left - this.element.width / 2;
+        let y = event.clientY - rect.top - this.element.height / 2;
+        let aspectRatio = this.element.width / this.element.height;
+        return new Vector(x / this.element.width * 2 * Scene.parameters.viewportHeight * aspectRatio, -y / this.element.height * 2 * Scene.parameters.viewportHeight);
+    }
     render = () => {
+        //Request next animation frame
         requestAnimationFrame(this.render);
+        //Clear rectangle
         this.context.clearRect(-100 * this.width, -100 * this.height, this.width * 200, this.height * 200);
+        //Render grid lines if enabled
+        if (Scene.parameters.showGridLines) {
+            this.context.lineWidth = 1.5;
+            this.context.strokeStyle = Scene.colors.gridLines;
+            this.context.beginPath();
+            for (let i = Math.floor(-this.width); i < this.width; i++) {
+                this.context.moveTo(i * 100, -this.height * 100);
+                this.context.lineTo(i * 100, this.height * 100);
+            }
+            for (let i = Math.floor(-this.height); i < this.height; i++) {
+                this.context.moveTo(-this.width * 100, i * 100);
+                this.context.lineTo(this.width * 100, i * 100);
+            }
+            this.context.stroke();
+            this.context.closePath();
+        }
+        //Render each object
         this.objects.forEach((object) => {
             object.render(this.context);
         });
@@ -88,7 +131,15 @@ document.addEventListener("DOMContentLoaded", () => {
     scene = new Scene(canvas);
     scene.objects.push(new PointCharge(1, 1, new Vector(0, 0)));
     scene.objects.push(new FiniteLine(1, 1, new Vector(-2, 4), 0.1, 4));
-    scene.objects.push(new FiniteLine(3, 1, new Vector(2, 4), 0.1, 4));
+    scene.objects.push(new FiniteLine(-3, 1, new Vector(2, 4), 0.1, 4));
     scene.objects.push(new FiniteLine(5, 1, new Vector(4, 4), 0.1, 4));
-    scene.objects.push(new InfinitePlane(5, 1, new Vector(6, -4), -0.4));
+    scene.objects.push(new InfinitePlane(-5, 1, new Vector(6, -4), -0.4));
 });
+window.addEventListener("resize", () => {
+    scene.updateAspectRatio();
+    scene.sceneDefaults();
+});
+window.addEventListener("click", (e) => {
+    console.log(scene.getCursorPosition(e as MouseEvent).toString());
+});
+

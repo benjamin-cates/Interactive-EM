@@ -5,6 +5,9 @@ export default class Vector {
         this.x = x;
         this.y = y;
     }
+    toString() {
+        return `<${this.x}, ${this.y}>`;
+    }
     isZero = (): boolean => {
         return this.x === 0 && this.y === 0;
     }
