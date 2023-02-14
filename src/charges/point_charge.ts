@@ -31,8 +31,4 @@ export default class PointCharge extends Object {
         ctx.fillText(this.charge.toString() + "μC", this.position.x * 100, this.position.y * 100);
     }
 
-    feildAt = (pos: Vector) => {
-        let nVec = pos.unit();
-        return 0;
-    }
 }
