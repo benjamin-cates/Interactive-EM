@@ -1,6 +1,7 @@
 import Object from "../base";
 import Vector from "../vector";
 import constants from "../constants";
+import Scene from "../scene";
 
 export default class PointCharge extends Object {
     //Stored in microcoloumbs
@@ -22,7 +23,7 @@ export default class PointCharge extends Object {
     }
 
     render = (ctx: CanvasRenderingContext2D) => {
-        ctx.fillStyle = this.charge > 0 ? "red" : (this.charge == 0 ? "black" : "blue");
+        ctx.fillStyle = Scene.getChargeColor(this.charge);
         ctx.strokeStyle = "black";
         ctx.lineWidth = 3;
         ctx.beginPath();

@@ -50,10 +50,10 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpac
 
 /***/ }),
 
-/***/ "./src/constants.ts":
-/*!**************************!*\
-  !*** ./src/constants.ts ***!
-  \**************************/
+/***/ "./src/equipotential.ts":
+/*!******************************!*\
+  !*** ./src/equipotential.ts ***!
+  \******************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   \"default\": () => (__WEBPACK_DEFAULT_EXPORT__)\n/* harmony export */ });\nconst constants = {\r\n    K: 0.0089875517873681764,\r\n    G: 6.67408e-11,\r\n};\r\n/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (constants);\r\n\n\n//# sourceURL=webpack://interactive-em/./src/constants.ts?");

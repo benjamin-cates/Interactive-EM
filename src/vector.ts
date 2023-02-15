@@ -5,6 +5,9 @@ export default class Vector {
         this.x = x;
         this.y = y;
     }
+    toString() {
+        return `<${this.x}, ${this.y}>`;
+    }
     isZero = (): boolean => {
         return this.x === 0 && this.y === 0;
     }
@@ -23,6 +26,14 @@ export default class Vector {
     add = (v: Vector) => {
         this.x += v.x;
         this.y += v.y;
+    }
+    rotate = (angle: number) => {
+        let sin = Math.sin(angle);
+        let cos = Math.cos(angle);
+        let x = this.x * cos - this.y * sin;
+        let y = this.x * sin + this.y * cos;
+        this.x = x;
+        this.y = y;
     }
     static add = (a: Vector, b: Vector): Vector => {
         return new Vector(a.x + b.x, a.y + b.y);
