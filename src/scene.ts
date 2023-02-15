@@ -4,6 +4,7 @@ import FiniteLine from "./charges/finite_line";
 import InfinitePlane from "./charges/infinite_plane";
 import PointCharge from "./charges/point_charge";
 import Vector from "./vector";
+import Equipotential from "./equipotential";
 
 
 export default class Scene {
@@ -33,11 +34,13 @@ export default class Scene {
     height: number;
     physicsPerSecond: number;
     element: HTMLCanvasElement;
+    voltCanvas: Equipotential;
     context: CanvasRenderingContext2D;
-    constructor(element: HTMLCanvasElement) {
+    constructor(element: HTMLCanvasElement, voltCanvas: HTMLCanvasElement) {
         this.objects = [];
         this.element = element;
         this.context = element.getContext("2d");
+        this.voltCanvas = new Equipotential(voltCanvas);
         this.updateAspectRatio();
         this.sceneDefaults();
         this.render();
@@ -53,6 +56,7 @@ export default class Scene {
         this.context.translate(window.innerWidth / 2, window.innerHeight / 2);
         let scale = window.innerHeight / 2 / Scene.parameters.viewportHeight / 100;
         this.context.scale(scale, scale);
+        this.voltCanvas.resize(this.width, this.height);
     }
 
     sceneDefaults = () => {
@@ -68,11 +72,19 @@ export default class Scene {
         let aspectRatio = this.element.width / this.element.height;
         return new Vector(x / this.element.width * 2 * Scene.parameters.viewportHeight * aspectRatio, -y / this.element.height * 2 * Scene.parameters.viewportHeight);
     }
+    pushObject(object: Object) {
+        this.objects.push(object);
+        this.updateObjects();
+    }
+    updateObjects() {
+        this.voltCanvas.updateObjects(this.objects);
+    }
     render = () => {
         //Request next animation frame
         requestAnimationFrame(this.render);
         //Clear rectangle
         this.context.clearRect(-100 * this.width, -100 * this.height, this.width * 200, this.height * 200);
+        this.voltCanvas.fullscreenRender();
         //Render grid lines if enabled
         if (Scene.parameters.showGridLines) {
             this.context.lineWidth = 1.5;
@@ -128,12 +140,19 @@ export default class Scene {
 var scene: Scene;
 document.addEventListener("DOMContentLoaded", () => {
     let canvas = document.getElementById("canvas") as HTMLCanvasElement;
-    scene = new Scene(canvas);
-    scene.objects.push(new PointCharge(1, 1, new Vector(0, 0)));
-    scene.objects.push(new FiniteLine(1, 1, new Vector(-2, 4), 0.1, 4));
-    scene.objects.push(new FiniteLine(-3, 1, new Vector(2, 4), 0.1, 4));
-    scene.objects.push(new FiniteLine(5, 1, new Vector(4, 4), 0.1, 4));
-    scene.objects.push(new InfinitePlane(-5, 1, new Vector(6, -4), -0.4));
+    let voltCanvas = document.getElementById("volt_canvas") as HTMLCanvasElement;
+    scene = new Scene(canvas, voltCanvas);
+    //@ts-ignore
+    window.scene = scene;
+    scene.objects.push(new PointCharge(1, 1, new Vector(10, 5)));
+    //scene.objects.push(new PointCharge(-1, 1, new Vector(1, 0)));
+    //scene.objects.push(new PointCharge(-1, 1, new Vector(1, 1)));
+    scene.objects.push(new FiniteLine(0.4, 1, new Vector(0, 0), 0, 10));
+    scene.objects.push(new FiniteLine(-0.4, 1, new Vector(0, 4), 0, 10));
+    //scene.objects.push(new FiniteLine(-3, 1, new Vector(2, 4), 0.1, 4));
+    //scene.objects.push(new FiniteLine(5, 1, new Vector(4, 4), 0.1, 4));
+    //scene.objects.push(new InfinitePlane(-5, 1, new Vector(6, -4), -0.4));
+    scene.updateObjects();
 });
 window.addEventListener("resize", () => {
     scene.updateAspectRatio();
