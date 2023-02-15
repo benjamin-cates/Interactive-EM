@@ -10,6 +10,10 @@ export default class PointCharge extends Object {
     fieldAt = (pos: Vector) => {
         return  Vector.multiply(Vector.inverseSquareField(pos, this.position), constants.K * this.charge);
     }
+    voltageAt = (pos: Vector) => {
+        let distance: number = Vector.distance(pos, this.position)
+        return ((constants.K * this.charge)/ distance);
+    }
     
     constructor(charge: number, mass: number, position: Vector) {
         super(mass, position);
@@ -31,8 +35,4 @@ export default class PointCharge extends Object {
         ctx.fillText(this.charge.toString() + "μC", this.position.x * 100, this.position.y * 100);
     }
 
-    feildAt = (pos: Vector) => {
-        let nVec = pos.unit();
-        return 0;
-    }
 }
