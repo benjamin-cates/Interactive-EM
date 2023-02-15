@@ -50,7 +50,7 @@ export default class VoltCanvas {
     constructor(canvas: HTMLCanvasElement) {
         //Get canvas context
         this.canvas = canvas;
-        this.gl = canvas.getContext("webgl");
+        this.gl = canvas.getContext("webgl2");
         if (!this.gl) {
             alert("WebGL not supported");
             return;
@@ -63,10 +63,12 @@ export default class VoltCanvas {
         this.gl.attachShader(this.program, fragmentShader);
         this.gl.linkProgram(this.program);
         this.gl.useProgram(this.program);
+        console.log(this.gl.getProgramInfoLog(this.program));
         //Get locations of uniforms in fragment shader
         VoltCanvas.uniforms.forEach((name) => {
             this.uniLoc[name] = this.gl.getUniformLocation(this.program, name);
         });
+        console.log(this.uniLoc);
         this.setColors({});
     }
     //Generic create shader function
@@ -124,13 +126,14 @@ export default class VoltCanvas {
         this.gl.uniform4fv(this.uniLoc.plane_data, planeData);
 
     }
-    static vertexShader = `
-        attribute vec2 a_position;
+    static vertexShader = `#version 300 es
+        precision mediump float;
+        in vec4 a_position;
         void main() {
-            gl_Position = vec4(a_position, 0, 1);
+            gl_Position = a_position;
         }
     `;
-    static fragmentShader = `
+    static fragmentShader = `#version 300 es
         precision mediump float;
 
         uniform vec2 canvas;
@@ -147,10 +150,12 @@ export default class VoltCanvas {
         uniform vec4 plane_data[100];
 
         const int max_iter = 100;
+        const float contour = 1.0;
 
+        out vec4 fragColor;
         void main() {
-            float volt = 0.0;
             vec2 p = vec2((gl_FragCoord.x/canvas.x-0.5) * scene.x , -(gl_FragCoord.y/canvas.y-0.5) * scene.y);
+            float volt = 0.0;
             for(int i = 0; i < max_iter; i++) {
                 if(i == point_count) break;
                 float charge = point_data[i].z;
@@ -159,7 +164,16 @@ export default class VoltCanvas {
             }
 
             float dVolt = 1.0/(1.0+exp(-volt));
-            gl_FragColor = vec4(dVolt, dVolt, dVolt, 1.0);
+            fragColor = vec4(dVolt, dVolt, dVolt, 1.0);
+            float dx = dFdx(dVolt);
+            float dy = dFdy(dVolt);
+            float dv = sqrt(abs(dx*dx)+abs(dy*dy));
+            dVolt*=12.0;
+            const float lineWidth = 20.0;
+            float fracv = fract(dVolt);
+            float lineCloseness = mix(1.0,smoothstep(0.0,1.0,min(fracv,1.0-fracv)/dv/lineWidth),contour);
+            //Blend with contour line
+            fragColor = vec4(fragColor.xyz*lineCloseness,1);
 
         }
     `;
