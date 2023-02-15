@@ -32,18 +32,19 @@ export default class Scene {
     timeSpeed: number;
     width: number;
     height: number;
-    physicsPerSecond: number;
     element: HTMLCanvasElement;
     voltCanvas: Equipotential;
     context: CanvasRenderingContext2D;
+    physicsInterval: number;
     constructor(element: HTMLCanvasElement, voltCanvas: HTMLCanvasElement) {
-        this.objects = [];
+        this.objects = [] as Object[];
         this.element = element;
         this.context = element.getContext("2d");
         this.voltCanvas = new Equipotential(voltCanvas);
         this.updateAspectRatio();
         this.sceneDefaults();
         this.render();
+        this.physicsInterval = window.setInterval(this.physics, 1000 / Scene.parameters.physicsPerSecond, 1 / Scene.parameters.physicsPerSecond);
     }
 
     updateAspectRatio = () => {
@@ -121,10 +122,11 @@ export default class Scene {
         });
         return potential;
     }
-    physics(dt: number) {
+    physics = (dt: number) => {
         this.objects.forEach((object) => {
             object.incrementPosition(dt);
         });
+        this.updateObjects();
     }
 
     //Returns the force and torque between two objects. Force is measured on object a and the opposite directional force is on object b. Torque is measured for both from the midpoint of a.position and b.position. Use the parallel axis theorem to find the torque on an objects center of mass.
@@ -144,7 +146,10 @@ document.addEventListener("DOMContentLoaded", () => {
     scene = new Scene(canvas, voltCanvas);
     //@ts-ignore
     window.scene = scene;
-    scene.objects.push(new PointCharge(1, 1, new Vector(10, 5)));
+    scene.objects.push(new PointCharge(1, 0, new Vector(10, 2)));
+    scene.objects[0].velocity = new Vector(-0.8, 0);
+    scene.objects.push(new PointCharge(-2, 0, new Vector(-10, 2)));
+    scene.objects[1].velocity = new Vector(0.8, 0);
     //scene.objects.push(new PointCharge(-1, 1, new Vector(1, 0)));
     //scene.objects.push(new PointCharge(-1, 1, new Vector(1, 1)));
     scene.objects.push(new FiniteLine(0.4, 1, new Vector(0, 0), 0, 10));
@@ -162,3 +167,16 @@ window.addEventListener("click", (e) => {
     console.log(scene.getCursorPosition(e as MouseEvent).toString());
 });
 
+//Export classes
+//@ts-ignore
+window.Base = Object;
+//@ts-ignore
+window.PointCharge = PointCharge;
+//@ts-ignore
+window.FiniteLine = FiniteLine;
+//@ts-ignore
+window.InfinitePlane = InfinitePlane;
+//@ts-ignore
+window.Vector = Vector;
+//@ts-ignore
+window.Conductor = Conductor;
