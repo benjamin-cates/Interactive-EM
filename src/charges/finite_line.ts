@@ -4,6 +4,9 @@ import Vector from "../vector";
 export default class FiniteLine extends Object {
     //Measured in microcoloumbs per meter
     chargeDensity: number;
+    startPoint: Vector;
+    endPoint: Vector;
+    normal: Vector;
     //Measured in meters
     length: number;
 
