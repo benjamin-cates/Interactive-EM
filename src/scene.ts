@@ -142,7 +142,9 @@ document.addEventListener("DOMContentLoaded", () => {
     let canvas = document.getElementById("canvas") as HTMLCanvasElement;
     let voltCanvas = document.getElementById("volt_canvas") as HTMLCanvasElement;
     scene = new Scene(canvas, voltCanvas);
-    scene.objects.push(new PointCharge(1, 1, new Vector(0, 0)));
+    scene.objects.push(new PointCharge(2, 1, new Vector(0, 0)));
+    scene.objects.push(new PointCharge(-1, 1, new Vector(1, 0)));
+    scene.objects.push(new PointCharge(-1, 1, new Vector(1, 1)));
     scene.objects.push(new FiniteLine(1, 1, new Vector(-2, 4), 0.1, 4));
     scene.objects.push(new FiniteLine(-3, 1, new Vector(2, 4), 0.1, 4));
     scene.objects.push(new FiniteLine(5, 1, new Vector(4, 4), 0.1, 4));

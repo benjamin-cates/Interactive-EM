@@ -7,24 +7,24 @@ export default class VoltCanvas {
     canvas: HTMLCanvasElement;
     gl: WebGLRenderingContext;
     program: WebGLProgram;
+    static uniforms = [
+        "point_count",
+        "point_data",
+        "line_count",
+        "line_pos",
+        "line_data",
+        "plane_count",
+        "plane_data",
+        "canvas",
+        "scene",
+        "positive_color",
+        "negative_color",
+        "neutral_color",
+        "equipotential_color",
+    ];
     //Location of uniform buffers in the fragment shader
     uniLoc: {
-        "point_count"?: WebGLUniformLocation,
-        "point_data"?: WebGLUniformLocation,
-
-        "line_count"?: WebGLUniformLocation,
-        "line_pos"?: WebGLUniformLocation,
-        "line_data"?: WebGLUniformLocation,
-
-        "plane_count"?: WebGLUniformLocation,
-        "plane_data"?: WebGLUniformLocation,
-
-        "canvas"?: WebGLUniformLocation,
-
-        "positive_color"?: WebGLUniformLocation,
-        "negative_color"?: WebGLUniformLocation,
-        "neutral_color"?: WebGLUniformLocation,
-        "equipotential_color"?: WebGLUniformLocation,
+        [key: string]: WebGLUniformLocation;
     } = {};
     private colors = {
         "positive_color": [1, 0, 0, 1],
@@ -41,7 +41,8 @@ export default class VoltCanvas {
         }
     }
     resize(width: number, height: number) {
-        this.gl.uniform2f(this.uniLoc["resolution"], width, height);
+        this.gl.uniform2f(this.uniLoc["scene"], width, height);
+        this.gl.uniform2f(this.uniLoc["canvas"], window.innerWidth, window.innerHeight);
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;
         this.gl.viewport(0, 0, window.innerWidth, window.innerHeight);
@@ -63,9 +64,9 @@ export default class VoltCanvas {
         this.gl.linkProgram(this.program);
         this.gl.useProgram(this.program);
         //Get locations of uniforms in fragment shader
-        for (let name in this.uniLoc) {
+        VoltCanvas.uniforms.forEach((name) => {
             this.uniLoc[name] = this.gl.getUniformLocation(this.program, name);
-        }
+        });
         this.setColors({});
     }
     //Generic create shader function
@@ -93,6 +94,7 @@ export default class VoltCanvas {
         });
         this.gl.uniform1i(this.uniLoc.point_count, points.length);
         this.gl.uniform3fv(this.uniLoc.point_data, pointData);
+        console.log(pointData);
 
         //Finite lines
         let lines = objects.filter((obj) => obj instanceof FiniteLine) as FiniteLine[];
@@ -131,20 +133,34 @@ export default class VoltCanvas {
     static fragmentShader = `
         precision mediump float;
 
-        uniform float canvas;
+        uniform vec2 canvas;
+        uniform vec2 scene;
 
-        uniform float point_count;
+        uniform int point_count;
         uniform vec3 point_data[100];
 
-        uniform float line_count;
+        uniform int line_count;
         uniform vec3 line_pos[100];
         uniform vec2 line_data[100];
 
-        uniform float plane_count;
+        uniform int plane_count;
         uniform vec4 plane_data[100];
 
+        const int max_iter = 100;
+
         void main() {
-            gl_FragColor = vec4(1, 0, 0.5, 1);
+            float volt = 0.0;
+            vec2 p = vec2((gl_FragCoord.x/canvas.x-0.5) * scene.x , -(gl_FragCoord.y/canvas.y-0.5) * scene.y);
+            for(int i = 0; i < max_iter; i++) {
+                if(i == point_count) break;
+                float charge = point_data[i].z;
+                float dist = distance(point_data[i].xy, p.xy);
+                volt += charge / dist;
+            }
+
+            float dVolt = 1.0/(1.0+exp(-volt));
+            gl_FragColor = vec4(dVolt, dVolt, dVolt, 1.0);
+
         }
     `;
     /*

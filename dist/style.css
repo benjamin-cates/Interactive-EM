@@ -5,3 +5,17 @@ body {
     overflow-x: hidden;
     overflow-y: hidden;
 }
+
+canvas {
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+}
+
+#canvas {
+    z-index: 2;
+}
+
+#volt_canvas {
+    z-index: 0;
+}
