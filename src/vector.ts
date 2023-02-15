@@ -35,6 +35,15 @@ export default class Vector {
         this.x = x;
         this.y = y;
     }
+    rotateByVector = (vec: Vector) => {
+        let uVec = vec.unit();
+        let sin = uVec.y;
+        let cos = uVec.x;
+        let x = this.x * cos - this.y * sin;
+        let y = this.x * sin + this.y * cos;
+        this.x = x;
+        this.y = y;
+    }
     static add = (a: Vector, b: Vector): Vector => {
         return new Vector(a.x + b.x, a.y + b.y);
     };
