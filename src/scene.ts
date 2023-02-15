@@ -144,13 +144,14 @@ document.addEventListener("DOMContentLoaded", () => {
     scene = new Scene(canvas, voltCanvas);
     //@ts-ignore
     window.scene = scene;
-    scene.objects.push(new PointCharge(2, 1, new Vector(0, 0)));
-    scene.objects.push(new PointCharge(-1, 1, new Vector(1, 0)));
-    scene.objects.push(new PointCharge(-1, 1, new Vector(1, 1)));
-    scene.objects.push(new FiniteLine(1, 1, new Vector(-2, 4), 0.1, 4));
-    scene.objects.push(new FiniteLine(-3, 1, new Vector(2, 4), 0.1, 4));
-    scene.objects.push(new FiniteLine(5, 1, new Vector(4, 4), 0.1, 4));
-    scene.objects.push(new InfinitePlane(-5, 1, new Vector(6, -4), -0.4));
+    scene.objects.push(new PointCharge(1, 1, new Vector(10, 5)));
+    //scene.objects.push(new PointCharge(-1, 1, new Vector(1, 0)));
+    //scene.objects.push(new PointCharge(-1, 1, new Vector(1, 1)));
+    scene.objects.push(new FiniteLine(0.4, 1, new Vector(0, 0), 0, 10));
+    scene.objects.push(new FiniteLine(-0.4, 1, new Vector(0, 4), 0, 10));
+    //scene.objects.push(new FiniteLine(-3, 1, new Vector(2, 4), 0.1, 4));
+    //scene.objects.push(new FiniteLine(5, 1, new Vector(4, 4), 0.1, 4));
+    //scene.objects.push(new InfinitePlane(-5, 1, new Vector(6, -4), -0.4));
     scene.updateObjects();
 });
 window.addEventListener("resize", () => {

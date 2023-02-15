@@ -162,8 +162,20 @@ export default class VoltCanvas {
                 float dist = distance(point_data[i].xy, p.xy);
                 volt += charge / dist;
             }
+            for(int i = 0; i < line_count; i++) {
+                float chargeDensity = line_data[i].x;
+                float halfLen = line_data[i].y/2.0;
+                vec2 center = line_pos[i].xy;
+                float rotation = line_pos[i].z;
+                vec2 dir = vec2(cos(rotation), sin(rotation));
+                vec2 relPos = p - center;
+                vec2 end1 = center - dir * halfLen;
+                vec2 end2 = center + dir * halfLen;
+                float g = dot(relPos,dir);
+                volt+=chargeDensity*log((distance(p,end1)+g+halfLen)/(distance(p,end2)+g-halfLen));
+            }
 
-            float dVolt = 1.0/(1.0+exp(-volt));
+            float dVolt = 1.0/(1.0+exp(-volt*2.0));
             fragColor = vec4(dVolt, dVolt, dVolt, 1.0);
             float dx = dFdx(dVolt);
             float dy = dFdy(dVolt);
@@ -178,13 +190,6 @@ export default class VoltCanvas {
         }
     `;
     /*
-        float potential = 0.0;
-        vec2 pos = gl_FragCoord.xy;
-        for(int i = 0; i < point_count; i++) {
-            float charge = point_data[i].z;
-            float dist = distance(point_data[i].xy, gl_FragCoord.xy);
-            potential += charge / dist;
-        }
         for(int i = 0; i < line_count; i++) {
             float chargeDensity = line_data[i].x;
             float halflen = line_data[i].y/2;
