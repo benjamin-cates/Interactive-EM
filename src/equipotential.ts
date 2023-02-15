@@ -29,7 +29,7 @@ export default class VoltCanvas {
     private colors = {
         "positive_color": [1, 0, 0, 1],
         "negative_color": [0, 0, 1, 1],
-        "neutral_color": [0, 0, 0, 1],
+        "neutral_color": [0.5, 0, 0.5, 1],
         "equipotential_color": [0, 1, 0, 1],
     };
     //Update color state by passing in an object with the color names as keys
@@ -37,6 +37,7 @@ export default class VoltCanvas {
         window.Object.assign(this.colors, cols);
         for (let i in this.colors) {
             let col = this.colors[i];
+            console.log(col);
             this.gl.uniform4f(this.uniLoc[i], col[0], col[1], col[2], col[3]);
         }
     }
@@ -150,6 +151,11 @@ export default class VoltCanvas {
         uniform int plane_count;
         uniform vec4 plane_data[100];
 
+        uniform vec4 neutral_color;
+        uniform vec4 positive_color;
+        uniform vec4 negative_color;
+        uniform vec4 equipotential_color;
+
         const float contour = 1.0;
 
         out vec4 fragColor;
@@ -174,8 +180,8 @@ export default class VoltCanvas {
                 volt+=chargeDensity*log((distance(p,end1)+g+halfLen)/(distance(p,end2)+g-halfLen));
             }
 
-            float dVolt = 1.0/(1.0+exp(-volt*2.0));
-            fragColor = vec4(dVolt, dVolt, dVolt, 1.0);
+            float dVolt = 2.0/(1.0+exp(-volt*2.0))-1.0;
+            fragColor = mix(mix(neutral_color,negative_color,0.0-dVolt), mix(neutral_color, positive_color, dVolt), step(dVolt, 0.0));
             float dx = dFdx(dVolt);
             float dy = dFdy(dVolt);
             float dv = sqrt(abs(dx*dx)+abs(dy*dy));
