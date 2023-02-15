@@ -1,0 +1,21 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
+
+body {
+    margin: 0;
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
+
+canvas {
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+}
+
+#canvas {
+    z-index: 2;
+}
+
+#volt_canvas {
+    z-index: 0;
+}
