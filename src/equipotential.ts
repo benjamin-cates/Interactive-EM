@@ -95,8 +95,7 @@ export default class VoltCanvas {
             pointData[i * 3 + 2] = point.charge;
         });
         this.gl.uniform1i(this.uniLoc.point_count, points.length);
-        this.gl.uniform3fv(this.uniLoc.point_data, pointData);
-        console.log(pointData);
+        if(points.length > 0) this.gl.uniform3fv(this.uniLoc.point_data, pointData);
 
         //Finite lines
         let lines = objects.filter((obj) => obj instanceof FiniteLine) as FiniteLine[];
@@ -110,8 +109,10 @@ export default class VoltCanvas {
             lineData[i * 2 + 1] = line.length;
         });
         this.gl.uniform1i(this.uniLoc.line_count, lines.length);
-        this.gl.uniform2fv(this.uniLoc.line_data, lineData);
-        this.gl.uniform3fv(this.uniLoc.line_pos, linePos);
+        if (lines.length > 0) {
+            this.gl.uniform2fv(this.uniLoc.line_data, lineData);
+            this.gl.uniform3fv(this.uniLoc.line_pos, linePos);
+        }
 
         //Planes
         let planes = objects.filter((obj) => obj instanceof InfinitePlane) as InfinitePlane[];
@@ -123,7 +124,7 @@ export default class VoltCanvas {
             planeData[i * 4 + 3] = plane.chargeDensity;
         });
         this.gl.uniform1i(this.uniLoc.plane_count, planes.length);
-        this.gl.uniform4fv(this.uniLoc.plane_data, planeData);
+        if (planes.length > 0) this.gl.uniform4fv(this.uniLoc.plane_data, planeData);
 
     }
     static vertexShader = `#version 300 es
@@ -149,15 +150,13 @@ export default class VoltCanvas {
         uniform int plane_count;
         uniform vec4 plane_data[100];
 
-        const int max_iter = 100;
         const float contour = 1.0;
 
         out vec4 fragColor;
         void main() {
             vec2 p = vec2((gl_FragCoord.x/canvas.x-0.5) * scene.x , -(gl_FragCoord.y/canvas.y-0.5) * scene.y);
             float volt = 0.0;
-            for(int i = 0; i < max_iter; i++) {
-                if(i == point_count) break;
+            for(int i = 0; i < point_count; i++) {
                 float charge = point_data[i].z;
                 float dist = distance(point_data[i].xy, p.xy);
                 volt += charge / dist;
