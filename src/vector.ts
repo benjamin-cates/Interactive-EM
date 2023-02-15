@@ -56,6 +56,12 @@ export default class Vector {
     static dot = (a: Vector, b: Vector): number => {
         return a.x * b.x + a.y * b.y;
     }
+    static scalarProject = (a: Vector, targetVector: Vector): number => {
+        return Vector.dot(a, targetVector) / targetVector.magnitude();
+    }
+    static project = (a: Vector, targetVector: Vector): Vector => {
+        return Vector.multiply(targetVector.unit(), Vector.scalarProject(a, targetVector));
+    }
     //Convert [x,y] array to a vector
     static fromArray = (a: number[]): Vector => {
         return new Vector(a[0], a[1]);
