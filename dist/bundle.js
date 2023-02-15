@@ -16,7 +16,17 @@
   \*********************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   \"default\": () => (/* binding */ Object)\n/* harmony export */ });\n/* harmony import */ var _vector__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./vector */ \"./src/vector.ts\");\n\r\nclass Object {\r\n    constructor(mass, position, rotation = 0) {\r\n        this.render = (ctx) => {\r\n        };\r\n        this.voltageAt = (pos) => {\r\n            return 0;\r\n        };\r\n        this.fieldAt = (pos) => {\r\n            return _vector__WEBPACK_IMPORTED_MODULE_0__[\"default\"].origin();\r\n        };\r\n        this.momentOfInertia = () => {\r\n            return 0;\r\n        };\r\n        this.incrementPosition = (dt) => {\r\n            this.position.x += this.velocity.x * dt;\r\n            this.position.y += this.velocity.y * dt;\r\n        };\r\n        this.physics = (dt, force, torque) => {\r\n            this.incrementPosition(dt);\r\n            this.velocity.add(_vector__WEBPACK_IMPORTED_MODULE_0__[\"default\"].multiply(force, dt / this.mass));\r\n        };\r\n        this.velocity = new _vector__WEBPACK_IMPORTED_MODULE_0__[\"default\"](0, 0);\r\n        this.position = position;\r\n        this.mass = mass;\r\n        this.rotation = rotation;\r\n    }\r\n}\r\n\n\n//# sourceURL=webpack://interactive-em/./src/base.ts?");
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   \"default\": () => (/* binding */ Object)\n/* harmony export */ });\n/* harmony import */ var _vector__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./vector */ \"./src/vector.ts\");\n\nclass Object {\n    constructor(mass, position, rotation = 0) {\n        this.render = (ctx) => {\n        };\n        this.voltageAt = (pos) => {\n            return 0;\n        };\n        this.fieldAt = (pos) => {\n            return _vector__WEBPACK_IMPORTED_MODULE_0__[\"default\"].origin();\n        };\n        this.momentOfInertia = () => {\n            return 0;\n        };\n        this.incrementPosition = (dt) => {\n            this.position.x += this.velocity.x * dt;\n            this.position.y += this.velocity.y * dt;\n            this.rotation += this.angularVelocity * dt;\n        };\n        this.physics = (dt, force, torque) => {\n            this.incrementPosition(dt);\n            this.velocity.add(_vector__WEBPACK_IMPORTED_MODULE_0__[\"default\"].multiply(force, dt / this.mass));\n        };\n        this.velocity = new _vector__WEBPACK_IMPORTED_MODULE_0__[\"default\"](0, 0);\n        this.position = position;\n        this.mass = mass;\n        this.rotation = rotation;\n        this.angularVelocity = 0;\n    }\n}\n\n\n//# sourceURL=webpack://interactive-em/./src/base.ts?");
+
+/***/ }),
+
+/***/ "./src/charges/conductor.ts":
+/*!**********************************!*\
+  !*** ./src/charges/conductor.ts ***!
+  \**********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   \"default\": () => (/* binding */ Conductor)\n/* harmony export */ });\n/* harmony import */ var _base__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../base */ \"./src/base.ts\");\n\nclass Conductor extends _base__WEBPACK_IMPORTED_MODULE_0__[\"default\"] {\n}\n\n\n//# sourceURL=webpack://interactive-em/./src/charges/conductor.ts?");
 
 /***/ }),
 
@@ -50,10 +60,10 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpac
 
 /***/ }),
 
-/***/ "./src/constants.ts":
-/*!**************************!*\
-  !*** ./src/constants.ts ***!
-  \**************************/
+/***/ "./src/equipotential.ts":
+/*!******************************!*\
+  !*** ./src/equipotential.ts ***!
+  \******************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   \"default\": () => (__WEBPACK_DEFAULT_EXPORT__)\n/* harmony export */ });\nconst constants = {\r\n    K: 0.0089875517873681764,\r\n    G: 6.67408e-11,\r\n};\r\n/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (constants);\r\n\n\n//# sourceURL=webpack://interactive-em/./src/constants.ts?");
