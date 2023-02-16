@@ -14,6 +14,7 @@ export default class Object {
         this.position = position;
         this.mass = mass;
         this.rotation = rotation;
+        this.angularVelocity = 0;
     }
 
     render = (ctx: CanvasRenderingContext2D) => {
@@ -37,6 +38,7 @@ export default class Object {
     incrementPosition = (dt: number) => {
         this.position.x += this.velocity.x * dt;
         this.position.y += this.velocity.y * dt;
+        this.rotation += this.angularVelocity * dt;
     }
     physics = (dt: number, force: Vector, torque: number) => {
         this.incrementPosition(dt);

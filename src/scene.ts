@@ -4,6 +4,7 @@ import FiniteLine from "./charges/finite_line";
 import InfinitePlane from "./charges/infinite_plane";
 import PointCharge from "./charges/point_charge";
 import Vector from "./vector";
+import Equipotential from "./equipotential";
 
 
 export default class Scene {
@@ -31,16 +32,19 @@ export default class Scene {
     timeSpeed: number;
     width: number;
     height: number;
-    physicsPerSecond: number;
     element: HTMLCanvasElement;
+    voltCanvas: Equipotential;
     context: CanvasRenderingContext2D;
-    constructor(element: HTMLCanvasElement) {
-        this.objects = [];
+    physicsInterval: number;
+    constructor(element: HTMLCanvasElement, voltCanvas: HTMLCanvasElement) {
+        this.objects = [] as Object[];
         this.element = element;
         this.context = element.getContext("2d");
+        this.voltCanvas = new Equipotential(voltCanvas);
         this.updateAspectRatio();
         this.sceneDefaults();
         this.render();
+        this.physicsInterval = window.setInterval(this.physics, 1000 / Scene.parameters.physicsPerSecond, 1 / Scene.parameters.physicsPerSecond);
     }
 
     updateAspectRatio = () => {
@@ -53,6 +57,7 @@ export default class Scene {
         this.context.translate(window.innerWidth / 2, window.innerHeight / 2);
         let scale = window.innerHeight / 2 / Scene.parameters.viewportHeight / 100;
         this.context.scale(scale, scale);
+        this.voltCanvas.resize(this.width, this.height);
     }
 
     sceneDefaults = () => {
@@ -66,13 +71,21 @@ export default class Scene {
         let x = event.clientX - rect.left - this.element.width / 2;
         let y = event.clientY - rect.top - this.element.height / 2;
         let aspectRatio = this.element.width / this.element.height;
-        return new Vector(x / this.element.width * 2 * Scene.parameters.viewportHeight * aspectRatio, -y / this.element.height * 2 * Scene.parameters.viewportHeight);
+        return new Vector(x / this.element.width * 2 * Scene.parameters.viewportHeight * aspectRatio, y / this.element.height * 2 * Scene.parameters.viewportHeight);
+    }
+    pushObject(object: Object) {
+        this.objects.push(object);
+        this.updateObjects();
+    }
+    updateObjects() {
+        this.voltCanvas.updateObjects(this.objects);
     }
     render = () => {
         //Request next animation frame
         requestAnimationFrame(this.render);
         //Clear rectangle
         this.context.clearRect(-100 * this.width, -100 * this.height, this.width * 200, this.height * 200);
+        this.voltCanvas.fullscreenRender();
         //Render grid lines if enabled
         if (Scene.parameters.showGridLines) {
             this.context.lineWidth = 1.5;
@@ -109,10 +122,11 @@ export default class Scene {
         });
         return potential;
     }
-    physics(dt: number) {
+    physics = (dt: number) => {
         this.objects.forEach((object) => {
             object.incrementPosition(dt);
         });
+        this.updateObjects();
     }
 
     //Returns the force and torque between two objects. Force is measured on object a and the opposite directional force is on object b. Torque is measured for both from the midpoint of a.position and b.position. Use the parallel axis theorem to find the torque on an objects center of mass.
@@ -123,23 +137,95 @@ export default class Scene {
         return { force: Vector.origin(), torque: 0 };
     }
 
+    private prevMouse: {
+        positions: Vector[];
+        selectedObj: Object;
+        time: number[];
+    } = { positions: [Vector.origin()], selectedObj: null, time: [0] }
+
+    mouseDown = (event: MouseEvent) => {
+        this.prevMouse = {
+            positions: [this.getCursorPosition(event)],
+            selectedObj: null,
+            time: [new Date().getTime()],
+        };
+        for (let i = 0; i < this.objects.length; i++) {
+            if (Vector.distance(this.objects[i].position, this.prevMouse.positions[0]) < 0.5) {
+                this.prevMouse.selectedObj = this.objects[i];
+                this.prevMouse.selectedObj.velocity = Vector.origin();
+                return;
+            }
+        }
+    }
+
+    mouseMove = (event: MouseEvent) => {
+        if (this.prevMouse.selectedObj == null)
+            return;
+        let pos = this.getCursorPosition(event);
+        this.prevMouse.positions.push(pos);
+        if (this.prevMouse.positions.length >= 10) {
+            this.prevMouse.positions.shift();
+            this.prevMouse.time.shift();
+        }
+        this.prevMouse.selectedObj.position = pos.copy();
+        this.updateObjects();
+        this.prevMouse.time.push(new Date().getTime());
+    }
+
+    mouseUp = (event: MouseEvent) => {
+        if (this.prevMouse.selectedObj == null)
+            return;
+        let pos = this.getCursorPosition(event);
+        if (new Date().getTime() - this.prevMouse.time[this.prevMouse.time.length - 1] < 60) {
+            let dt = new Date().getTime() - this.prevMouse.time[0];
+            let dx = Vector.add(pos, Vector.multiply(this.prevMouse.positions[0], -1));
+            this.prevMouse.selectedObj.velocity = Vector.multiply(dx, 1000 / dt);
+        }
+        else this.prevMouse.selectedObj.velocity = Vector.origin();
+        this.prevMouse.selectedObj = null;
+        this.updateObjects();
+    }
+
 }
 
 var scene: Scene;
 document.addEventListener("DOMContentLoaded", () => {
     let canvas = document.getElementById("canvas") as HTMLCanvasElement;
-    scene = new Scene(canvas);
-    scene.objects.push(new PointCharge(1, 1, new Vector(0, 0)));
-    scene.objects.push(new FiniteLine(1, 1, new Vector(-2, 4), 0.1, 4));
-    scene.objects.push(new FiniteLine(-3, 1, new Vector(2, 4), 0.1, 4));
-    scene.objects.push(new FiniteLine(5, 1, new Vector(4, 4), 0.1, 4));
-    scene.objects.push(new InfinitePlane(-5, 1, new Vector(6, -4), -0.4));
+    let voltCanvas = document.getElementById("volt_canvas") as HTMLCanvasElement;
+    scene = new Scene(canvas, voltCanvas);
+    //@ts-ignore
+    window.scene = scene;
+    scene.objects.push(new PointCharge(1, 0, new Vector(10, 2)));
+    scene.objects[0].velocity = new Vector(-0.8, 0);
+    scene.objects.push(new PointCharge(-2, 0, new Vector(-10, 2)));
+    scene.objects[1].velocity = new Vector(0.8, 0);
+    //scene.objects.push(new PointCharge(-1, 1, new Vector(1, 0)));
+    //scene.objects.push(new PointCharge(-1, 1, new Vector(1, 1)));
+    scene.objects.push(new FiniteLine(0.4, 1, new Vector(0, 0), 0, 10));
+    scene.objects.push(new FiniteLine(-0.4, 1, new Vector(0, 4), 0, 10));
+    //scene.objects.push(new FiniteLine(-3, 1, new Vector(2, 4), 0.1, 4));
+    //scene.objects.push(new FiniteLine(5, 1, new Vector(4, 4), 0.1, 4));
+    //scene.objects.push(new InfinitePlane(-5, 1, new Vector(6, -4), -0.4));
+    scene.updateObjects();
+    window.addEventListener("mousedown", scene.mouseDown);
+    window.addEventListener("mouseup", scene.mouseUp);
+    window.addEventListener("mousemove", scene.mouseMove);
 });
 window.addEventListener("resize", () => {
     scene.updateAspectRatio();
     scene.sceneDefaults();
 });
-window.addEventListener("click", (e) => {
-    console.log(scene.getCursorPosition(e as MouseEvent).toString());
-});
 
+//Export classes
+//@ts-ignore
+window.Base = Object;
+//@ts-ignore
+window.PointCharge = PointCharge;
+//@ts-ignore
+window.FiniteLine = FiniteLine;
+//@ts-ignore
+window.InfinitePlane = InfinitePlane;
+//@ts-ignore
+window.Vector = Vector;
+//@ts-ignore
+window.Conductor = Conductor;

@@ -27,6 +27,23 @@ export default class Vector {
         this.x += v.x;
         this.y += v.y;
     }
+    rotate = (angle: number) => {
+        let sin = Math.sin(angle);
+        let cos = Math.cos(angle);
+        let x = this.x * cos - this.y * sin;
+        let y = this.x * sin + this.y * cos;
+        this.x = x;
+        this.y = y;
+    }
+    rotateByVector = (vec: Vector) => {
+        let uVec = vec.unit();
+        let sin = uVec.y;
+        let cos = uVec.x;
+        let x = this.x * cos - this.y * sin;
+        let y = this.x * sin + this.y * cos;
+        this.x = x;
+        this.y = y;
+    }
     static add = (a: Vector, b: Vector): Vector => {
         return new Vector(a.x + b.x, a.y + b.y);
     };
@@ -38,6 +55,12 @@ export default class Vector {
     }
     static dot = (a: Vector, b: Vector): number => {
         return a.x * b.x + a.y * b.y;
+    }
+    static scalarProject = (a: Vector, targetVector: Vector): number => {
+        return Vector.dot(a, targetVector) / targetVector.magnitude();
+    }
+    static project = (a: Vector, targetVector: Vector): Vector => {
+        return Vector.multiply(targetVector.unit(), Vector.scalarProject(a, targetVector));
     }
     //Convert [x,y] array to a vector
     static fromArray = (a: number[]): Vector => {
