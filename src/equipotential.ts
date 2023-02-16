@@ -27,10 +27,10 @@ export default class VoltCanvas {
         [key: string]: WebGLUniformLocation;
     } = {};
     private colors = {
-        "positive_color": [1, 0, 0, 1],
-        "negative_color": [0, 0, 1, 1],
-        "neutral_color": [0.5, 0, 0.5, 1],
-        "equipotential_color": [0, 1, 0, 1],
+        "positive_color": [1, 0, 0.4, 1],
+        "negative_color": [0.3, 0, 1, 1],
+        "neutral_color": [0.5, 0, 0.6, 1],
+        "equipotential_color": [0.2, 0.8, 0.2, 0.9],
     };
     //Update color state by passing in an object with the color names as keys
     setColors(cols: any) {
@@ -96,7 +96,7 @@ export default class VoltCanvas {
             pointData[i * 3 + 2] = point.charge;
         });
         this.gl.uniform1i(this.uniLoc.point_count, points.length);
-        if(points.length > 0) this.gl.uniform3fv(this.uniLoc.point_data, pointData);
+        if (points.length > 0) this.gl.uniform3fv(this.uniLoc.point_data, pointData);
 
         //Finite lines
         let lines = objects.filter((obj) => obj instanceof FiniteLine) as FiniteLine[];
@@ -188,9 +188,10 @@ export default class VoltCanvas {
             dVolt*=12.0;
             const float lineWidth = 20.0;
             float fracv = fract(dVolt);
-            float lineCloseness = mix(1.0,smoothstep(0.0,1.0,min(fracv,1.0-fracv)/dv/lineWidth),contour);
+            vec4 vLines = vec4(equipotential_color.rgb,smoothstep(1.0,0.0,min(fracv,1.0-fracv)/dv/lineWidth));
+            vLines.a*=equipotential_color.a;
             //Blend with contour line
-            fragColor = vec4(fragColor.xyz*lineCloseness,1);
+            fragColor = vec4(fragColor.rgb*(1.0-vLines.a) + vLines.rgb*vLines.a,1.0);
 
         }
     `;
