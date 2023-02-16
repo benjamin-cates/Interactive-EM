@@ -17,18 +17,18 @@ export default class FiniteLine extends Object {
         let deltaPoint = Vector.subtract(pos, this.startPoint); //The vector from the start of the line to the point
 
         let pointOntoLine = Vector.scalarProject(deltaPoint, deltaLine); // the scalar projection of the point vector onto the line vector
-        let distanceFromLine = Math.sqrt(Math.pow(deltaPoint.magnitude(),2) - Math.pow(pointOntoLine, 2));
+        let pointOntoNormal = Vector.scalarProject(deltaPoint, this.normal);
 
         let xStart = -pointOntoLine;
         let xEnd = this.length - pointOntoLine;
 
-        let rInvStart = 1 / Math.sqrt(Math.pow(xStart, 2) + Math.pow(distanceFromLine, 2));
-        let rInvEnd = 1 / Math.sqrt(Math.pow(xEnd, 2) + Math.pow(distanceFromLine, 2));
+        let rInvStart = 1 / Math.sqrt(Math.pow(xStart, 2) + Math.pow(pointOntoNormal, 2));
+        let rInvEnd = 1 / Math.sqrt(Math.pow(xEnd, 2) + Math.pow(pointOntoNormal, 2));
 
         let xF = rInvEnd - rInvStart;
-        let yF = Math.sign(Vector.dot(this.normal, deltaLine)) * (xEnd * rInvEnd - xStart * rInvStart) / distanceFromLine;
+        let yF = (xEnd * rInvEnd - xStart * rInvStart) / pointOntoNormal;
 
-        let fieldVec = Vector.multiply(new Vector(xF, xEnd), constants.K * this.chargeDensity);
+        let fieldVec = Vector.multiply(new Vector(xF, yF), constants.K * this.chargeDensity);
         fieldVec.rotateByVector(deltaLine);
 
         return  fieldVec;

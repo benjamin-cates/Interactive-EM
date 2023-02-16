@@ -2,6 +2,7 @@ import Object from "../base";
 import Vector from "../vector";
 import constants from "../constants";
 import Scene from "../scene";
+import PointCharge from "./point_charge";
 
 export default class InfinitePlane extends Object {
     //Measured in microcoulombs per meter
@@ -9,7 +10,8 @@ export default class InfinitePlane extends Object {
     normal: Vector;
 
     fieldAt = (pos: Vector) => {
-        return  Vector.multiply(this.normal, Math.sign(Vector.dot(this.normal, pos)) * 2 * this.chargeDensity * constants.K);
+        let deltaPos = Vector.subtract(pos, this.position);
+        return  Vector.multiply(this.normal, Math.sign(Vector.dot(this.normal, deltaPos)) * 2 * this.chargeDensity * constants.K);
     }
     
     constructor(chargeDensity: number, mass: number, position: Vector, rotation: number = 0) {
