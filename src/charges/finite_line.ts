@@ -1,15 +1,38 @@
 import Object from "../base";
 import Vector from "../vector";
 import Scene from "../scene";
+import constants from "../constants";
 
 export default class FiniteLine extends Object {
     //Measured in microcoloumbs per meter
     chargeDensity: number;
-    startPoint: Vector;
-    endPoint: Vector;
+    startPoint: Vector; //negative
+    endPoint: Vector; //positive
     normal: Vector;
     //Measured in meters
     length: number;
+
+    fieldAt = (pos: Vector): Vector => {
+        let deltaLine = Vector.subtract(this.endPoint, this.startPoint); //The vector from one end of the line to the other
+        let deltaPoint = Vector.subtract(pos, this.startPoint); //The vector from the start of the line to the point
+
+        let pointOntoLine = Vector.scalarProject(deltaPoint, deltaLine); // the scalar projection of the point vector onto the line vector
+        let distanceFromLine = Math.sqrt(Math.pow(deltaPoint.magnitude(),2) - Math.pow(pointOntoLine, 2));
+
+        let xStart = -pointOntoLine;
+        let xEnd = this.length - pointOntoLine;
+
+        let rInvStart = 1 / Math.sqrt(Math.pow(xStart, 2) + Math.pow(distanceFromLine, 2));
+        let rInvEnd = 1 / Math.sqrt(Math.pow(xEnd, 2) + Math.pow(distanceFromLine, 2));
+
+        let xF = rInvEnd - rInvStart;
+        let yF = Math.sign(Vector.dot(this.normal, deltaLine)) * (xEnd * rInvEnd - xStart * rInvStart) / distanceFromLine;
+
+        let fieldVec = Vector.multiply(new Vector(xF, xEnd), constants.K * this.chargeDensity);
+        fieldVec.rotateByVector(deltaLine);
+
+        return  fieldVec;
+    }
 
     constructor(chargeDensity: number, mass: number, position: Vector, rotation: number, length: number) {
         super(mass, position, rotation);
