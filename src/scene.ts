@@ -71,7 +71,7 @@ export default class Scene {
         let x = event.clientX - rect.left - this.element.width / 2;
         let y = event.clientY - rect.top - this.element.height / 2;
         let aspectRatio = this.element.width / this.element.height;
-        return new Vector(x / this.element.width * 2 * Scene.parameters.viewportHeight * aspectRatio, -y / this.element.height * 2 * Scene.parameters.viewportHeight);
+        return new Vector(x / this.element.width * 2 * Scene.parameters.viewportHeight * aspectRatio, y / this.element.height * 2 * Scene.parameters.viewportHeight);
     }
     pushObject(object: Object) {
         this.objects.push(object);
@@ -137,6 +137,55 @@ export default class Scene {
         return { force: Vector.origin(), torque: 0 };
     }
 
+    private prevMouse: {
+        positions: Vector[];
+        selectedObj: Object;
+        time: number[];
+    } = { positions: [Vector.origin()], selectedObj: null, time: [0] }
+
+    mouseDown = (event: MouseEvent) => {
+        this.prevMouse = {
+            positions: [this.getCursorPosition(event)],
+            selectedObj: null,
+            time: [new Date().getTime()],
+        };
+        for (let i = 0; i < this.objects.length; i++) {
+            if (Vector.distance(this.objects[i].position, this.prevMouse.positions[0]) < 0.5) {
+                this.prevMouse.selectedObj = this.objects[i];
+                this.prevMouse.selectedObj.velocity = Vector.origin();
+                return;
+            }
+        }
+    }
+
+    mouseMove = (event: MouseEvent) => {
+        if (this.prevMouse.selectedObj == null)
+            return;
+        let pos = this.getCursorPosition(event);
+        this.prevMouse.positions.push(pos);
+        if (this.prevMouse.positions.length >= 10) {
+            this.prevMouse.positions.shift();
+            this.prevMouse.time.shift();
+        }
+        this.prevMouse.selectedObj.position = pos.copy();
+        this.updateObjects();
+        this.prevMouse.time.push(new Date().getTime());
+    }
+
+    mouseUp = (event: MouseEvent) => {
+        if (this.prevMouse.selectedObj == null)
+            return;
+        let pos = this.getCursorPosition(event);
+        if (new Date().getTime() - this.prevMouse.time[this.prevMouse.time.length - 1] < 60) {
+            let dt = new Date().getTime() - this.prevMouse.time[0];
+            let dx = Vector.add(pos, Vector.multiply(this.prevMouse.positions[0], -1));
+            this.prevMouse.selectedObj.velocity = Vector.multiply(dx, 1000 / dt);
+        }
+        else this.prevMouse.selectedObj.velocity = Vector.origin();
+        this.prevMouse.selectedObj = null;
+        this.updateObjects();
+    }
+
 }
 
 var scene: Scene;
@@ -158,13 +207,13 @@ document.addEventListener("DOMContentLoaded", () => {
     //scene.objects.push(new FiniteLine(5, 1, new Vector(4, 4), 0.1, 4));
     //scene.objects.push(new InfinitePlane(-5, 1, new Vector(6, -4), -0.4));
     scene.updateObjects();
+    window.addEventListener("mousedown", scene.mouseDown);
+    window.addEventListener("mouseup", scene.mouseUp);
+    window.addEventListener("mousemove", scene.mouseMove);
 });
 window.addEventListener("resize", () => {
     scene.updateAspectRatio();
     scene.sceneDefaults();
-});
-window.addEventListener("click", (e) => {
-    console.log(scene.getCursorPosition(e as MouseEvent).toString());
 });
 
 //Export classes
