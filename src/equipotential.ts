@@ -174,17 +174,18 @@ export default class VoltCanvas {
                 float rotation = line_pos[i].z;
                 vec2 dir = vec2(cos(rotation), sin(rotation));
                 vec2 relPos = p - center;
+                float g = dot(relPos,dir);
                 vec2 end1 = center - dir * halfLen;
                 vec2 end2 = center + dir * halfLen;
-                float g = dot(relPos,dir);
-                volt+=chargeDensity*log((distance(p,end1)+g+halfLen)/(distance(p,end2)+g-halfLen));
+                halfLen = halfLen * sign(g);
+                volt+=sign(g)*chargeDensity*log((distance(p,end1)+abs(g)+halfLen)/(distance(p,end2)+abs(g)-halfLen));
             }
 
             float dVolt = 2.0/(1.0+exp(-volt*2.0))-1.0;
             fragColor = mix(mix(neutral_color,negative_color,0.0-dVolt), mix(neutral_color, positive_color, dVolt), step(dVolt, 0.0));
             float dx = dFdx(dVolt);
             float dy = dFdy(dVolt);
-            float dv = sqrt(abs(dx*dx)+abs(dy*dy));
+            float dv = min(sqrt(abs(dx*dx)+abs(dy*dy)),0.5);
             dVolt*=12.0;
             const float lineWidth = 20.0;
             float fracv = fract(dVolt);
