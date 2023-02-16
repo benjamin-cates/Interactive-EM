@@ -147,7 +147,7 @@ export default class Scene {
         this.prevMouse = {
             positions: [this.getCursorPosition(event)],
             selectedObj: null,
-            time: [new Date().getMilliseconds()],
+            time: [new Date().getTime()],
         };
         for (let i = 0; i < this.objects.length; i++) {
             if (Vector.distance(this.objects[i].position, this.prevMouse.positions[0]) < 0.5) {
@@ -169,16 +169,15 @@ export default class Scene {
         }
         this.prevMouse.selectedObj.position = pos.copy();
         this.updateObjects();
-        this.prevMouse.time.push(new Date().getMilliseconds());
+        this.prevMouse.time.push(new Date().getTime());
     }
 
     mouseUp = (event: MouseEvent) => {
         if (this.prevMouse.selectedObj == null)
             return;
         let pos = this.getCursorPosition(event);
-        let ms = new Date().getMilliseconds();
-        if (ms - this.prevMouse.time[this.prevMouse.time.length - 1] < 60) {
-            let dt = new Date().getMilliseconds() - this.prevMouse.time[0];
+        if (new Date().getTime() - this.prevMouse.time[this.prevMouse.time.length - 1] < 60) {
+            let dt = new Date().getTime() - this.prevMouse.time[0];
             let dx = Vector.add(pos, Vector.multiply(this.prevMouse.positions[0], -1));
             console.log(dx.toString(), dt);
             this.prevMouse.selectedObj.velocity = Vector.multiply(dx, 1000 / dt);
