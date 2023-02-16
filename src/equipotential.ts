@@ -27,16 +27,17 @@ export default class VoltCanvas {
         [key: string]: WebGLUniformLocation;
     } = {};
     private colors = {
-        "positive_color": [1, 0, 0, 1],
-        "negative_color": [0, 0, 1, 1],
-        "neutral_color": [0, 0, 0, 1],
-        "equipotential_color": [0, 1, 0, 1],
+        "positive_color": [1, 0, 0.4, 1],
+        "negative_color": [0.3, 0, 1, 1],
+        "neutral_color": [0.5, 0, 0.6, 1],
+        "equipotential_color": [0.2, 0.8, 0.2, 0.9],
     };
     //Update color state by passing in an object with the color names as keys
     setColors(cols: any) {
         window.Object.assign(this.colors, cols);
         for (let i in this.colors) {
             let col = this.colors[i];
+            console.log(col);
             this.gl.uniform4f(this.uniLoc[i], col[0], col[1], col[2], col[3]);
         }
     }
@@ -95,7 +96,7 @@ export default class VoltCanvas {
             pointData[i * 3 + 2] = point.charge;
         });
         this.gl.uniform1i(this.uniLoc.point_count, points.length);
-        if(points.length > 0) this.gl.uniform3fv(this.uniLoc.point_data, pointData);
+        if (points.length > 0) this.gl.uniform3fv(this.uniLoc.point_data, pointData);
 
         //Finite lines
         let lines = objects.filter((obj) => obj instanceof FiniteLine) as FiniteLine[];
@@ -150,6 +151,11 @@ export default class VoltCanvas {
         uniform int plane_count;
         uniform vec4 plane_data[100];
 
+        uniform vec4 neutral_color;
+        uniform vec4 positive_color;
+        uniform vec4 negative_color;
+        uniform vec4 equipotential_color;
+
         const float contour = 1.0;
 
         out vec4 fragColor;
@@ -168,23 +174,25 @@ export default class VoltCanvas {
                 float rotation = line_pos[i].z;
                 vec2 dir = vec2(cos(rotation), sin(rotation));
                 vec2 relPos = p - center;
+                float g = dot(relPos,dir);
                 vec2 end1 = center - dir * halfLen;
                 vec2 end2 = center + dir * halfLen;
-                float g = dot(relPos,dir);
-                volt+=chargeDensity*log((distance(p,end1)+g+halfLen)/(distance(p,end2)+g-halfLen));
+                halfLen = halfLen * sign(g);
+                volt+=sign(g)*chargeDensity*log((distance(p,end1)+abs(g)+halfLen)/(distance(p,end2)+abs(g)-halfLen));
             }
 
-            float dVolt = 1.0/(1.0+exp(-volt*2.0));
-            fragColor = vec4(dVolt, dVolt, dVolt, 1.0);
+            float dVolt = 2.0/(1.0+exp(-volt*2.0))-1.0;
+            fragColor = mix(mix(neutral_color,negative_color,0.0-dVolt), mix(neutral_color, positive_color, dVolt), step(dVolt, 0.0));
             float dx = dFdx(dVolt);
             float dy = dFdy(dVolt);
-            float dv = sqrt(abs(dx*dx)+abs(dy*dy));
+            float dv = min(sqrt(abs(dx*dx)+abs(dy*dy)),0.5);
             dVolt*=12.0;
             const float lineWidth = 20.0;
             float fracv = fract(dVolt);
-            float lineCloseness = mix(1.0,smoothstep(0.0,1.0,min(fracv,1.0-fracv)/dv/lineWidth),contour);
+            vec4 vLines = vec4(equipotential_color.rgb,smoothstep(1.0,0.0,min(fracv,1.0-fracv)/dv/lineWidth));
+            vLines.a*=equipotential_color.a;
             //Blend with contour line
-            fragColor = vec4(fragColor.xyz*lineCloseness,1);
+            fragColor = vec4(fragColor.rgb*(1.0-vLines.a) + vLines.rgb*vLines.a,1.0);
 
         }
     `;
