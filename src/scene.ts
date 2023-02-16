@@ -179,7 +179,6 @@ export default class Scene {
         if (new Date().getTime() - this.prevMouse.time[this.prevMouse.time.length - 1] < 60) {
             let dt = new Date().getTime() - this.prevMouse.time[0];
             let dx = Vector.add(pos, Vector.multiply(this.prevMouse.positions[0], -1));
-            console.log(dx.toString(), dt);
             this.prevMouse.selectedObj.velocity = Vector.multiply(dx, 1000 / dt);
         }
         else this.prevMouse.selectedObj.velocity = Vector.origin();
@@ -215,9 +214,6 @@ document.addEventListener("DOMContentLoaded", () => {
 window.addEventListener("resize", () => {
     scene.updateAspectRatio();
     scene.sceneDefaults();
-});
-window.addEventListener("click", (e) => {
-    console.log(scene.getCursorPosition(e as MouseEvent).toString());
 });
 
 //Export classes
