@@ -47,6 +47,9 @@ export default class Vector {
     static add = (a: Vector, b: Vector): Vector => {
         return new Vector(a.x + b.x, a.y + b.y);
     };
+    static subtract = (a: Vector, sub: Vector): Vector => {
+        return new Vector (a.x - sub.x, a.y - sub.y);
+    }
     static multiply = (a: Vector, scalar: number): Vector => {
         return new Vector(a.x * scalar, a.y * scalar);
     }
@@ -65,6 +68,12 @@ export default class Vector {
     //Convert [x,y] array to a vector
     static fromArray = (a: number[]): Vector => {
         return new Vector(a[0], a[1]);
+    }
+    static rHat = (pos: Vector, chargePos: Vector): Vector => {
+        return Vector.subtract(chargePos, pos).unit();
+    } 
+    static inverseSquareField = (pos: Vector, ForcePoint: Vector): Vector => {
+        return Vector.multiply(Vector.rHat(pos, ForcePoint), 1 / Math.pow(Vector.distance(pos, ForcePoint), 2));
     }
     static origin = (): Vector => {
         return new Vector(0, 0);
