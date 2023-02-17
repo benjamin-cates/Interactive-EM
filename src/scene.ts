@@ -1,10 +1,11 @@
-import {Object, ObjectTypes} from "./base";
+import { Object, ObjectTypes } from "./base";
 import Conductor from "./charges/conductor";
 import FiniteLine from "./charges/finite_line";
 import InfinitePlane from "./charges/infinite_plane";
 import PointCharge from "./charges/point_charge";
 import Vector from "./vector";
 import Equipotential from "./equipotential";
+import ObjEditor from "./object_editor";
 
 
 export default class Scene {
@@ -34,9 +35,10 @@ export default class Scene {
     height: number;
     element: HTMLCanvasElement;
     voltCanvas: Equipotential;
+    objEditor: ObjEditor;
     context: CanvasRenderingContext2D;
     physicsInterval: number;
-    constructor(element: HTMLCanvasElement, voltCanvas: HTMLCanvasElement) {
+    constructor(element: HTMLCanvasElement, voltCanvas: HTMLCanvasElement, objectEditor: HTMLElement) {
         this.objects = [] as Object[];
         this.element = element;
         this.context = element.getContext("2d");
@@ -45,6 +47,7 @@ export default class Scene {
         this.sceneDefaults();
         this.render();
         this.physicsInterval = window.setInterval(this.physics, 1000 / Scene.parameters.physicsPerSecond, 1 / Scene.parameters.physicsPerSecond);
+        this.objEditor = new ObjEditor(objectEditor, this);
     }
 
     updateAspectRatio = () => {
@@ -125,6 +128,9 @@ export default class Scene {
     physics = (dt: number) => {
         this.objects.forEach((object) => {
             object.incrementPosition(dt);
+            if (object == this.selected.obj) {
+                this.objEditor.updateDisplay("position", object.position);
+            }
         });
         this.updateObjects();
     }
@@ -155,6 +161,7 @@ export default class Scene {
             if (Vector.distance(this.objects[i].position, this.selected.dragPositions[0]) < 0.5) {
                 this.selected.obj = this.objects[i];
                 this.selected.obj.velocity = Vector.origin();
+                this.objEditor.setObj(this.objects[i])
                 this.selected.isGrab = true;
                 return;
             }
@@ -171,6 +178,7 @@ export default class Scene {
             this.selected.dragTime.shift();
         }
         this.selected.obj.position = pos.copy();
+        this.objEditor.updateDisplay("position", pos);
         this.updateObjects();
         this.selected.dragTime.push(new Date().getTime());
     }
@@ -186,6 +194,7 @@ export default class Scene {
             this.selected.obj.velocity = Vector.multiply(dx, 1000 / dt);
         }
         else this.selected.obj.velocity = Vector.origin();
+        this.objEditor.updateDisplay("velocity", this.selected.obj.velocity);
         this.updateObjects();
     }
 
@@ -195,7 +204,8 @@ var scene: Scene;
 document.addEventListener("DOMContentLoaded", () => {
     let canvas = document.getElementById("canvas") as HTMLCanvasElement;
     let voltCanvas = document.getElementById("volt_canvas") as HTMLCanvasElement;
-    scene = new Scene(canvas, voltCanvas);
+    let objectEditor = document.querySelector("#properties") as HTMLElement;
+    scene = new Scene(canvas, voltCanvas, objectEditor);
     //@ts-ignore
     window.scene = scene;
     scene.objects.push(new PointCharge(1, 0, new Vector(10, 2)));

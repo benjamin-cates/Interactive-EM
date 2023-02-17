@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Chivo+Mono&family=Lato:wght@400;700&family=Nunito&family=Ubuntu+Mono:wght@700&display=swap');
 
 body {
     margin: 0;
@@ -19,3 +19,37 @@ canvas {
 #volt_canvas {
     z-index: 0;
 }
+
+#properties_wrapper {
+    z-index: 5;
+    position: absolute;
+    width: 20rem;
+    height: 100vh;
+    right: 0;
+    display: flex;
+    align-items: center;
+}
+
+#properties {
+    width: 100%;
+    background: white;
+    border-radius: 2rem 0 0 2rem;
+    box-shadow: -2px -2px 5px 0px rgba(0, 0, 0, 0.4);
+    padding: 2rem;
+
+}
+
+.slider_input_unit {
+    display: inline;
+}
+
+.input_slider_display {
+    font-family: "Chivo Mono";
+
+}
+
+.input_slider_name {}
+
+.input_slider_range {}
+
+.input_slider_vector {}
