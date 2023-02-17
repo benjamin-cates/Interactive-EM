@@ -1,4 +1,4 @@
-import Object from "./base";
+import {Object, ObjectTypes} from "./base";
 import Conductor from "./charges/conductor";
 import FiniteLine from "./charges/finite_line";
 import InfinitePlane from "./charges/infinite_plane";

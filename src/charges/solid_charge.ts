@@ -1,4 +1,4 @@
-import Object from "../base";
+import {Object, ObjectTypes} from "../base";
 import Vector from "../vector";
 
 export class Triangle {
@@ -71,4 +71,5 @@ window.Triangle = Triangle;
 export class SolidCharge extends Object {
     //Measured in microcoloumbs per meter square
     chargeDensity: number;
+    getType: () => ObjectTypes = () => "solid_charge";
 }

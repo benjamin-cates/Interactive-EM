@@ -1,5 +1,6 @@
 import Vector from "./vector";
-export default class Object {
+export type ObjectTypes = "point_charge" | "infinite_plane" | "conductor" | "finite_line" | "solid_charge" | "all";
+export class Object {
     //Physical properties
     mass: number;
     position: Vector;
@@ -7,7 +8,6 @@ export default class Object {
     //Rotation from default orientation in radians
     rotation: number;
     angularVelocity: number;
-
 
     constructor(mass: number, position: Vector, rotation: number = 0) {
         this.velocity = new Vector(0, 0);
@@ -20,6 +20,7 @@ export default class Object {
     render = (ctx: CanvasRenderingContext2D) => {
 
     }
+    getType: () => ObjectTypes = () => "all";
 
 
     //Electric field properties

@@ -1,4 +1,4 @@
-import Object from "../base";
+import {Object, ObjectTypes} from "../base";
 import Vector from "../vector";
 import constants from "../constants";
 import Scene from "../scene";
@@ -12,11 +12,12 @@ export default class InfinitePlane extends Object {
         let deltaPos = Vector.subtract(pos, this.position);
         return  Vector.multiply(this.normal, Math.sign(Vector.dot(this.normal, deltaPos)) * 2 * this.chargeDensity * constants.K);
     }
-    
+
     constructor(chargeDensity: number, mass: number, position: Vector, rotation: number = 0) {
         super(mass, position, rotation);
         this.chargeDensity = chargeDensity;
     }
+    getType: () => ObjectTypes = () => "infinite_plane";
 
     render = (ctx: CanvasRenderingContext2D) => {
         ctx.strokeStyle = Scene.getChargeColor(this.chargeDensity);

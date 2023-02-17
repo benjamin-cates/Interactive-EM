@@ -1,7 +1,7 @@
 import PointCharge from "./charges/point_charge";
 import FiniteLine from "./charges/finite_line";
 import InfinitePlane from "./charges/infinite_plane";
-import Object from "./base";
+import {Object, ObjectTypes} from "./base";
 
 export default class VoltCanvas {
     canvas: HTMLCanvasElement;

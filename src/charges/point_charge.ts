@@ -1,4 +1,4 @@
-import Object from "../base";
+import {Object, ObjectTypes} from "../base";
 import Vector from "../vector";
 import constants from "../constants";
 import Scene from "../scene";
@@ -15,12 +15,13 @@ export default class PointCharge extends Object {
         let distance: number = Vector.distance(pos, this.position)
         return ((constants.K * this.charge)/ distance);
     }
-    
+
     constructor(charge: number, mass: number, position: Vector) {
         super(mass, position);
         this.charge = charge;
         this.displayRadius = 40;
     }
+    getType: () => ObjectTypes = () => "point_charge";
 
     render = (ctx: CanvasRenderingContext2D) => {
         ctx.fillStyle = Scene.getChargeColor(this.charge);

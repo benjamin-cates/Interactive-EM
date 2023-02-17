@@ -1,4 +1,4 @@
-import Object from "../base";
+import { Object, ObjectTypes } from "../base";
 import Vector from "../vector";
 import Scene from "../scene";
 import constants from "../constants";
@@ -31,7 +31,7 @@ export default class FiniteLine extends Object {
         let fieldVec = Vector.multiply(new Vector(xF, yF), constants.K * this.chargeDensity);
         fieldVec.rotateByVector(deltaLine);
 
-        return  fieldVec;
+        return fieldVec;
     }
 
     constructor(chargeDensity: number, mass: number, position: Vector, rotation: number, length: number) {
@@ -39,6 +39,7 @@ export default class FiniteLine extends Object {
         this.chargeDensity = chargeDensity;
         this.length = length;
     }
+    getType: () => ObjectTypes = () => "finite_line";
 
     render = (ctx: CanvasRenderingContext2D) => {
         ctx.lineCap = "round";
