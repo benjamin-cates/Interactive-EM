@@ -137,52 +137,55 @@ export default class Scene {
         return { force: Vector.origin(), torque: 0 };
     }
 
-    private prevMouse: {
-        positions: Vector[];
-        selectedObj: Object;
-        time: number[];
-    } = { positions: [Vector.origin()], selectedObj: null, time: [0] }
+    private selected: {
+        obj?: Object;
+
+        //History of the past ten mouse events for dragging
+        dragPositions: Vector[];
+        //History of the past ten mouse event times
+        dragTime: number[];
+        //If being dragged
+        isGrab: boolean;
+    } = { dragPositions: [Vector.origin()], obj: null, dragTime: [0], isGrab: false }
 
     mouseDown = (event: MouseEvent) => {
-        this.prevMouse = {
-            positions: [this.getCursorPosition(event)],
-            selectedObj: null,
-            time: [new Date().getTime()],
-        };
+        this.selected.dragPositions = [this.getCursorPosition(event)];
+        this.selected.dragTime = [new Date().getTime()];
         for (let i = 0; i < this.objects.length; i++) {
-            if (Vector.distance(this.objects[i].position, this.prevMouse.positions[0]) < 0.5) {
-                this.prevMouse.selectedObj = this.objects[i];
-                this.prevMouse.selectedObj.velocity = Vector.origin();
+            if (Vector.distance(this.objects[i].position, this.selected.dragPositions[0]) < 0.5) {
+                this.selected.obj = this.objects[i];
+                this.selected.obj.velocity = Vector.origin();
+                this.selected.isGrab = true;
                 return;
             }
         }
     }
 
     mouseMove = (event: MouseEvent) => {
-        if (this.prevMouse.selectedObj == null)
+        if (this.selected.isGrab == false)
             return;
         let pos = this.getCursorPosition(event);
-        this.prevMouse.positions.push(pos);
-        if (this.prevMouse.positions.length >= 10) {
-            this.prevMouse.positions.shift();
-            this.prevMouse.time.shift();
+        this.selected.dragPositions.push(pos);
+        if (this.selected.dragPositions.length >= 10) {
+            this.selected.dragPositions.shift();
+            this.selected.dragTime.shift();
         }
-        this.prevMouse.selectedObj.position = pos.copy();
+        this.selected.obj.position = pos.copy();
         this.updateObjects();
-        this.prevMouse.time.push(new Date().getTime());
+        this.selected.dragTime.push(new Date().getTime());
     }
 
     mouseUp = (event: MouseEvent) => {
-        if (this.prevMouse.selectedObj == null)
+        if (this.selected.isGrab == false)
             return;
+        this.selected.isGrab = false;
         let pos = this.getCursorPosition(event);
-        if (new Date().getTime() - this.prevMouse.time[this.prevMouse.time.length - 1] < 60) {
-            let dt = new Date().getTime() - this.prevMouse.time[0];
-            let dx = Vector.add(pos, Vector.multiply(this.prevMouse.positions[0], -1));
-            this.prevMouse.selectedObj.velocity = Vector.multiply(dx, 1000 / dt);
+        if (new Date().getTime() - this.selected.dragTime[this.selected.dragTime.length - 1] < 60) {
+            let dt = new Date().getTime() - this.selected.dragTime[0];
+            let dx = Vector.add(pos, Vector.multiply(this.selected.dragPositions[0], -1));
+            this.selected.obj.velocity = Vector.multiply(dx, 1000 / dt);
         }
-        else this.prevMouse.selectedObj.velocity = Vector.origin();
-        this.prevMouse.selectedObj = null;
+        else this.selected.obj.velocity = Vector.origin();
         this.updateObjects();
     }
 
