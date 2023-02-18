@@ -14,6 +14,7 @@ interface Slider {
     type: "vector" | "number" | "boolean";
     min?: number | Vector;
     max?: number | Vector;
+    nonLinear?: boolean;
     step?: number;
     for?: ObjectTypes;
     unit?: string;
@@ -30,7 +31,8 @@ const sliders: Slider[] = [
     {
         "name": "velocity",
         "type": "vector", "unit": "m/s",
-        "min": new Vector(-1, -1), "max": new Vector(1, 1), "step": 0.1,
+        "min": new Vector(-20, -20), "max": new Vector(20, 20), "step": 0.1,
+        "nonLinear": true,
         "for": "all",
     },
     {
@@ -56,7 +58,8 @@ const sliders: Slider[] = [
     {
         "name": "charge",
         "type": "number", "unit": "μC",
-        "min": -10, "max": 10, "step": 0.1,
+        "min": -3, "max": 3, "step": 0.05,
+        "nonLinear": true,
         "for": "point_charge",
     },
 
@@ -72,6 +75,7 @@ const sliders: Slider[] = [
         "name": "charge_density",
         "type": "number",
         "min": -1.5, "max": 1.5, "step": 0.05,
+        "nonLinear": true,
         "for": "finite_line",
         "unit": "μC/m",
     },
@@ -81,12 +85,21 @@ const sliders: Slider[] = [
         "name": "charge_density",
         "type": "number",
         "min": -1.5, "max": 1.5, "step": 0.05,
+        "nonLinear": true,
         "for": "infinite_plane",
         "unit": "μC/m²",
     },
 
 ];
 export default class ObjEditor {
+    static correction(value: number, isNonLinear: boolean = false): number {
+        if (isNonLinear) return Math.sign(value) * Math.pow(Math.abs(value), 2.6);
+        else return value;
+    }
+    static unCorrection(value: number, isNonLinear: boolean = false): number {
+        if (isNonLinear) return Math.sign(value) * Math.pow(Math.abs(value), 1 / 2.6);
+        else return value;
+    }
     element: HTMLElement;
     curObj?: Object;
     curType?: string;
@@ -103,24 +116,42 @@ export default class ObjEditor {
         //For each element in curState
         for (let i in this.curState) {
             let id = sliders.findIndex((slider) => slider.name == i);
+            let name = sliders[id].name.charAt(0).toUpperCase() + sliders[id].name.slice(1).replace(/_/g, " ");
             let html = `<div class="input_slider slider_${i}">`;
-            html += `<div class="input_slider_name">${sliders[id].name}</div>`;
+            html += `<div class="input_slider_name">${name}</div>`;
             html += `<div class="input_slider_display">
                 <span class="slider_value" id="slider_value${i}">${this.curState[i].toString()}</span>
                 <span class="slider_units">${sliders[id].unit}</span></div>`;
+            let isNonLinear = sliders[id].nonLinear;
             //Number sliders
             if (sliders[id].type == "number") {
+                //Do not display angular velocity or rotation for point charges
+                if ((sliders[id].name == "angular_velocity" || sliders[id].name == "rotation") && this.curObj instanceof PointCharge) continue;
+                if (sliders[id].name == "mass" && this.curObj instanceof InfinitePlane) continue;
+                //Calculate corrected min and max values according to non-linear input
+                let min = ObjEditor.unCorrection(sliders[id].min as number, isNonLinear);
+                let max = ObjEditor.unCorrection(sliders[id].max as number, isNonLinear);
+                let val = ObjEditor.unCorrection(this.curState[i] as number, isNonLinear);
                 html += `
                     <div class="input_slider_range">
-                        <input id="slider_range${i}" type="range" min="${sliders[id].min}" max="${sliders[id].max}" value="${(this.curState[i] as number).toString()}" step="${sliders[id].step}" oninput="scene.objEditor.input('${i}',this.value)"/></div>
+                        <input id="slider_range${i}" type="range" min="${min}" max="${max}" value="${val}" step="${sliders[id].step}" oninput="scene.objEditor.input('${i}',this.value)"/></div>
                 `;
             }
             //Vector inputs
             else if (sliders[id].type == "vector") {
+                let min = sliders[id].min as Vector;
+                let minx = ObjEditor.unCorrection(min.x, isNonLinear);
+                let miny = ObjEditor.unCorrection(min.y, isNonLinear);
+                let max = sliders[id].max as Vector;
+                let maxx = ObjEditor.unCorrection(max.x, isNonLinear);
+                let maxy = ObjEditor.unCorrection(max.y, isNonLinear);
+                let val = this.curState[i] as Vector;
+                let valx = ObjEditor.unCorrection(val.x, isNonLinear);
+                let valy = ObjEditor.unCorrection(val.y, isNonLinear);
                 html += `
                     <div class="input_slider_vector">
-                        <input id="range_x${i}" type="range" min="${(sliders[id].min as Vector).x}" max="${(sliders[id].max as Vector).x}" step="${sliders[id].step}" value="${(this.curState[i] as Vector).x}" oninput="scene.objEditor.input('${i}_x',this.value)"/>
-                        <input id="range_y${i}" type="range" min="${(sliders[id].min as Vector).y}" max="${(sliders[id].max as Vector).y}" step="${sliders[id].step}" value="${(this.curState[i] as Vector).y}" oninput="scene.objEditor.input('${i}_y',this.value)"/>
+                        <input id="range_x${i}" type="range" min="${minx}" max="${maxx}" step="${sliders[id].step}" value="${valx}" oninput="scene.objEditor.input('${i}',this.value,'x')"/>
+                        <input id="range_y${i}" type="range" min="${miny}" max="${maxy}" step="${sliders[id].step}" value="${valy}" oninput="scene.objEditor.input('${i}',this.value,'y')"/>
                     </div>
                 `;
             }
@@ -136,25 +167,25 @@ export default class ObjEditor {
         elements.forEach(v => outHtml += v.html);
         this.element.innerHTML = outHtml;
     }
-    input = (name: string, value: number) => {
-        value = Number(value);
+    input = (name: string, value: number | string, direction?: "x" | "y") => {
         if (!this.curObj) return;
-        if (name.startsWith("position")) {
-            console.log(name, value);
-            if (name == "position_x") this.curObj.position.x = value;
-            if (name == "position_y") this.curObj.position.y = value;
-            this.updateDisplay("position", this.curObj.position);
+        value = ObjEditor.correction(Number(value), sliders[sliders.findIndex(v => v.name == name)].nonLinear);
+        value = Math.round(value * 100) / 100;
+        if (name == "position") {
+            if (direction == "x") this.curObj.position.x = value;
+            if (direction == "y") this.curObj.position.y = value;
+            this.updateDisplay("position", this.curObj.position, false);
             return;
         }
-        else if (name.startsWith("velocity")) {
-            if (name == "velocity_x") this.curObj.velocity.x = value;
-            if (name == "velocity_y") this.curObj.velocity.y = value;
-            this.updateDisplay("velocity", this.curObj.velocity);
+        else if (name == "velocity") {
+            if (direction == "x") this.curObj.velocity.x = value;
+            if (direction == "y") this.curObj.velocity.y = value;
+            this.updateDisplay("velocity", this.curObj.velocity, false);
             return;
         }
         else if (name == "rotation") this.curObj.rotation = value;
         else if (name == "angular_velocity") this.curObj.angularVelocity = value;
-        else if (name == "mass") this.curObj.mass = value as number;
+        else if (name == "mass") this.curObj.mass = value;
         else if (name == "charge") (this.curObj as PointCharge).charge = value;
         else if (name == "length") (this.curObj as FiniteLine).length = value;
         else if (name == "charge_density") {
@@ -165,17 +196,21 @@ export default class ObjEditor {
         this.updateDisplay(name, value, false);
     }
     updateDisplay = (name: string, value: number | Vector, setInput: boolean = true) => {
+        let isNonLinear = sliders[sliders.findIndex(v => v.name == name)].nonLinear;
         //Update interface display
         if (value instanceof Vector) {
-            if (setInput) document.querySelector<HTMLInputElement>("#range_x" + name).value = value.x.toString();
-            if (setInput) document.querySelector<HTMLInputElement>("#range_y" + name).value = value.y.toString();
             document.querySelector("#slider_value" + name).innerHTML = value.toString();
+            let valx = ObjEditor.unCorrection(value.x, isNonLinear);
+            let valy = ObjEditor.unCorrection(value.y, isNonLinear);
+            if (setInput) document.querySelector<HTMLInputElement>("#range_x" + name).value = valx.toString();
+            if (setInput) document.querySelector<HTMLInputElement>("#range_y" + name).value = valy.toString();
         }
         else if (typeof value == "number") {
+            let roundedValue = Math.round(value * 100) / 100;
+            document.querySelector("#slider_value" + name).innerHTML = roundedValue.toString();
+            value = ObjEditor.unCorrection(value, isNonLinear);
             if (setInput) document.querySelector<HTMLInputElement>("#slider_range" + name).value = value.toString();
-            document.querySelector("#slider_value" + name).innerHTML = value.toString();
         }
-
     }
 
     setObj = (obj: Object) => {

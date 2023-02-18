@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Chivo+Mono&family=Lato:wght@400;700&family=Nunito&family=Ubuntu+Mono:wght@700&display=swap');
 
 body {
+    font-family: "Nunito";
     margin: 0;
     overflow-x: hidden;
     overflow-y: hidden;
@@ -23,11 +24,16 @@ canvas {
 #properties_wrapper {
     z-index: 5;
     position: absolute;
-    width: 20rem;
+    width: 15rem;
     height: 100vh;
     right: 0;
     display: flex;
     align-items: center;
+    user-select: none;
+}
+
+input[type="range"] {
+    width: 100%;
 }
 
 #properties {
