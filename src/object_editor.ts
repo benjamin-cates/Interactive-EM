@@ -16,9 +16,11 @@ interface Slider {
     max?: number | Vector;
     nonLinear?: boolean;
     step?: number;
-    for?: ObjectTypes;
+    for?: "all" | ObjectTypes[];
     unit?: string;
 }
+const canMove: ObjectTypes[] = ["point_charge", "finite_line", "solid_charge", "conductor"];
+const canRotate: ObjectTypes[] = ["finite_line", "infinite_plane", "solid_charge", "conductor"];
 const sliders: Slider[] = [
 
     //Universal
@@ -33,25 +35,25 @@ const sliders: Slider[] = [
         "type": "vector", "unit": "m/s",
         "min": new Vector(-20, -20), "max": new Vector(20, 20), "step": 0.1,
         "nonLinear": true,
-        "for": "all",
+        "for": canMove,
     },
     {
         "name": "rotation",
         "type": "number", "unit": "rad",
         "min": -Math.PI, "max": Math.PI, "step": 0.1,
-        "for": "all",
+        "for": canRotate,
     },
     {
         "name": "angular_velocity",
         "type": "number", "unit": "rad/s",
         "min": -1.7, "max": 1.7, "step": 0.1,
-        "for": "all",
+        "for": canRotate,
     },
     {
         "name": "mass",
         "type": "number", "unit": "kg",
         "min": -10, "max": 10, "step": 0.1,
-        "for": "all",
+        "for": canMove,
     },
 
     //Point charge
@@ -60,34 +62,31 @@ const sliders: Slider[] = [
         "type": "number", "unit": "μC",
         "min": -3, "max": 3, "step": 0.05,
         "nonLinear": true,
-        "for": "point_charge",
+        "for": ["point_charge"],
     },
 
     //Finite line
     {
         "name": "length",
-        "type": "number",
+        "type": "number", "unit": "m",
         "min": 0, "max": 10, "step": 0.1,
-        "for": "finite_line",
-        "unit": "m",
+        "for": ["finite_line"],
     },
     {
         "name": "charge_density",
-        "type": "number",
+        "type": "number", "unit": "μC/m",
         "min": -1.5, "max": 1.5, "step": 0.05,
         "nonLinear": true,
-        "for": "finite_line",
-        "unit": "μC/m",
+        "for": ["finite_line"],
     },
 
     //Infinite Plane
     {
         "name": "charge_density",
-        "type": "number",
+        "type": "number", "unit": "nC/m²",
         "min": -40, "max": 40, "step": 0.05,
         "nonLinear": true,
-        "for": "infinite_plane",
-        "unit": "nC/m²",
+        "for": ["infinite_plane"],
     },
 
 ];
@@ -102,7 +101,7 @@ export default class ObjEditor {
     }
     element: HTMLElement;
     curObj?: Object;
-    curType?: string;
+    curType?: ObjectTypes;
     curState?: { [key: string]: Vector | number } = {};
     scene: Scene;
     constructor(element: HTMLElement, scene: Scene) {
@@ -115,7 +114,7 @@ export default class ObjEditor {
         let elements: Element[] = [];
         //For each element in curState
         for (let i in this.curState) {
-            let id = sliders.findIndex((slider) => (slider.name == i && (slider.for == "all" || slider.for == this.curType)));
+            let id = sliders.findIndex((slider) => (slider.name == i && (slider.for == "all" || slider.for.includes(this.curType))));
             let name = sliders[id].name.charAt(0).toUpperCase() + sliders[id].name.slice(1).replace(/_/g, " ");
             let html = `<div class="input_slider slider_${i}">`;
             html += `<div class="input_slider_name">${name}</div>`;
@@ -227,7 +226,7 @@ export default class ObjEditor {
         //Update curState to match sliders
         for (let i = 0; i < sliders.length; i++) {
             let slider = sliders[i];
-            if (slider.for == "all" || slider.for == this.curType) {
+            if (slider.for == "all" || slider.for.includes(this.curType)) {
                 //Universal
                 if (slider.name == "position") this.curState[slider.name] = obj.position;
                 else if (slider.name == "velocity") this.curState[slider.name] = obj.velocity;
