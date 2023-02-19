@@ -37,7 +37,6 @@ export default class VoltCanvas {
         window.Object.assign(this.colors, cols);
         for (let i in this.colors) {
             let col = this.colors[i];
-            console.log(col);
             this.gl.uniform4f(this.uniLoc[i], col[0], col[1], col[2], col[3]);
         }
     }
@@ -64,12 +63,10 @@ export default class VoltCanvas {
         this.gl.attachShader(this.program, fragmentShader);
         this.gl.linkProgram(this.program);
         this.gl.useProgram(this.program);
-        console.log(this.gl.getProgramInfoLog(this.program));
         //Get locations of uniforms in fragment shader
         VoltCanvas.uniforms.forEach((name) => {
             this.uniLoc[name] = this.gl.getUniformLocation(this.program, name);
         });
-        console.log(this.uniLoc);
         this.setColors({});
     }
     //Generic create shader function

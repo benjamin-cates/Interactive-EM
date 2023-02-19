@@ -57,7 +57,6 @@ export default class FiniteLine extends Object {
         if (this.length == 0) return Vector.distance(pos, this.position);
         let t = Vector.dot(Vector.subtract(pos, this.endPoint), Vector.subtract(this.startPoint, this.endPoint)) / this.length / this.length;
         t = Math.max(0, Math.min(1, t));
-        console.log(Vector.distance(pos, Vector.add(this.endPoint, Vector.multiply(Vector.subtract(this.startPoint, this.endPoint), t))));
         return Vector.distance(pos, Vector.add(this.endPoint, Vector.multiply(Vector.subtract(this.startPoint, this.endPoint), t)));
     }
 
