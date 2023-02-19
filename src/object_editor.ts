@@ -84,10 +84,10 @@ const sliders: Slider[] = [
     {
         "name": "charge_density",
         "type": "number",
-        "min": -1.5, "max": 1.5, "step": 0.05,
+        "min": -40, "max": 40, "step": 0.05,
         "nonLinear": true,
         "for": "infinite_plane",
-        "unit": "μC/m²",
+        "unit": "nC/m²",
     },
 
 ];
@@ -115,7 +115,7 @@ export default class ObjEditor {
         let elements: Element[] = [];
         //For each element in curState
         for (let i in this.curState) {
-            let id = sliders.findIndex((slider) => slider.name == i);
+            let id = sliders.findIndex((slider) => (slider.name == i && (slider.for == "all" || slider.for == this.curType)));
             let name = sliders[id].name.charAt(0).toUpperCase() + sliders[id].name.slice(1).replace(/_/g, " ");
             let html = `<div class="input_slider slider_${i}">`;
             html += `<div class="input_slider_name">${name}</div>`;
@@ -190,7 +190,7 @@ export default class ObjEditor {
         else if (name == "length") (this.curObj as FiniteLine).length = value;
         else if (name == "charge_density") {
             if (this.curType == "finite_line") (this.curObj as FiniteLine).chargeDensity = value;
-            else if (this.curType == "infinite_plane") (this.curObj as InfinitePlane).chargeDensity = value;
+            else if (this.curType == "infinite_plane") (this.curObj as InfinitePlane).chargeDensity = value / 1000;
         }
         this.scene.updateObjects();
         this.updateDisplay(name, value, false);
@@ -232,7 +232,7 @@ export default class ObjEditor {
                 else if (slider.name == "length") this.curState[slider.name] = (obj as FiniteLine).length;
                 else if (slider.name == "charge_density") {
                     if (this.curType == "finite_line") this.curState[slider.name] = (obj as FiniteLine).chargeDensity;
-                    else if (this.curType == "infinite_plane") this.curState[slider.name] = (obj as InfinitePlane).chargeDensity;
+                    else if (this.curType == "infinite_plane") this.curState[slider.name] = (obj as InfinitePlane).chargeDensity * 1000;
                 }
             }
         }
