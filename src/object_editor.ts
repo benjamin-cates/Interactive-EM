@@ -196,6 +196,9 @@ export default class ObjEditor {
         //Compile to single html string
         let outHtml = "";
         elements.forEach(v => outHtml += v.html);
+        outHtml += `<div class="action_buttons">
+                <button class="delete_button" onclick="scene.objEditor.deleteElement()">&times; Destroy</button>
+        </div>`;
         this.element.innerHTML = outHtml;
     }
     input = (name: string, value: number | string, direction?: "x" | "y") => {
@@ -281,6 +284,10 @@ export default class ObjEditor {
         this.show();
     }
 
-
+    deleteElement = () => {
+        if (!this.curObj) return;
+        this.scene.removeObject(this.curObj);
+        this.hide();
+    }
 
 }

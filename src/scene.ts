@@ -83,6 +83,10 @@ export default class Scene {
     updateObjects() {
         this.voltCanvas.updateObjects(this.objects);
     }
+    removeObject(object: Object) {
+        this.objects.splice(this.objects.indexOf(object), 1);
+        this.updateObjects();
+    }
     render = () => {
         //Request next animation frame
         requestAnimationFrame(this.render);

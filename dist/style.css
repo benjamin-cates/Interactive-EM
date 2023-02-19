@@ -53,6 +53,22 @@ input[type="range"] {
     left: 0;
 }
 
+.delete_button {
+    background-color: #d01414;
+    color: white;
+    font-size:1.2rem;
+    border:0;
+    border-radius:0.4rem;
+    padding:0.3rem;
+}
+.delete_button:hover {
+    background-color: #ab1414;
+}
+
+button:focus {
+    outline:#ffffff 0.3rem solid;
+}
+
 
 .slider_input_unit {
     display: inline;
