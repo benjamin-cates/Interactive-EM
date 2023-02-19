@@ -40,8 +40,11 @@ export class Object {
         this.position.x += this.velocity.x * dt;
         this.position.y += this.velocity.y * dt;
         this.rotation += this.angularVelocity * dt;
-        this.updatePosition();
-        this.updateRotation();
+        if (this.angularVelocity != 0) this.updateRotation();
+        if (this.velocity.x != 0 || this.velocity.y != 0) this.updatePosition();
+    }
+    distanceFrom(pos: Vector): number {
+        return Vector.subtract(this.position, pos).magnitude();
     }
 
     //Updates properties related to position (such as end points)

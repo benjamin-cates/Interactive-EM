@@ -16,9 +16,14 @@ export default class InfinitePlane extends Object {
     constructor(chargeDensity: number, mass: number, position: Vector, rotation: number = 0) {
         super(mass, position, rotation);
         this.chargeDensity = chargeDensity;
+        this.updateRotation();
     }
     getType: () => ObjectTypes = () => "infinite_plane";
 
+    distanceFrom = (pos: Vector) => {
+        let deltaPos = Vector.subtract(pos, this.position);
+        return Math.abs(Vector.dot(deltaPos, this.normal));
+    }
     updateRotation = () => {
         this.normal = new Vector(-Math.sin(this.rotation), Math.cos(this.rotation));
     }

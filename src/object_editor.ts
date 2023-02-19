@@ -175,6 +175,7 @@ export default class ObjEditor {
             if (direction == "x") this.curObj.position.x = value;
             if (direction == "y") this.curObj.position.y = value;
             this.updateDisplay("position", this.curObj.position, false);
+            this.curObj.updatePosition();
             return;
         }
         else if (name == "velocity") {
@@ -183,11 +184,17 @@ export default class ObjEditor {
             this.updateDisplay("velocity", this.curObj.velocity, false);
             return;
         }
-        else if (name == "rotation") this.curObj.rotation = value;
+        else if (name == "rotation") {
+            this.curObj.rotation = value;
+            this.curObj.updateRotation();
+        }
         else if (name == "angular_velocity") this.curObj.angularVelocity = value;
         else if (name == "mass") this.curObj.mass = value;
         else if (name == "charge") (this.curObj as PointCharge).charge = value;
-        else if (name == "length") (this.curObj as FiniteLine).length = value;
+        else if (name == "length") {
+            (this.curObj as FiniteLine).length = value;
+            this.curObj.updatePosition();
+        }
         else if (name == "charge_density") {
             if (this.curType == "finite_line") (this.curObj as FiniteLine).chargeDensity = value;
             else if (this.curType == "infinite_plane") (this.curObj as InfinitePlane).chargeDensity = value / 1000;

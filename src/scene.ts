@@ -150,19 +150,21 @@ export default class Scene {
         dragPositions: Vector[];
         //History of the past ten mouse event times
         dragTime: number[];
+        posOffset: Vector;
         //If being dragged
         isGrab: boolean;
-    } = { dragPositions: [Vector.origin()], obj: null, dragTime: [0], isGrab: false }
+    } = { dragPositions: [Vector.origin()], obj: null, dragTime: [0], posOffset: null, isGrab: false }
 
     mouseDown = (event: MouseEvent) => {
         this.selected.dragPositions = [this.getCursorPosition(event)];
         this.selected.dragTime = [new Date().getTime()];
         for (let i = 0; i < this.objects.length; i++) {
-            if (Vector.distance(this.objects[i].position, this.selected.dragPositions[0]) < 0.5) {
+            if (this.objects[i].distanceFrom(this.selected.dragPositions[0]) < 0.5) {
                 this.selected.obj = this.objects[i];
                 this.selected.obj.velocity = Vector.origin();
                 this.objEditor.setObj(this.objects[i])
                 this.selected.isGrab = true;
+                this.selected.posOffset = Vector.subtract(this.selected.obj.position, this.selected.dragPositions[0]);
                 return;
             }
         }
@@ -177,7 +179,8 @@ export default class Scene {
             this.selected.dragPositions.shift();
             this.selected.dragTime.shift();
         }
-        this.selected.obj.position = pos.copy();
+        this.selected.obj.position = Vector.add(pos, this.selected.posOffset);
+        this.selected.obj.updatePosition();
         this.objEditor.updateDisplay("position", pos);
         this.updateObjects();
         this.selected.dragTime.push(new Date().getTime());
