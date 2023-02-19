@@ -1,7 +1,7 @@
 import PointCharge from "./charges/point_charge";
 import FiniteLine from "./charges/finite_line";
 import InfinitePlane from "./charges/infinite_plane";
-import {Object, ObjectTypes} from "./base";
+import { Object, ObjectTypes } from "./base";
 
 export default class VoltCanvas {
     canvas: HTMLCanvasElement;
@@ -179,6 +179,16 @@ export default class VoltCanvas {
                 vec2 end2 = center + dir * halfLen;
                 halfLen = halfLen * sign(g);
                 volt+=sign(g)*chargeDensity*log((distance(p,end1)+abs(g)+halfLen)/(distance(p,end2)+abs(g)-halfLen));
+            }
+
+            for(int i = 0; i < plane_count; i++) {
+                float chargeDensity = plane_data[i].w;
+                vec2 center = plane_data[i].xy;
+                float rotation = plane_data[i].z;
+                vec2 dir = vec2(sin(rotation), -cos(rotation));
+                vec2 relPos = p - center;
+                float dist = abs(dot(relPos,dir));
+                volt+=(100.0-6.28317*dist)*chargeDensity;
             }
 
             float dVolt = 2.0/(1.0+exp(-volt*2.0))-1.0;
