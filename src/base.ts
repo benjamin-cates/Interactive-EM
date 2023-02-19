@@ -40,6 +40,8 @@ export class Object {
         this.position.x += this.velocity.x * dt;
         this.position.y += this.velocity.y * dt;
         this.rotation += this.angularVelocity * dt;
+        if (this.rotation > Math.PI) this.rotation -= 2 * Math.PI;
+        if (this.rotation < -Math.PI) this.rotation += 2 * Math.PI;
         if (this.angularVelocity != 0) this.updateRotation();
         if (this.velocity.x != 0 || this.velocity.y != 0) this.updatePosition();
     }

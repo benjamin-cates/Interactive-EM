@@ -134,6 +134,7 @@ export default class Scene {
             object.incrementPosition(dt);
             if (object == this.selected.obj) {
                 this.objEditor.updateDisplay("position", object.position);
+                this.objEditor.updateDisplay("rotation", object.rotation);
             }
         });
         this.updateObjects();
