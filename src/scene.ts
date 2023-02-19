@@ -156,6 +156,10 @@ export default class Scene {
     } = { dragPositions: [Vector.origin()], obj: null, dragTime: [0], posOffset: null, isGrab: false }
 
     mouseDown = (event: MouseEvent) => {
+        //Return if within the bounding box
+        let objEditorRect = this.objEditor.element.getBoundingClientRect();
+        if (event.clientX > objEditorRect.left && event.clientY < objEditorRect.bottom && event.clientY > objEditorRect.top) return;
+        //Get drag position of current cursor
         this.selected.dragPositions = [this.getCursorPosition(event)];
         this.selected.dragTime = [new Date().getTime()];
         for (let i = 0; i < this.objects.length; i++) {
@@ -168,6 +172,7 @@ export default class Scene {
                 return;
             }
         }
+        this.objEditor.hide();
     }
 
     mouseMove = (event: MouseEvent) => {

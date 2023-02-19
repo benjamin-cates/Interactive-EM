@@ -42,8 +42,17 @@ input[type="range"] {
     border-radius: 2rem 0 0 2rem;
     box-shadow: -2px -2px 5px 0px rgba(0, 0, 0, 0.4);
     padding: 2rem;
-
+    position: relative;
+    transition: left 0.5s ease;
 }
+
+#properties {
+    left:16rem;
+}
+#properties.show {
+    left: 0;
+}
+
 
 .slider_input_unit {
     display: inline;

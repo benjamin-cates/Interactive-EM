@@ -134,6 +134,18 @@ export default class ObjEditor {
         this.element = element;
         this.scene = scene;
         if (scene.objects[0]) this.setObj(scene.objects[0]);
+        else this.hide();
+    }
+    hideTimeout = -1;
+    show = () => {
+        window.clearTimeout(this.hideTimeout);
+        this.element.style.display = "block";
+        this.element.clientWidth;
+        this.element.classList.add("show");
+    }
+    hide = () => {
+        this.element.classList.remove("show");
+        this.hideTimeout =setTimeout(_ => this.element.style.display = "none", 400);
     }
     generateHTML = () => {
         interface Element { html: string; id: number; }
@@ -266,6 +278,7 @@ export default class ObjEditor {
             }
         }
         this.generateHTML();
+        this.show();
     }
 
 
