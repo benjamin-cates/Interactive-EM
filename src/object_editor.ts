@@ -116,6 +116,14 @@ const sliders: Slider[] = [
 function getSliderId(name: string, type: ObjectTypes) {
     return sliders.findIndex((slider) => (slider.name == name && (slider.for == "all" || slider.for.includes(type))));
 }
+function prettyToString(val: number | Vector) {
+    if (typeof val == "number") {
+        let negativeBuffer = val < 0 ? "" : "&nbsp;";
+        return negativeBuffer + val.toFixed(2);
+    }
+    else return val.toString();
+
+}
 export default class ObjEditor {
     static correction(value: number, isNonLinear: boolean = false): number {
         if (isNonLinear) return Math.sign(value) * Math.pow(Math.abs(value), 2.6);
@@ -145,7 +153,7 @@ export default class ObjEditor {
     }
     hide = () => {
         this.element.classList.remove("show");
-        this.hideTimeout =setTimeout(_ => this.element.style.display = "none", 400);
+        this.hideTimeout = setTimeout(_ => this.element.style.display = "none", 400);
     }
     generateHTML = () => {
         interface Element { html: string; id: number; }
@@ -157,7 +165,7 @@ export default class ObjEditor {
             let html = `<div class="input_slider slider_${i}">`;
             html += `<div class="input_slider_name">${name}</div>`;
             html += `<div class="input_slider_display">
-                <span class="slider_value" id="slider_value${i}">${this.curState[i].toString()}</span>
+                <span class="slider_value" id="slider_value${i}">${prettyToString(this.curState[i])}</span>
                 <span class="slider_units">${sliders[id].unit}</span></div>`;
             let uncorrect = sliders[id].correction.uncorrect;
             //Number sliders
@@ -243,7 +251,7 @@ export default class ObjEditor {
         let uncorrect = slider.correction.uncorrect;
         //Update interface display
         if (value instanceof Vector) {
-            document.querySelector("#slider_value" + name).innerHTML = value.toString();
+            document.querySelector("#slider_value" + name).innerHTML = prettyToString(value);
             let valx = uncorrect(value.x);
             let valy = uncorrect(value.y);
             if (setInput) document.querySelector<HTMLInputElement>("#range_x" + name).value = valx.toString();
@@ -251,7 +259,7 @@ export default class ObjEditor {
         }
         else if (typeof value == "number") {
             let roundedValue = Math.round(value * 100) / 100;
-            document.querySelector("#slider_value" + name).innerHTML = roundedValue.toString();
+            document.querySelector("#slider_value" + name).innerHTML = prettyToString(roundedValue);
             value = uncorrect(value);
             if (setInput) document.querySelector<HTMLInputElement>("#slider_range" + name).value = value.toString();
         }

@@ -6,7 +6,7 @@ export default class Vector {
         this.y = y;
     }
     toString() {
-        return `<${Math.round(this.x * 100) / 100}, ${Math.round(this.y * 100) / 100}>`;
+        return `<${this.x.toFixed(2)}, ${this.y.toFixed(2)}>`;
     }
     isZero = (): boolean => {
         return this.x === 0 && this.y === 0;
