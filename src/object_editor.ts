@@ -140,7 +140,7 @@ export default class ObjEditor {
         let elements: Element[] = [];
         //For each element in curState
         for (let i in this.curState) {
-            let id = getSliderId(i,this.curType);
+            let id = getSliderId(i, this.curType);
             let name = sliders[id].name.charAt(0).toUpperCase() + sliders[id].name.slice(1).replace(/_/g, " ");
             let html = `<div class="input_slider slider_${i}">`;
             html += `<div class="input_slider_name">${name}</div>`;
@@ -224,6 +224,7 @@ export default class ObjEditor {
     }
     updateDisplay = (name: string, value: number | Vector, setInput: boolean = true) => {
         let slider = sliders[getSliderId(name, this.curType)]
+        if (slider == null) return;
         let uncorrect = slider.correction.uncorrect;
         //Update interface display
         if (value instanceof Vector) {

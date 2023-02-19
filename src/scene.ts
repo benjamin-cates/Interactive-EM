@@ -191,6 +191,7 @@ export default class Scene {
         if (this.selected.isGrab == false)
             return;
         this.selected.isGrab = false;
+        if (this.selected.obj.getType() == "infinite_plane") return;
         let pos = this.getCursorPosition(event);
         if (new Date().getTime() - this.selected.dragTime[this.selected.dragTime.length - 1] < 60) {
             let dt = new Date().getTime() - this.selected.dragTime[0];
