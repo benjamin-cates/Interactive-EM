@@ -40,8 +40,19 @@ export class Object {
         this.position.x += this.velocity.x * dt;
         this.position.y += this.velocity.y * dt;
         this.rotation += this.angularVelocity * dt;
+        this.updatePosition();
+        this.updateRotation();
     }
-    physics = (dt: number, force: Vector, torque: number) => {
+
+    //Updates properties related to position (such as end points)
+    updatePosition = () => {
+
+    }
+    //Updates properties related to rotation (such as normal vector)
+    updateRotation = () => {
+
+    }
+    applyForces = (dt: number, force: Vector, torque: number) => {
         this.incrementPosition(dt);
         this.velocity.add(Vector.multiply(force, dt / this.mass));
     }
