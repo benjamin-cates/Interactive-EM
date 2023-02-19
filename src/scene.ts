@@ -175,11 +175,12 @@ export default class Scene {
             return;
         let pos = this.getCursorPosition(event);
         this.selected.dragPositions.push(pos);
+        pos = Vector.add(pos, this.selected.posOffset);
         if (this.selected.dragPositions.length >= 10) {
             this.selected.dragPositions.shift();
             this.selected.dragTime.shift();
         }
-        this.selected.obj.position = Vector.add(pos, this.selected.posOffset);
+        this.selected.obj.position = pos;
         this.selected.obj.updatePosition();
         this.objEditor.updateDisplay("position", pos);
         this.updateObjects();
