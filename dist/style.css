@@ -21,6 +21,34 @@ canvas {
     z-index: 0;
 }
 
+#add_menu {
+    z-index: 5;
+    position: absolute;
+    border-radius: 0 0 1rem 0;
+    box-shadow: 2px 2px 6px 0px rgba(0, 0, 0, 0.4);
+    top: 0;
+    left: 0;
+    background: #eeeeee;
+    padding: 0.5rem;
+}
+
+#add_menu>button {
+    font-family: inherit;
+    width: 100%;
+    text-align: left;
+    border-radius: 0.2rem;
+    margin: 0 0 0.1rem 0;
+    padding: 0.2rem;
+    display: block;
+    border: 0;
+    font-size: 1.2rem;
+    background: white;
+}
+
+#add_menu>button:hover {
+    background: #dddddd;
+}
+
 #properties_wrapper {
     z-index: 5;
     position: absolute;

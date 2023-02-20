@@ -80,6 +80,14 @@ export default class Scene {
         this.objects.push(object);
         this.updateObjects();
     }
+    static defaultObjects: { [key: string]: Object } = {
+        "point_charge": new PointCharge(1, 1, new Vector(0, 0)),
+        "infinite_plane": new InfinitePlane(0.02, 1, new Vector(0, 0)),
+        "finite_line": new FiniteLine(0.4, 1, new Vector(0, 0), 0, 10),
+    };
+    pushDefaultObject = (type: ObjectTypes) => {
+        this.pushObject(Scene.defaultObjects[type].clone());
+    }
     updateObjects() {
         this.voltCanvas.updateObjects(this.objects);
     }
