@@ -18,6 +18,12 @@ export default class InfinitePlane extends Object {
         this.chargeDensity = chargeDensity;
         this.updateRotation();
     }
+    clone = () => {
+        let clone = new InfinitePlane(this.chargeDensity, this.mass, this.position.copy(), this.rotation);
+        clone.velocity = this.velocity.copy();
+        clone.angularVelocity = this.angularVelocity;
+        return clone;
+    }
     getType: () => ObjectTypes = () => "infinite_plane";
 
     distanceFrom = (pos: Vector) => {

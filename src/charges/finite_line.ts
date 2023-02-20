@@ -41,6 +41,12 @@ export default class FiniteLine extends Object {
         this.updateRotation();
         this.updatePosition();
     }
+    clone = () => {
+        let clone = new FiniteLine(this.chargeDensity, this.mass, this.position.copy(), this.rotation, this.length);
+        clone.velocity = this.velocity.copy();
+        clone.angularVelocity = this.angularVelocity;
+        return clone;
+    }
     updatePosition = () => {
         let dir = new Vector(Math.cos(this.rotation), Math.sin(this.rotation));
         this.startPoint = Vector.add(this.position, Vector.multiply(dir, -this.length / 2));

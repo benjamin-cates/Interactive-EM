@@ -17,6 +17,13 @@ export class Object {
         this.angularVelocity = 0;
     }
 
+    clone = () => {
+        let clone = new Object(this.mass, this.position.copy(), this.rotation);
+        clone.velocity = this.velocity.copy();
+        clone.angularVelocity = this.angularVelocity;
+        return clone;
+    }
+
     render = (ctx: CanvasRenderingContext2D) => {
 
     }
