@@ -56,6 +56,9 @@ export default class FiniteLine extends Object {
         this.normal = new Vector(-Math.sin(this.rotation), Math.cos(this.rotation));
         this.updatePosition();
     }
+    momentOfInertia = () => {
+        return this.mass * Math.pow(this.length, 2) / 12;
+    }
 
     getType: () => ObjectTypes = () => "finite_line";
 

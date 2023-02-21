@@ -33,6 +33,9 @@ export default class InfinitePlane extends Object {
     updateRotation = () => {
         this.normal = new Vector(-Math.sin(this.rotation), Math.cos(this.rotation));
     }
+    momentOfInertia = () => {
+        return Infinity;
+    }
 
     render = (ctx: CanvasRenderingContext2D) => {
         //Line width is non linear wrt to charge density
