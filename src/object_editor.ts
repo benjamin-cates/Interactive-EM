@@ -3,6 +3,7 @@ import InfinitePlane from "./charges/infinite_plane";
 import Conductor from "./charges/conductor";
 import FiniteLine from "./charges/finite_line";
 import { SolidCharge } from "./charges/solid_charge";
+import Triangle from "./charges/triangle";
 import Vector from "./vector";
 import constants from "./constants";
 import { Object, ObjectTypes } from "./base";
@@ -37,8 +38,8 @@ interface Slider {
     unit?: string;
     correction: Correction;
 }
-const canMove: ObjectTypes[] = ["point_charge", "finite_line", "solid_charge", "conductor"];
-const canRotate: ObjectTypes[] = ["finite_line", "infinite_plane", "solid_charge", "conductor"];
+const canMove: ObjectTypes[] = ["point_charge", "finite_line", "triangle_charge", "conductor"];
+const canRotate: ObjectTypes[] = ["finite_line", "infinite_plane", "triangle_charge", "conductor"];
 const sliders: Slider[] = [
 
     //Universal

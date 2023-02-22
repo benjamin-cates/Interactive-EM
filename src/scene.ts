@@ -3,6 +3,7 @@ import Conductor from "./charges/conductor";
 import FiniteLine from "./charges/finite_line";
 import InfinitePlane from "./charges/infinite_plane";
 import PointCharge from "./charges/point_charge";
+import Triangle from "./charges/triangle";
 import Vector from "./vector";
 import Equipotential from "./equipotential";
 import ObjEditor from "./object_editor";
