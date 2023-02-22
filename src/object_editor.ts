@@ -2,7 +2,6 @@ import PointCharge from "./charges/point_charge";
 import InfinitePlane from "./charges/infinite_plane";
 import Conductor from "./charges/conductor";
 import FiniteLine from "./charges/finite_line";
-import { SolidCharge } from "./charges/solid_charge";
 import Triangle from "./charges/triangle";
 import Vector from "./vector";
 import constants from "./constants";
