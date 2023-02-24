@@ -8,7 +8,7 @@ export default class PointCharge extends Object {
     charge: number;
 
     fieldAt = (pos: Vector) => {
-        return  Vector.multiply(Vector.inverseSquareField(pos, this.position), constants.K * this.charge);
+        return  Vector.multiply(Vector.inverseSquareField(pos, this.position), -constants.K * this.charge);
     }
     voltageAt = (pos: Vector) => {
         let distance: number = Vector.distance(pos, this.position)
