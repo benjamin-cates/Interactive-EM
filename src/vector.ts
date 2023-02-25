@@ -70,10 +70,10 @@ export default class Vector {
         return new Vector(a[0], a[1]);
     }
     static rHat = (pos: Vector, chargePos: Vector): Vector => {
-        return Vector.subtract(chargePos, pos).unit();
+        return Vector.subtract(pos, chargePos).unit();
     }
-    static inverseSquareField = (pos: Vector, ForcePoint: Vector): Vector => {
-        return Vector.multiply(Vector.rHat(pos, ForcePoint), 1 / Math.pow(Vector.distance(pos, ForcePoint), 2));
+    static inverseSquareField = (pos: Vector, chargePos: Vector): Vector => {
+        return Vector.multiply(Vector.rHat(pos, chargePos), 1 / Math.pow(Vector.distance(pos, chargePos), 2));
     }
     static origin = (): Vector => {
         return new Vector(0, 0);
