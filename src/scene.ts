@@ -15,6 +15,7 @@ export default class Scene {
         physicsPerSecond: 100,
         timeSpeed: 1,
         showGridLines: true,
+        showVectorGrid: true,
     };
     static colors = {
         background: "#ffffff",
@@ -117,6 +118,39 @@ export default class Scene {
             }
             this.context.stroke();
             this.context.closePath();
+        }
+        if (Scene.parameters.showVectorGrid) {
+            //Set stroke color and line cap
+            this.context.strokeStyle = Scene.colors.fieldLines;
+            this.context.lineCap = "round";
+            //Iterate over grid with step size 2
+            for (let i = Math.floor(-this.width - 1); i < this.width + 1; i += 2) {
+                for (let j = Math.floor(-this.height - 1); j < this.height + 1; j += 2) {
+                    //Get field at grid point
+                    let pos = new Vector(i, j);
+                    let field = this.fieldAt(pos);
+                    let fieldMag = field.magnitude();
+                    if (fieldMag > 0.0001) {
+                        this.context.beginPath();
+                        let unit = field.unit();
+                        let len = 1 / (1 + Math.exp(-fieldMag * 1000)) - 0.5;
+                        let size = Math.abs(len) * 20;
+                        this.context.lineWidth = size;
+                        let fieldEnd = Vector.add(pos, Vector.multiply(unit, len));
+                        let normal = new Vector(-unit.y * size, unit.x * size);
+                        let along = new Vector(unit.x * size, unit.y * size);
+                        //Draw arrow shape
+                        this.context.moveTo(pos.x * 100, pos.y * 100);
+                        this.context.lineTo(fieldEnd.x * 100, fieldEnd.y * 100);
+                        this.context.moveTo(fieldEnd.x * 100, fieldEnd.y * 100);
+                        this.context.lineTo(fieldEnd.x * 100 - along.x + normal.x, fieldEnd.y * 100 - along.y + normal.y);
+                        this.context.moveTo(fieldEnd.x * 100, fieldEnd.y * 100);
+                        this.context.lineTo(fieldEnd.x * 100 - along.x - normal.x, fieldEnd.y * 100 - along.y - normal.y);
+                        this.context.stroke();
+                        this.context.closePath();
+                    }
+                }
+            }
         }
         //Render each object
         this.objects.forEach((object) => {
@@ -243,6 +277,8 @@ window.addEventListener("resize", () => {
 });
 
 //Export classes
+//@ts-ignore
+window.Scene = Scene;
 //@ts-ignore
 window.Base = Object;
 //@ts-ignore
