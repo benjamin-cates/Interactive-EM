@@ -65,6 +65,12 @@ export default class Vector {
     static project = (a: Vector, targetVector: Vector): Vector => {
         return Vector.multiply(targetVector.unit(), Vector.scalarProject(a, targetVector));
     }
+    static rotationMatrix = (angle: number): number[][] => {
+        return [[Math.cos(angle), -Math.sin(angle)], [Math.sin(angle), Math.cos(angle)]];
+    }
+    static transform = (a: Vector, matrix: number[][]): Vector => {
+        return new Vector(a.x * matrix[0][0] + a.y * matrix[0][1], a.x * matrix[1][0] + a.y * matrix[1][1]);
+    }
     //Convert [x,y] array to a vector
     static fromArray = (a: number[]): Vector => {
         return new Vector(a[0], a[1]);
