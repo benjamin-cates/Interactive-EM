@@ -6,8 +6,8 @@ import constants from "../constants";
 export default class FiniteLine extends Object {
     //Measured in microcoloumbs per meter
     chargeDensity: number;
-    startPoint: Vector; //negative
-    endPoint: Vector; //positive
+    startPoint: Vector;
+    endPoint: Vector;
     normal: Vector;
     //Measured in meters
     length: number;
@@ -38,8 +38,36 @@ export default class FiniteLine extends Object {
         super(mass, position, rotation);
         this.chargeDensity = chargeDensity;
         this.length = length;
+        this.updateRotation();
+        this.updatePosition();
     }
+    clone = () => {
+        let clone = new FiniteLine(this.chargeDensity, this.mass, this.position.copy(), this.rotation, this.length);
+        clone.velocity = this.velocity.copy();
+        clone.angularVelocity = this.angularVelocity;
+        return clone;
+    }
+    updatePosition = () => {
+        let dir = new Vector(Math.cos(this.rotation), Math.sin(this.rotation));
+        this.startPoint = Vector.add(this.position, Vector.multiply(dir, -this.length / 2));
+        this.endPoint = Vector.add(this.position, Vector.multiply(dir, this.length / 2));
+    }
+    updateRotation = () => {
+        this.normal = new Vector(-Math.sin(this.rotation), Math.cos(this.rotation));
+        this.updatePosition();
+    }
+    momentOfInertia = () => {
+        return this.mass * Math.pow(this.length, 2) / 12;
+    }
+
     getType: () => ObjectTypes = () => "finite_line";
+
+    distanceFrom = (pos: Vector) => {
+        if (this.length == 0) return Vector.distance(pos, this.position);
+        let t = Vector.dot(Vector.subtract(pos, this.endPoint), Vector.subtract(this.startPoint, this.endPoint)) / this.length / this.length;
+        t = Math.max(0, Math.min(1, t));
+        return Vector.distance(pos, Vector.add(this.endPoint, Vector.multiply(Vector.subtract(this.startPoint, this.endPoint), t)));
+    }
 
     render = (ctx: CanvasRenderingContext2D) => {
         ctx.lineCap = "round";

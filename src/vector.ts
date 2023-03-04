@@ -6,7 +6,7 @@ export default class Vector {
         this.y = y;
     }
     toString() {
-        return `<${Math.round(this.x * 100) / 100}, ${Math.round(this.y * 100) / 100}>`;
+        return `<${this.x.toFixed(2)}, ${this.y.toFixed(2)}>`;
     }
     isZero = (): boolean => {
         return this.x === 0 && this.y === 0;
@@ -70,10 +70,10 @@ export default class Vector {
         return new Vector(a[0], a[1]);
     }
     static rHat = (pos: Vector, chargePos: Vector): Vector => {
-        return Vector.subtract(chargePos, pos).unit();
+        return Vector.subtract(pos, chargePos).unit();
     }
-    static inverseSquareField = (pos: Vector, ForcePoint: Vector): Vector => {
-        return Vector.multiply(Vector.rHat(pos, ForcePoint), 1 / Math.pow(Vector.distance(pos, ForcePoint), 2));
+    static inverseSquareField = (pos: Vector, chargePos: Vector): Vector => {
+        return Vector.multiply(Vector.rHat(pos, chargePos), 1 / Math.pow(Vector.distance(pos, chargePos), 2));
     }
     static origin = (): Vector => {
         return new Vector(0, 0);

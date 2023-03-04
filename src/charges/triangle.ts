@@ -1,18 +1,18 @@
-import {Object, ObjectTypes} from "../base";
+import { Object, ObjectTypes } from "../base";
 import Vector from "../vector";
+import constants from "../constants";
 
-export class Triangle {
-    points: Vector[];
-    hypot1: number;
-    hypot2: number;
-    opposite: number;
-    opTrans: Vector
-    hypotCenter: Vector;
-    halfWidth: number;
-    height: number;
-    defRotation: number;
-    constructor(p1: Vector, p2: Vector, p3: Vector) {
+export default class Triangle extends Object {
+    private points: Vector[];
+    chargeDensity: number;
+    private opTrans: Vector
+    private hypotCenter: Vector;
+    private halfWidth: number;
+    private defRotation: number;
+    constructor(mass: number, position: Vector, rotation: number, chargeDensity: number, p1: Vector, p2: Vector, p3: Vector) {
+        super(mass, position, rotation);
         this.points = [p1, p2, p3];
+        this.chargeDensity = chargeDensity;
         //Find hypotenuses
         let d1 = Vector.distance(p1, p2);
         let d2 = Vector.distance(p2, p3);
@@ -20,9 +20,6 @@ export class Triangle {
         let hypot = 2, hypot2 = 0, opposite = 1;
         if (d1 >= d2 && d1 >= d3) hypot = 0, hypot2 = 1, opposite = 2;
         else if (d2 >= d1 && d2 >= d3) hypot = 1, hypot2 = 2, opposite = 0;
-        this.hypot1 = hypot;
-        this.hypot2 = hypot2;
-        this.opposite = opposite;
 
         //Find fixed triangle properties
         this.hypotCenter = Vector.multiply(Vector.add(this.points[hypot], this.points[hypot2]), 0.5);
@@ -37,7 +34,9 @@ export class Triangle {
         }
     }
 
-    voltageAt(pos: Vector): number {
+    voltageAt = (pos: Vector): number => {
+        //TODO: Make sure these are correct
+        //TODO: Cache some of these calculations to improve efficiency
         //Translate so the center of the hypotenuse is at the origin
         let p = Vector.add(pos, Vector.multiply(this.hypotCenter, -1));
         p.rotate(this.defRotation);
@@ -45,6 +44,7 @@ export class Triangle {
         let height = this.opTrans.y;
         let ox = this.opTrans.x;
 
+        //Do funky calculations
         let a = height / halfWidth;
         let b = p.x * a - p.y;
         let c = height / (ox - halfWidth);
@@ -61,15 +61,32 @@ export class Triangle {
             let l = Math.sqrt(a * a + 1);
             return x * Math.asinh(a + b / x) + b / l * Math.log(Math.abs((t + l + 1) / (t - l + 1)))
         }
-        return f3(l1, a, b) - f3(l0, a, b) + f3(l2, c, d) - f3(l1, c, d) + f1(l0) - f1(l2);
+        return constants.K * this.chargeDensity * (f3(l1, a, b) - f3(l0, a, b) + f3(l2, c, d) - f3(l1, c, d) + f1(l0) - f1(l2));
     }
+
+    fieldAt = (pos: Vector): Vector => {
+        //TODO: Field at for charged triangle
+        return Vector.origin();
+    }
+    clone = (): Triangle => {
+        return new Triangle(this.mass, this.position.copy(), this.rotation, this.chargeDensity, this.points[0].copy(), this.points[1].copy(), this.points[2].copy());
+    }
+    getType = (): ObjectTypes => "triangle_charge";
+
+    updateRotation = () => {
+        //TODO: update cached values for rotation and position
+    }
+    updatePosition = () => {
+        //TODO: update cached values for rotation and position
+    }
+    render = (ctx: CanvasRenderingContext2D) => {
+        //TODO: write render function
+
+    }
+
+
+
 }
 
 //@ts-ignore
 window.Triangle = Triangle;
-
-export class SolidCharge extends Object {
-    //Measured in microcoloumbs per meter square
-    chargeDensity: number;
-    getType: () => ObjectTypes = () => "solid_charge";
-}

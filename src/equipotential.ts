@@ -1,7 +1,8 @@
 import PointCharge from "./charges/point_charge";
 import FiniteLine from "./charges/finite_line";
 import InfinitePlane from "./charges/infinite_plane";
-import {Object, ObjectTypes} from "./base";
+import Triangle from "./charges/triangle";
+import { Object, ObjectTypes } from "./base";
 
 export default class VoltCanvas {
     canvas: HTMLCanvasElement;
@@ -37,7 +38,6 @@ export default class VoltCanvas {
         window.Object.assign(this.colors, cols);
         for (let i in this.colors) {
             let col = this.colors[i];
-            console.log(col);
             this.gl.uniform4f(this.uniLoc[i], col[0], col[1], col[2], col[3]);
         }
     }
@@ -64,12 +64,10 @@ export default class VoltCanvas {
         this.gl.attachShader(this.program, fragmentShader);
         this.gl.linkProgram(this.program);
         this.gl.useProgram(this.program);
-        console.log(this.gl.getProgramInfoLog(this.program));
         //Get locations of uniforms in fragment shader
         VoltCanvas.uniforms.forEach((name) => {
             this.uniLoc[name] = this.gl.getUniformLocation(this.program, name);
         });
-        console.log(this.uniLoc);
         this.setColors({});
     }
     //Generic create shader function
@@ -179,6 +177,16 @@ export default class VoltCanvas {
                 vec2 end2 = center + dir * halfLen;
                 halfLen = halfLen * sign(g);
                 volt+=sign(g)*chargeDensity*log((distance(p,end1)+abs(g)+halfLen)/(distance(p,end2)+abs(g)-halfLen));
+            }
+
+            for(int i = 0; i < plane_count; i++) {
+                float chargeDensity = plane_data[i].w;
+                vec2 center = plane_data[i].xy;
+                float rotation = plane_data[i].z;
+                vec2 dir = vec2(sin(rotation), -cos(rotation));
+                vec2 relPos = p - center;
+                float dist = abs(dot(relPos,dir));
+                volt+=(100.0-6.28317*dist)*chargeDensity;
             }
 
             float dVolt = 2.0/(1.0+exp(-volt*2.0))-1.0;

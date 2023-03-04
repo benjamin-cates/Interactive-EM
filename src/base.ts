@@ -1,5 +1,5 @@
 import Vector from "./vector";
-export type ObjectTypes = "point_charge" | "infinite_plane" | "conductor" | "finite_line" | "solid_charge" | "all";
+export type ObjectTypes = "point_charge" | "infinite_plane" | "conductor" | "finite_line" | "triangle_charge" | "all";
 export class Object {
     //Physical properties
     mass: number;
@@ -15,6 +15,13 @@ export class Object {
         this.mass = mass;
         this.rotation = rotation;
         this.angularVelocity = 0;
+    }
+
+    clone = () => {
+        let clone = new Object(this.mass, this.position.copy(), this.rotation);
+        clone.velocity = this.velocity.copy();
+        clone.angularVelocity = this.angularVelocity;
+        return clone;
     }
 
     render = (ctx: CanvasRenderingContext2D) => {
@@ -40,8 +47,24 @@ export class Object {
         this.position.x += this.velocity.x * dt;
         this.position.y += this.velocity.y * dt;
         this.rotation += this.angularVelocity * dt;
+        if (this.rotation > Math.PI) this.rotation -= 2 * Math.PI;
+        if (this.rotation < -Math.PI) this.rotation += 2 * Math.PI;
+        if (this.angularVelocity != 0) this.updateRotation();
+        if (this.velocity.x != 0 || this.velocity.y != 0) this.updatePosition();
     }
-    physics = (dt: number, force: Vector, torque: number) => {
+    distanceFrom(pos: Vector): number {
+        return Vector.subtract(this.position, pos).magnitude();
+    }
+
+    //Updates properties related to position (such as end points)
+    updatePosition = () => {
+
+    }
+    //Updates properties related to rotation (such as normal vector)
+    updateRotation = () => {
+
+    }
+    applyForces = (dt: number, force: Vector, torque: number) => {
         this.incrementPosition(dt);
         this.velocity.add(Vector.multiply(force, dt / this.mass));
     }

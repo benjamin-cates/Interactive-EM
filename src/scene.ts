@@ -3,6 +3,7 @@ import Conductor from "./charges/conductor";
 import FiniteLine from "./charges/finite_line";
 import InfinitePlane from "./charges/infinite_plane";
 import PointCharge from "./charges/point_charge";
+import Triangle from "./charges/triangle";
 import Vector from "./vector";
 import Equipotential from "./equipotential";
 import ObjEditor from "./object_editor";
@@ -14,6 +15,7 @@ export default class Scene {
         physicsPerSecond: 100,
         timeSpeed: 1,
         showGridLines: true,
+        showVectorGrid: true,
     };
     static colors = {
         background: "#ffffff",
@@ -80,8 +82,20 @@ export default class Scene {
         this.objects.push(object);
         this.updateObjects();
     }
+    static defaultObjects: { [key: string]: Object } = {
+        "point_charge": new PointCharge(1, 1, new Vector(0, 0)),
+        "infinite_plane": new InfinitePlane(0.02, 1, new Vector(0, 0)),
+        "finite_line": new FiniteLine(0.4, 1, new Vector(0, 0), 0, 10),
+    };
+    pushDefaultObject = (type: ObjectTypes) => {
+        this.pushObject(Scene.defaultObjects[type].clone());
+    }
     updateObjects() {
         this.voltCanvas.updateObjects(this.objects);
+    }
+    removeObject(object: Object) {
+        this.objects.splice(this.objects.indexOf(object), 1);
+        this.updateObjects();
     }
     render = () => {
         //Request next animation frame
@@ -104,6 +118,39 @@ export default class Scene {
             }
             this.context.stroke();
             this.context.closePath();
+        }
+        if (Scene.parameters.showVectorGrid) {
+            //Set stroke color and line cap
+            this.context.strokeStyle = Scene.colors.fieldLines;
+            this.context.lineCap = "round";
+            //Iterate over grid with step size 2
+            for (let i = Math.floor(-this.width - 1); i < this.width + 1; i += 2) {
+                for (let j = Math.floor(-this.height - 1); j < this.height + 1; j += 2) {
+                    //Get field at grid point
+                    let pos = new Vector(i, j);
+                    let field = this.fieldAt(pos);
+                    let fieldMag = field.magnitude();
+                    if (fieldMag > 0.0001) {
+                        this.context.beginPath();
+                        let unit = field.unit();
+                        let len = 1 / (1 + Math.exp(-fieldMag * 1000)) - 0.5;
+                        let size = Math.abs(len) * 20;
+                        this.context.lineWidth = size;
+                        let fieldEnd = Vector.add(pos, Vector.multiply(unit, len));
+                        let normal = new Vector(-unit.y * size, unit.x * size);
+                        let along = new Vector(unit.x * size, unit.y * size);
+                        //Draw arrow shape
+                        this.context.moveTo(pos.x * 100, pos.y * 100);
+                        this.context.lineTo(fieldEnd.x * 100, fieldEnd.y * 100);
+                        this.context.moveTo(fieldEnd.x * 100, fieldEnd.y * 100);
+                        this.context.lineTo(fieldEnd.x * 100 - along.x + normal.x, fieldEnd.y * 100 - along.y + normal.y);
+                        this.context.moveTo(fieldEnd.x * 100, fieldEnd.y * 100);
+                        this.context.lineTo(fieldEnd.x * 100 - along.x - normal.x, fieldEnd.y * 100 - along.y - normal.y);
+                        this.context.stroke();
+                        this.context.closePath();
+                    }
+                }
+            }
         }
         //Render each object
         this.objects.forEach((object) => {
@@ -130,6 +177,7 @@ export default class Scene {
             object.incrementPosition(dt);
             if (object == this.selected.obj) {
                 this.objEditor.updateDisplay("position", object.position);
+                this.objEditor.updateDisplay("rotation", object.rotation);
             }
         });
         this.updateObjects();
@@ -150,22 +198,29 @@ export default class Scene {
         dragPositions: Vector[];
         //History of the past ten mouse event times
         dragTime: number[];
+        posOffset: Vector;
         //If being dragged
         isGrab: boolean;
-    } = { dragPositions: [Vector.origin()], obj: null, dragTime: [0], isGrab: false }
+    } = { dragPositions: [Vector.origin()], obj: null, dragTime: [0], posOffset: null, isGrab: false }
 
     mouseDown = (event: MouseEvent) => {
+        //Return if within the bounding box
+        let objEditorRect = this.objEditor.element.getBoundingClientRect();
+        if (event.clientX > objEditorRect.left && event.clientY < objEditorRect.bottom && event.clientY > objEditorRect.top) return;
+        //Get drag position of current cursor
         this.selected.dragPositions = [this.getCursorPosition(event)];
         this.selected.dragTime = [new Date().getTime()];
         for (let i = 0; i < this.objects.length; i++) {
-            if (Vector.distance(this.objects[i].position, this.selected.dragPositions[0]) < 0.5) {
+            if (this.objects[i].distanceFrom(this.selected.dragPositions[0]) < 0.5) {
                 this.selected.obj = this.objects[i];
                 this.selected.obj.velocity = Vector.origin();
                 this.objEditor.setObj(this.objects[i])
                 this.selected.isGrab = true;
+                this.selected.posOffset = Vector.subtract(this.selected.obj.position, this.selected.dragPositions[0]);
                 return;
             }
         }
+        this.objEditor.hide();
     }
 
     mouseMove = (event: MouseEvent) => {
@@ -173,11 +228,13 @@ export default class Scene {
             return;
         let pos = this.getCursorPosition(event);
         this.selected.dragPositions.push(pos);
+        pos = Vector.add(pos, this.selected.posOffset);
         if (this.selected.dragPositions.length >= 10) {
             this.selected.dragPositions.shift();
             this.selected.dragTime.shift();
         }
-        this.selected.obj.position = pos.copy();
+        this.selected.obj.position = pos;
+        this.selected.obj.updatePosition();
         this.objEditor.updateDisplay("position", pos);
         this.updateObjects();
         this.selected.dragTime.push(new Date().getTime());
@@ -187,6 +244,7 @@ export default class Scene {
         if (this.selected.isGrab == false)
             return;
         this.selected.isGrab = false;
+        if (this.selected.obj.getType() == "infinite_plane") return;
         let pos = this.getCursorPosition(event);
         if (new Date().getTime() - this.selected.dragTime[this.selected.dragTime.length - 1] < 60) {
             let dt = new Date().getTime() - this.selected.dragTime[0];
@@ -208,17 +266,6 @@ document.addEventListener("DOMContentLoaded", () => {
     scene = new Scene(canvas, voltCanvas, objectEditor);
     //@ts-ignore
     window.scene = scene;
-    scene.objects.push(new PointCharge(1, 0, new Vector(10, 2)));
-    scene.objects[0].velocity = new Vector(-0.8, 0);
-    scene.objects.push(new PointCharge(-2, 0, new Vector(-10, 2)));
-    scene.objects[1].velocity = new Vector(0.8, 0);
-    //scene.objects.push(new PointCharge(-1, 1, new Vector(1, 0)));
-    //scene.objects.push(new PointCharge(-1, 1, new Vector(1, 1)));
-    scene.objects.push(new FiniteLine(0.4, 1, new Vector(0, 0), 0, 10));
-    scene.objects.push(new FiniteLine(-0.4, 1, new Vector(0, 4), 0, 10));
-    //scene.objects.push(new FiniteLine(-3, 1, new Vector(2, 4), 0.1, 4));
-    //scene.objects.push(new FiniteLine(5, 1, new Vector(4, 4), 0.1, 4));
-    //scene.objects.push(new InfinitePlane(-5, 1, new Vector(6, -4), -0.4));
     scene.updateObjects();
     window.addEventListener("mousedown", scene.mouseDown);
     window.addEventListener("mouseup", scene.mouseUp);
@@ -230,6 +277,8 @@ window.addEventListener("resize", () => {
 });
 
 //Export classes
+//@ts-ignore
+window.Scene = Scene;
 //@ts-ignore
 window.Base = Object;
 //@ts-ignore
