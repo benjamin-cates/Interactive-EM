@@ -23,7 +23,7 @@ Let p = point charge
 
 */
 //Returns the force onto a from b (a negative force is applied to b) and the torque onto a from b point that is in the middle of the two centers.
-export default function forceBetween(a: Object, b: Object): { force: Vector, torque: number } {
+export default function forceBetween(a: Object, b: Object): { force: Vector, torqueA: number, torqueB: number } {
     let atype = a.getType();
     let btype = b.getType();
     //Swap objects if the type of a is alphabetically higher than b
@@ -33,7 +33,7 @@ export default function forceBetween(a: Object, b: Object): { force: Vector, tor
         isSwapped = true;
     }
     let force = Vector.origin();
-    let torque = 0;
+    let torqueA = 0, torqueB = 0;
 
     if (atype == "finite_line") {
         if (btype == "finite_line") {
@@ -43,6 +43,7 @@ export default function forceBetween(a: Object, b: Object): { force: Vector, tor
         else if (btype == "infinite_plane") {
             //TODO: Figure out what portion of the line is on each side of the plane
             //Maybe use some geometry to find the intersection of the plane wrt the lines coordinate system
+            //No torque
 
         }
         else if (btype == "point_charge") {
@@ -51,7 +52,8 @@ export default function forceBetween(a: Object, b: Object): { force: Vector, tor
             force.x *= (b as PointCharge).charge;
             force.y *= (b as PointCharge).charge;
             //TODO: Calculate torque
-            torque = 0;
+            torqueB = 0;
+            torqueA = NaN;
         }
 
     }
@@ -62,11 +64,10 @@ export default function forceBetween(a: Object, b: Object): { force: Vector, tor
             force = a.fieldAt(b.position);
             force.x = -(b as PointCharge).charge * force.x;
             force.y = -(b as PointCharge).charge * force.y;
-            torque = 0
         }
         //No force between infinite planes because they are immovable
         else if (btype == "infinite_plane") {
-            return { force: Vector.origin(), torque: 0 };
+            //Do nothing
         }
 
     }
@@ -76,13 +77,12 @@ export default function forceBetween(a: Object, b: Object): { force: Vector, tor
             force = b.fieldAt(a.position);
             force.x *= (a as PointCharge).charge;
             force.y *= (a as PointCharge).charge;
-            torque = 0;
         }
     }
     if (isSwapped) {
         force.x = -force.x;
         force.y = -force.y;
-        torque = -torque;
+        [torqueA, torqueB] = [torqueB, torqueA];
     }
-    return { force, torque };
+    return { force, torqueA, torqueB };
 }
