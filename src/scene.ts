@@ -16,6 +16,7 @@ export default class Scene {
         timeSpeed: 1,
         showGridLines: true,
         showVectorGrid: true,
+        debugField: false,
     };
     static colors = {
         background: "#ffffff",
@@ -134,6 +135,7 @@ export default class Scene {
                         this.context.beginPath();
                         let unit = field.unit();
                         let len = 1 / (1 + Math.exp(-fieldMag * 1000)) - 0.5;
+                        if (Scene.parameters.debugField) len = 1;
                         let size = Math.abs(len) * 20;
                         this.context.lineWidth = size;
                         let fieldEnd = Vector.add(pos, Vector.multiply(unit, len));
@@ -146,6 +148,12 @@ export default class Scene {
                         this.context.lineTo(fieldEnd.x * 100 - along.x + normal.x, fieldEnd.y * 100 - along.y + normal.y);
                         this.context.moveTo(fieldEnd.x * 100, fieldEnd.y * 100);
                         this.context.lineTo(fieldEnd.x * 100 - along.x - normal.x, fieldEnd.y * 100 - along.y - normal.y);
+                        if (Scene.parameters.debugField) {
+                            this.context.moveTo(pos.x * 100, pos.y * 100);
+                            this.context.lineTo(pos.x * 100 + normal.x, pos.y * 100 + normal.y);
+                            this.context.moveTo(pos.x * 100, pos.y * 100);
+                            this.context.lineTo(pos.x * 100 - normal.x, pos.y * 100 - normal.y);
+                        }
                         this.context.stroke();
                         this.context.closePath();
                     }
