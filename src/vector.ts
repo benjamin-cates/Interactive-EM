@@ -59,6 +59,9 @@ export default class Vector {
     static dot = (a: Vector, b: Vector): number => {
         return a.x * b.x + a.y * b.y;
     }
+    static cross2D = (a: Vector, b: Vector): number => {
+        return a.x * b.y - a.y * b.x;
+    }
     static scalarProject = (a: Vector, targetVector: Vector): number => {
         return Vector.dot(a, targetVector) / targetVector.magnitude();
     }
