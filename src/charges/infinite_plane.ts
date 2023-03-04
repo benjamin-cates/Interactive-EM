@@ -10,7 +10,7 @@ export default class InfinitePlane extends Object {
 
     fieldAt = (pos: Vector) => {
         let deltaPos = Vector.subtract(pos, this.position);
-        return Vector.multiply(this.normal, Math.sign(Vector.dot(this.normal, deltaPos)) * 2 * this.chargeDensity * constants.K);
+        return Vector.multiply(this.normal, Math.sign(Vector.dot(this.normal, deltaPos)) * 2 * this.chargeDensity * constants.K * Math.PI);
     }
 
     constructor(chargeDensity: number, mass: number, position: Vector, rotation: number = 0) {
