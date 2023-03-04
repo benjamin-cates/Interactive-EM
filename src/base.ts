@@ -68,5 +68,9 @@ export class Object {
         this.incrementPosition(dt);
         this.velocity.add(Vector.multiply(force, dt / this.mass));
     }
+    //For complicated physics calculations, decomposes the object into a list of point charges that is as long as detail
+    decompose = (detail: number): Object[] => {
+        return [this];
+    }
 
 }

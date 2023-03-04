@@ -52,4 +52,7 @@ export default class InfinitePlane extends Object {
         ctx.stroke();
         ctx.closePath();
     }
+    decompose = (detail: number) => {
+        throw "Infinite Plane cannot be decomposed";
+    }
 }

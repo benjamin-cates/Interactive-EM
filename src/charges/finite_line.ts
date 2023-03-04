@@ -2,6 +2,7 @@ import { Object, ObjectTypes } from "../base";
 import Vector from "../vector";
 import Scene from "../scene";
 import constants from "../constants";
+import PointCharge from "./point_charge";
 
 export default class FiniteLine extends Object {
     //Measured in microcoloumbs per meter
@@ -93,5 +94,14 @@ export default class FiniteLine extends Object {
         ctx.stroke();
         ctx.closePath();
 
+    }
+    decompose = (detail: number): Object[] => {
+        let objs: Object[] = [];
+        let step = Vector.multiply(Vector.subtract(this.endPoint, this.startPoint), 1 / detail);
+        let charge = this.chargeDensity / detail;
+        for (let i = 0; i < detail; i++) {
+            objs.push(new PointCharge(charge, this.mass / detail, Vector.add(this.startPoint, Vector.multiply(step, i))));
+        }
+        return objs;
     }
 }

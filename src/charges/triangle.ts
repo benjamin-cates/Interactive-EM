@@ -1,6 +1,7 @@
 import { Object, ObjectTypes } from "../base";
 import Vector from "../vector";
 import constants from "../constants";
+import PointCharge from "./point_charge";
 
 export default class Triangle extends Object {
     private points: Vector[];
@@ -84,6 +85,27 @@ export default class Triangle extends Object {
 
     }
 
+    decompose = (detail: number): Object[] => {
+        //Find closest trianglular number
+        let triNumber = 3;
+        let i = 3;
+        for (; triNumber < detail; i++) triNumber += i;
+        //Calculate side length
+        const sideLen = i - 1;
+        let charge = this.chargeDensity / triNumber;
+        //Calculate vectors from 0 to 1 and 0 to 2 divided by side length
+        let unit1 = Vector.multiply(Vector.subtract(this.points[1], this.points[0]), 1 / sideLen);
+        let unit2 = Vector.multiply(Vector.subtract(this.points[2], this.points[0]), 1 / sideLen);
+        let objs: Object[] = [];
+        //Generate all points that are an integer linear combination of unit1 and unit2 and that are on the triangle
+        for (let x = 0; x < sideLen; x++) {
+            for (let y = 0; y < sideLen - x; y++) {
+                objs.push(new PointCharge(this.mass, charge,
+                    Vector.add(this.points[0], Vector.add(Vector.multiply(unit1, x), Vector.multiply(unit2, y)))));
+            }
+        }
+        return objs;
+    }
 
 
 }
