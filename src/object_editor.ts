@@ -32,7 +32,6 @@ interface Slider {
     type: "vector" | "number" | "boolean";
     min?: number | Vector;
     max?: number | Vector;
-    step?: number;
     for?: "all" | ObjectTypes[];
     unit?: string;
     correction: Correction;
@@ -45,35 +44,35 @@ const sliders: Slider[] = [
     {
         name: "position",
         type: "vector", unit: "m",
-        min: new Vector(-20, -20), max: new Vector(20, 20), step: 0.1,
+        min: new Vector(-20, -20), max: new Vector(20, 20),
         for: "all",
         correction: noCorrection,
     },
     {
         name: "velocity",
         type: "vector", unit: "m/s",
-        min: new Vector(-20, -20), max: new Vector(20, 20), step: 0.1,
+        min: new Vector(-20, -20), max: new Vector(20, 20),
         for: canMove,
         correction: powerCorrection,
     },
     {
         name: "rotation",
         type: "number", unit: "rad",
-        min: -Math.PI, max: Math.PI, step: 0.1,
+        min: -Math.PI, max: Math.PI,
         for: canRotate,
         correction: noCorrection,
     },
     {
         name: "angular_velocity",
         type: "number", unit: "rad/s",
-        min: -1.7, max: 1.7, step: 0.1,
+        min: -1.7, max: 1.7,
         for: canRotate,
         correction: powerCorrection,
     },
     {
         name: "mass",
         type: "number", unit: "kg",
-        min: 0.5, max: 1000, step: 0.05,
+        min: 0.5, max: 1000,
         for: canMove,
         correction: logCorrection,
     },
@@ -82,7 +81,7 @@ const sliders: Slider[] = [
     {
         name: "charge",
         type: "number", unit: "μC",
-        min: -3, max: 3, step: 0.05,
+        min: -3, max: 3,
         for: ["point_charge"],
         correction: powerCorrection,
     },
@@ -91,14 +90,14 @@ const sliders: Slider[] = [
     {
         name: "length",
         type: "number", unit: "m",
-        min: 0.4, max: 20, step: 0.05,
+        min: 0.4, max: 20,
         for: ["finite_line"],
         correction: logCorrection,
     },
     {
         name: "charge_density",
         type: "number", unit: "μC/m",
-        min: -1.5, max: 1.5, step: 0.05,
+        min: -1.5, max: 1.5,
         for: ["finite_line"],
         correction: powerCorrection,
     },
@@ -107,7 +106,7 @@ const sliders: Slider[] = [
     {
         name: "charge_density",
         type: "number", unit: "nC/m²",
-        min: -40, max: 40, step: 0.05,
+        min: -40, max: 40,
         for: ["infinite_plane"],
         correction: powerCorrection,
     },
@@ -179,7 +178,7 @@ export default class ObjEditor {
                 let val = uncorrect(this.curState[i] as number);
                 html += `
                     <div class="input_slider_range">
-                        <input id="slider_range${i}" type="range" min="${min}" max="${max}" value="${val}" step="${sliders[id].step}" oninput="scene.objEditor.input('${i}',this.value)"/></div>
+                        <input id="slider_range${i}" type="range" min="${min}" max="${max}" value="${val}" step="0.001" oninput="scene.objEditor.input('${i}',this.value)"/></div>
                 `;
             }
             //Vector inputs
@@ -189,8 +188,8 @@ export default class ObjEditor {
                 let val = this.curState[i] as Vector;
                 html += `
                     <div class="input_slider_vector">
-                        <input id="range_x${i}" type="range" min="${uncorrect(min.x)}" max="${uncorrect(max.x)}" step="${sliders[id].step}" value="${uncorrect(val.x)}" oninput="scene.objEditor.input('${i}',this.value,'x')"/>
-                        <input id="range_y${i}" type="range" min="${uncorrect(min.y)}" max="${uncorrect(max.y)}" step="${sliders[id].step}" value="${uncorrect(val.y)}" oninput="scene.objEditor.input('${i}',this.value,'y')"/>
+                        <input id="range_x${i}" type="range" min="${uncorrect(min.x)}" max="${uncorrect(max.x)}" step="0.001" value="${uncorrect(val.x)}" oninput="scene.objEditor.input('${i}',this.value,'x')"/>
+                        <input id="range_y${i}" type="range" min="${uncorrect(min.y)}" max="${uncorrect(max.y)}" step="0.001" value="${uncorrect(val.y)}" oninput="scene.objEditor.input('${i}',this.value,'y')"/>
                     </div>
                 `;
             }
