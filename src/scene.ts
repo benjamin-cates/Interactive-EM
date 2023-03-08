@@ -183,6 +183,11 @@ export default class Scene {
     physics = (dt: number) => {
         this.objects.forEach((object) => {
             object.incrementPosition(dt);
+            //Destroy objects that are more than 100 units away
+            if (object.position.x > 100 || object.position.x < -100 || object.position.y > 100 || object.position.y < -100) {
+                this.removeObject(object);
+                return;
+            }
             if (object == this.selected.obj) {
                 this.objEditor.updateDisplay("position", object.position);
                 this.objEditor.updateDisplay("rotation", object.rotation);
