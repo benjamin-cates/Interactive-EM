@@ -165,17 +165,19 @@ export default class Scene {
             object.render(this.context);
         });
     }
-    fieldAt = (pos: Vector): Vector => {
+    fieldAt = (pos: Vector, ignored?: Object): Vector => {
         let out = Vector.origin();
         this.objects.forEach((object) => {
+            if (object == ignored) return;
             out.add(object.fieldAt(pos));
         });
         return out;
     }
 
-    voltageAt = (pos: Vector): number => {
+    voltageAt = (pos: Vector, ignored?: Object): number => {
         let potential = 0;
         this.objects.forEach((object) => {
+            if (object == ignored) return;
             potential += object.voltageAt(pos);
         });
         return potential;
