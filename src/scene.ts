@@ -99,71 +99,75 @@ export default class Scene {
         this.updateObjects();
     }
     render = () => {
-        //Request next animation frame
         requestAnimationFrame(this.render);
-        //Clear rectangle
+
         this.context.clearRect(-100 * this.width, -100 * this.height, this.width * 200, this.height * 200);
+
         this.voltCanvas.fullscreenRender();
-        //Render grid lines if enabled
-        if (Scene.parameters.showGridLines) {
-            this.context.lineWidth = 1.5;
-            this.context.strokeStyle = Scene.colors.gridLines;
-            this.context.beginPath();
-            for (let i = Math.floor(-this.width); i < this.width; i++) {
-                this.context.moveTo(i * 100, -this.height * 100);
-                this.context.lineTo(i * 100, this.height * 100);
-            }
-            for (let i = Math.floor(-this.height); i < this.height; i++) {
-                this.context.moveTo(-this.width * 100, i * 100);
-                this.context.lineTo(this.width * 100, i * 100);
-            }
-            this.context.stroke();
-            this.context.closePath();
-        }
-        if (Scene.parameters.showVectorGrid) {
-            //Set stroke color and line cap
-            this.context.strokeStyle = Scene.colors.fieldLines;
-            this.context.lineCap = "round";
-            //Iterate over grid with step size 2
-            for (let i = Math.floor(-this.width - 1); i < this.width + 1; i += 2) {
-                for (let j = Math.floor(-this.height - 1); j < this.height + 1; j += 2) {
-                    //Get field at grid point
-                    let pos = new Vector(i, j);
-                    let field = this.fieldAt(pos);
-                    let fieldMag = field.magnitude();
-                    if (fieldMag > 0.0001) {
-                        this.context.beginPath();
-                        let unit = field.unit();
-                        let len = 1 / (1 + Math.exp(-fieldMag * 1000)) - 0.5;
-                        if (Scene.parameters.debugField) len = 1;
-                        let size = Math.abs(len) * 20;
-                        this.context.lineWidth = size;
-                        let fieldEnd = Vector.add(pos, Vector.multiply(unit, len));
-                        let normal = new Vector(-unit.y * size, unit.x * size);
-                        let along = new Vector(unit.x * size, unit.y * size);
-                        //Draw arrow shape
-                        this.context.moveTo(pos.x * 100, pos.y * 100);
-                        this.context.lineTo(fieldEnd.x * 100, fieldEnd.y * 100);
-                        this.context.moveTo(fieldEnd.x * 100, fieldEnd.y * 100);
-                        this.context.lineTo(fieldEnd.x * 100 - along.x + normal.x, fieldEnd.y * 100 - along.y + normal.y);
-                        this.context.moveTo(fieldEnd.x * 100, fieldEnd.y * 100);
-                        this.context.lineTo(fieldEnd.x * 100 - along.x - normal.x, fieldEnd.y * 100 - along.y - normal.y);
-                        if (Scene.parameters.debugField) {
-                            this.context.moveTo(pos.x * 100, pos.y * 100);
-                            this.context.lineTo(pos.x * 100 + normal.x, pos.y * 100 + normal.y);
-                            this.context.moveTo(pos.x * 100, pos.y * 100);
-                            this.context.lineTo(pos.x * 100 - normal.x, pos.y * 100 - normal.y);
-                        }
-                        this.context.stroke();
-                        this.context.closePath();
-                    }
-                }
-            }
-        }
-        //Render each object
+
+        if (Scene.parameters.showGridLines)
+            this.renderGridLines();
+        if (Scene.parameters.showVectorGrid)
+            this.renderVectorField();
+
         this.objects.forEach((object) => {
             object.render(this.context);
         });
+    }
+    renderGridLines = () => {
+        this.context.lineWidth = 1.5;
+        this.context.strokeStyle = Scene.colors.gridLines;
+        this.context.beginPath();
+        for (let i = Math.floor(-this.width); i < this.width; i++) {
+            this.context.moveTo(i * 100, -this.height * 100);
+            this.context.lineTo(i * 100, this.height * 100);
+        }
+        for (let i = Math.floor(-this.height); i < this.height; i++) {
+            this.context.moveTo(-this.width * 100, i * 100);
+            this.context.lineTo(this.width * 100, i * 100);
+        }
+        this.context.stroke();
+        this.context.closePath();
+    }
+    renderVectorField = () => {
+        this.context.strokeStyle = Scene.colors.fieldLines;
+        this.context.lineCap = "round";
+        //Iterate over grid with step size 2
+        for (let i = Math.floor(-this.width - 1); i < this.width + 1; i += 2) {
+            for (let j = Math.floor(-this.height - 1); j < this.height + 1; j += 2) {
+                //Get field at grid point
+                let pos = new Vector(i, j);
+                let field = this.fieldAt(pos);
+                let fieldMag = field.magnitude();
+                if (fieldMag > 0.0001) {
+                    this.context.beginPath();
+                    let unit = field.unit();
+                    let len = 1 / (1 + Math.exp(-fieldMag * 1000)) - 0.5;
+                    if (Scene.parameters.debugField) len = 1;
+                    let size = Math.abs(len) * 20;
+                    this.context.lineWidth = size;
+                    let fieldEnd = Vector.add(pos, Vector.multiply(unit, len));
+                    let normal = new Vector(-unit.y * size, unit.x * size);
+                    let along = new Vector(unit.x * size, unit.y * size);
+                    //Draw arrow shape
+                    this.context.moveTo(pos.x * 100, pos.y * 100);
+                    this.context.lineTo(fieldEnd.x * 100, fieldEnd.y * 100);
+                    this.context.moveTo(fieldEnd.x * 100, fieldEnd.y * 100);
+                    this.context.lineTo(fieldEnd.x * 100 - along.x + normal.x, fieldEnd.y * 100 - along.y + normal.y);
+                    this.context.moveTo(fieldEnd.x * 100, fieldEnd.y * 100);
+                    this.context.lineTo(fieldEnd.x * 100 - along.x - normal.x, fieldEnd.y * 100 - along.y - normal.y);
+                    //Draw perpendicular to arrow line (to ensure they match voltage fields)
+                    if (Scene.parameters.debugField) {
+                        this.context.moveTo(pos.x * 100, pos.y * 100);
+                        this.context.lineTo(pos.x * 100 + normal.x, pos.y * 100 + normal.y);
+                        this.context.moveTo(pos.x * 100, pos.y * 100);
+                        this.context.lineTo(pos.x * 100 - normal.x, pos.y * 100 - normal.y);
+                    }
+                    this.context.stroke();
+                    this.context.closePath();
+                }
+            }
+        }
     }
     fieldAt = (pos: Vector, ignored?: Object): Vector => {
         let out = Vector.origin();
