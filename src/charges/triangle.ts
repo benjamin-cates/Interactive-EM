@@ -2,6 +2,7 @@ import { Object, ObjectTypes } from "../base";
 import Vector from "../vector";
 import constants from "../constants";
 import PointCharge from "./point_charge";
+import Scene from "../scene";
 
 export default class Triangle extends Object {
     private points: Vector[];
@@ -14,25 +15,22 @@ export default class Triangle extends Object {
         super(mass, position, rotation);
         this.points = [p1, p2, p3];
         this.chargeDensity = chargeDensity;
-        //Find hypotenuses
+        //Find lengths
         let d1 = Vector.distance(p1, p2);
         let d2 = Vector.distance(p2, p3);
         let d3 = Vector.distance(p3, p1);
         let hypot = 2, hypot2 = 0, opposite = 1;
         if (d1 >= d2 && d1 >= d3) hypot = 0, hypot2 = 1, opposite = 2;
         else if (d2 >= d1 && d2 >= d3) hypot = 1, hypot2 = 2, opposite = 0;
-
         //Find fixed triangle properties
-        this.hypotCenter = Vector.multiply(Vector.add(this.points[hypot], this.points[hypot2]), 0.5);
         let hypotVec = Vector.add(this.points[hypot], Vector.multiply(this.points[hypot2], -1));
         this.halfWidth = hypotVec.magnitude() / 2;
-        this.defRotation = -Math.atan2(hypotVec.y, hypotVec.x);
-        this.opTrans = Vector.add(this.points[opposite], Vector.multiply(this.hypotCenter, -1));
-        this.opTrans.rotate(this.defRotation);
-        if (this.opTrans.y < 0) {
-            this.defRotation += Math.PI;
-            this.opTrans.rotate(Math.PI);
-        }
+        //Shift so that the center of mass is in the middle
+        let COM = Vector.multiply(Vector.add(Vector.add(p1, p2), p3), 1 / 3);
+        console.log(COM.toString());
+        this.position.add(COM);
+        let negCOM = Vector.multiply(COM, -1);
+        this.points.forEach(p => p.add(negCOM));
     }
 
     voltageAt = (pos: Vector): number => {
@@ -69,6 +67,34 @@ export default class Triangle extends Object {
         //TODO: Field at for charged triangle
         return Vector.origin();
     }
+    private distanceFromFiniteLine = (pos: Vector, p1: Vector, p2: Vector): number => {
+        let len = Vector.distance(p1, p2);
+        let t = Vector.dot(Vector.subtract(pos, p2), Vector.subtract(p1, p2)) / len / len;
+        t = Math.max(0, Math.min(1, t));
+        return Vector.distance(pos, Vector.add(p2, Vector.multiply(Vector.subtract(p1, p2), t)));
+    }
+    private pointInside(pos: Vector) {
+        //Calculate barycentric coordinates s and t
+        let s = (this.points[0].x - this.points[2].x) * (pos.y - this.points[2].y) - (this.points[0].y - this.points[2].y) * (pos.x - this.points[2].x);
+        let t = (this.points[1].x - this.points[0].x) * (pos.y - this.points[0].y) - (this.points[1].y - this.points[0].y) * (pos.x - this.points[0].x);
+        if ((s < 0) != (t < 0) && s != 0 && t != 0)
+            return false
+        let d = (this.points[2].x - this.points[1].x) * (pos.y - this.points[1].y) - (this.points[2].y - this.points[1].y) * (pos.x - this.points[1].x);
+        return d == 0 || (d < 0) == (s + t <= 0);
+
+    }
+
+    distanceFrom = (pos: Vector): number => {
+        let translatedPosition = Vector.add(pos, Vector.multiply(this.position, -1));
+        translatedPosition.rotate(-this.rotation);
+        if (this.pointInside(translatedPosition)) return 0;
+
+        return Math.min(
+            this.distanceFromFiniteLine(translatedPosition, this.points[0], this.points[1]),
+            this.distanceFromFiniteLine(translatedPosition, this.points[1], this.points[2]),
+            this.distanceFromFiniteLine(translatedPosition, this.points[2], this.points[0])
+        );
+    }
     clone = (): Triangle => {
         return new Triangle(this.mass, this.position.copy(), this.rotation, this.chargeDensity, this.points[0].copy(), this.points[1].copy(), this.points[2].copy());
     }
@@ -81,8 +107,17 @@ export default class Triangle extends Object {
         //TODO: update cached values for rotation and position
     }
     render = (ctx: CanvasRenderingContext2D) => {
-        //TODO: write render function
-
+        ctx.save();
+        ctx.fillStyle = Scene.getChargeColor(this.chargeDensity);
+        ctx.beginPath();
+        ctx.translate(this.position.x * 100, this.position.y * 100)
+        ctx.rotate(this.rotation);
+        ctx.moveTo(this.points[0].x * 100, this.points[0].y * 100);
+        ctx.lineTo(this.points[1].x * 100, this.points[1].y * 100);
+        ctx.lineTo(this.points[2].x * 100, this.points[2].y * 100);
+        ctx.fill();
+        ctx.closePath();
+        ctx.restore();
     }
 
     decompose = (detail: number): Object[] => {

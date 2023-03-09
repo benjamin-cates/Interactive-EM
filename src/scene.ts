@@ -87,6 +87,7 @@ export default class Scene {
         "point_charge": new PointCharge(1, 1, new Vector(0, 0)),
         "infinite_plane": new InfinitePlane(0.02, 1, new Vector(0, 0)),
         "finite_line": new FiniteLine(0.4, 1, new Vector(0, 0), 0, 10),
+        "triangle": new Triangle(1, new Vector(0, 0), 0, 1, new Vector(0, 0), new Vector(0, 1), new Vector(1, 0)),
     };
     pushDefaultObject = (type: ObjectTypes) => {
         this.pushObject(Scene.defaultObjects[type].clone());
