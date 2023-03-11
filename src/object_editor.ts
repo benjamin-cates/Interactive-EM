@@ -111,6 +111,14 @@ const sliders: Slider[] = [
         correction: powerCorrection,
     },
 
+    //Triangle
+    {
+        name: "charge_density",
+        type: "number", unit: "μC/m²",
+        min: -1.5, max: 1.5,
+        for: ["triangle_charge"],
+        correction: powerCorrection,
+    },
 ];
 function getSliderId(name: string, type: ObjectTypes) {
     return sliders.findIndex((slider) => (slider.name == name && (slider.for == "all" || slider.for.includes(type))));
@@ -240,6 +248,7 @@ export default class ObjEditor {
         else if (name == "charge_density") {
             if (this.curType == "finite_line") (this.curObj as FiniteLine).chargeDensity = value;
             else if (this.curType == "infinite_plane") (this.curObj as InfinitePlane).chargeDensity = value / 1000;
+            else if(this.curType == "triangle_charge") (this.curObj as Triangle).chargeDensity = value;
         }
         this.scene.updateObjects();
         this.updateDisplay(name, value, false);
@@ -284,6 +293,7 @@ export default class ObjEditor {
                 else if (slider.name == "charge_density") {
                     if (this.curType == "finite_line") this.curState[slider.name] = (obj as FiniteLine).chargeDensity;
                     else if (this.curType == "infinite_plane") this.curState[slider.name] = (obj as InfinitePlane).chargeDensity * 1000;
+                    else if (this.curType == "triangle_charge") this.curState[slider.name] = (obj as Triangle).chargeDensity;
                 }
             }
         }
