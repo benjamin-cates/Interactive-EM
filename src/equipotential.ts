@@ -16,6 +16,9 @@ export default class VoltCanvas {
         "line_data",
         "plane_count",
         "plane_data",
+        "tri_count",
+        "tri_data1",
+        "tri_data2",
         "canvas",
         "scene",
         "positive_color",
@@ -125,6 +128,28 @@ export default class VoltCanvas {
         this.gl.uniform1i(this.uniLoc.plane_count, planes.length);
         if (planes.length > 0) this.gl.uniform4fv(this.uniLoc.plane_data, planeData);
 
+        //Triangles
+        let tris = objects.filter((obj) => obj instanceof Triangle) as Triangle[];
+        //Stores [x, y, rotation, half width]
+        let triData1 = new Float32Array(tris.length * 4);
+        //Stores [charge, tip.x, tip.y]
+        let triData2 = new Float32Array(tris.length * 3);
+        tris.forEach((tri, i) => {
+            triData1[i * 4 + 0] = tri.position.x;
+            triData1[i * 4 + 1] = tri.position.y;
+            triData1[i * 4 + 2] = tri.rotation;
+            triData1[i * 4 + 3] = tri.halfWidth;
+
+            triData2[i * 3 + 0] = tri.chargeDensity;
+            triData2[i * 3 + 1] = tri.tip.x;
+            triData2[i * 3 + 2] = tri.tip.y;
+        });
+        this.gl.uniform1i(this.uniLoc.tri_count, tris.length);
+        if (tris.length > 0) {
+            this.gl.uniform4fv(this.uniLoc.tri_data1, triData1);
+            this.gl.uniform3fv(this.uniLoc.tri_data2, triData2);
+        }
+
     }
     static vertexShader = `#version 300 es
         precision mediump float;
@@ -149,12 +174,32 @@ export default class VoltCanvas {
         uniform int plane_count;
         uniform vec4 plane_data[100];
 
+        uniform int tri_count;
+        uniform vec4 tri_data1[100];
+        uniform vec3 tri_data2[100];
+
+
         uniform vec4 neutral_color;
         uniform vec4 positive_color;
         uniform vec4 negative_color;
         uniform vec4 equipotential_color;
 
         const float contour = 1.0;
+
+
+        float tri1(vec2 p, float x) {
+            float l = sqrt(p.y*p.y/(x*x)+1.0);
+            return -asinh(p.y/x) - p.y/2.0 * log((l+1.0)/(l-1.0));
+        }
+        float tri2(float x, float a, float b) {
+
+            return a * (sqrt((a+b/x)*(a+b/x) + 1.0)-1.0) / (a+b/x);
+        }
+        float tri3(float x, float a, float b) {
+            float t = tri2(x,a,b);
+            float l = sqrt(a*a + 1.0);
+            return x * asinh(a+b/x) + b/l * log(abs((t+l+1.0)/(t-l+1.0)));
+        }
 
         out vec4 fragColor;
         void main() {
@@ -189,6 +234,33 @@ export default class VoltCanvas {
                 volt+=(100.0-6.28317*dist)*chargeDensity;
             }
 
+            for(int i = 0; i < tri_count; i++) {
+                float halfWidth = tri_data1[i].w;
+                float rotation = tri_data1[i].z;
+                vec2 center = tri_data1[i].xy;
+                float chargeDensity = tri_data2[i].x;
+                vec2 tip = tri_data2[i].yz;
+                float height = 3.0/2.0 * tip.y;
+
+                vec2 relPos = p - center;
+                float cosRot = cos(rotation);
+                float sinRot = sin(-rotation);
+                relPos = vec2(cosRot * relPos.x - sinRot * relPos.y, sinRot * relPos.x + cosRot * relPos.y);
+
+                relPos.y-=tip.y/2.0;
+                float a1 = height / (tip.x + halfWidth);
+                float b1 = (relPos.x + halfWidth) * a1 - relPos.y;
+                float a2 = height / (tip.x - halfWidth);
+                float b2 = (relPos.x-tip.x) * a2 + height - relPos.y;
+
+
+                float l0 = -halfWidth - relPos.x;
+                float l1 = tip.x - relPos.x;
+                float l2 = halfWidth - relPos.x;
+
+                volt+=chargeDensity*(tri3(l1,a1,b1) - tri3(l0,a1,b1) + tri3(l2,a2,b2) - tri3(l1,a2,b2) + tri1(relPos,l0) - tri1(relPos,l2));
+            }
+
             float dVolt = 2.0/(1.0+exp(-volt*2.0))-1.0;
             fragColor = mix(mix(neutral_color,negative_color,0.0-dVolt), mix(neutral_color, positive_color, dVolt), step(dVolt, 0.0));
             float dx = dFdx(dVolt);
@@ -203,6 +275,7 @@ export default class VoltCanvas {
             fragColor = vec4(fragColor.rgb*(1.0-vLines.a) + vLines.rgb*vLines.a,1.0);
 
         }
+
     `;
     /*
         for(int i = 0; i < line_count; i++) {
