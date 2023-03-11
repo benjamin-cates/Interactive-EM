@@ -7,10 +7,8 @@ import Scene from "../scene";
 export default class Triangle extends Object {
     private points: Vector[];
     chargeDensity: number;
-    private opTrans: Vector
-    private hypotCenter: Vector;
-    private halfWidth: number;
-    private defRotation: number;
+    tip: Vector;
+    halfWidth: number;
     constructor(mass: number, position: Vector, rotation: number, chargeDensity: number, p1: Vector, p2: Vector, p3: Vector) {
         super(mass, position, rotation);
         this.points = [p1, p2, p3];
@@ -19,29 +17,39 @@ export default class Triangle extends Object {
         let d1 = Vector.distance(p1, p2);
         let d2 = Vector.distance(p2, p3);
         let d3 = Vector.distance(p3, p1);
-        let hypot = 2, hypot2 = 0, opposite = 1;
-        if (d1 >= d2 && d1 >= d3) hypot = 0, hypot2 = 1, opposite = 2;
-        else if (d2 >= d1 && d2 >= d3) hypot = 1, hypot2 = 2, opposite = 0;
+        let hypot = 2, hypot2 = 0, tip = 1;
+        if (d1 >= d2 && d1 >= d3) hypot = 0, hypot2 = 1, tip = 2;
+        else if (d2 >= d1 && d2 >= d3) hypot = 1, hypot2 = 2, tip = 0;
         //Find fixed triangle properties
         let hypotVec = Vector.add(this.points[hypot], Vector.multiply(this.points[hypot2], -1));
         this.halfWidth = hypotVec.magnitude() / 2;
         //Shift so that the center of mass is in the middle
         let COM = Vector.multiply(Vector.add(Vector.add(p1, p2), p3), 1 / 3);
-        console.log(COM.toString());
         this.position.add(COM);
         let negCOM = Vector.multiply(COM, -1);
         this.points.forEach(p => p.add(negCOM));
+        //Rotate triangle so hypotenuse is horizontal
+        let adjustmentRotation = Math.atan2(hypotVec.y, hypotVec.x);
+        this.points.forEach(p => p.rotate(adjustmentRotation));
+        if (this.points[tip].y < 0) {
+            adjustmentRotation -= Math.PI;
+            this.points.forEach(p => p.rotate(Math.PI));
+        }
+        this.rotation -= adjustmentRotation;
+        this.tip = this.points[tip];
     }
 
     voltageAt = (pos: Vector): number => {
         //TODO: Make sure these are correct
         //TODO: Cache some of these calculations to improve efficiency
         //Translate so the center of the hypotenuse is at the origin
-        let p = Vector.add(pos, Vector.multiply(this.hypotCenter, -1));
-        p.rotate(this.defRotation);
+        let p = Vector.add(pos, Vector.multiply(this.position, -1));
+        p.rotate(this.rotation);
+        //Set position relative to center of the hypotenuse
+        p.y -= this.tip.y / 2;
         let halfWidth = this.halfWidth;
-        let height = this.opTrans.y;
-        let ox = this.opTrans.x;
+        let height = this.tip.y * 3/2;
+        let ox = this.tip.x;
 
         //Do funky calculations
         let a = height / halfWidth;
@@ -126,19 +134,21 @@ export default class Triangle extends Object {
         let i = 3;
         for (; triNumber < detail; i++) triNumber += i;
         //Calculate side length
-        const sideLen = i - 1;
+        const sideLen = i - 2;
         let charge = this.chargeDensity / triNumber;
         //Calculate vectors from 0 to 1 and 0 to 2 divided by side length
         let unit1 = Vector.multiply(Vector.subtract(this.points[1], this.points[0]), 1 / sideLen);
         let unit2 = Vector.multiply(Vector.subtract(this.points[2], this.points[0]), 1 / sideLen);
         let objs: Object[] = [];
         //Generate all points that are an integer linear combination of unit1 and unit2 and that are on the triangle
-        for (let x = 0; x < sideLen; x++) {
-            for (let y = 0; y < sideLen - x; y++) {
-                objs.push(new PointCharge(this.mass, charge,
+        for (let x = 0; x <= sideLen; x++) {
+            for (let y = 0; y <= sideLen - x; y++) {
+                objs.push(new PointCharge(charge, 1,
                     Vector.add(this.points[0], Vector.add(Vector.multiply(unit1, x), Vector.multiply(unit2, y)))));
             }
         }
+        objs.forEach(obj => obj.position.rotate(this.rotation));
+        objs.forEach(obj => obj.position.add(this.position));
         return objs;
     }
 
