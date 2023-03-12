@@ -187,18 +187,24 @@ export default class VoltCanvas {
         const float contour = 1.0;
 
 
-        float tri1(vec2 p, float x) {
-            float l = sqrt(p.y*p.y/(x*x)+1.0);
-            return -asinh(p.y/x) - p.y/2.0 * log((l+1.0)/(l-1.0));
+        float triAD1(vec2 p, float x) {
+            float l = sqrt(p.y*p.y/(x*x)+1.0000001);
+            return sign(x)*(x*asinh(p.y/x) + p.y/2.0 * log((l+1.0)/(l-1.0)));
         }
-        float tri2(float x, float a, float b) {
-
-            return a * (sqrt((a+b/x)*(a+b/x) + 1.0)-1.0) / (a+b/x);
-        }
-        float tri3(float x, float a, float b) {
-            float t = tri2(x,a,b);
+        float triAD2(float x, float a, float b) {
+            float abx = a+b/x;
+            float t = a * (sqrt(abx*abx+1.0)-1.0) / abx;
             float l = sqrt(a*a + 1.0);
-            return x * asinh(a+b/x) + b/l * log(abs((t+l+1.0)/(t-l+1.0)));
+            return x * asinh(abx) + b/l * log(abs((t+l+1.0)/(t-l+1.0)));
+        }
+
+        float triADC2(float L, float U, float a, float b) {
+            if(sign(L)!=sign(U)) {
+                float l = sqrt(a*a+1.0);
+                float corr =  sign(a)*abs(b)/l*abs(log(abs((a+l+1.0)/(a-l+1.0)))-log(abs((-a+l+1.0)/(-a-l+1.0))));
+                return triAD2(U,a,b)-triAD2(L,a,b) - 2.0*corr;
+            }
+            return sign(U)*(triAD2(U,a,b)-triAD2(L,a,b));
         }
 
         out vec4 fragColor;
@@ -247,7 +253,7 @@ export default class VoltCanvas {
                 float sinRot = sin(-rotation);
                 relPos = vec2(cosRot * relPos.x - sinRot * relPos.y, sinRot * relPos.x + cosRot * relPos.y);
 
-                relPos.y-=tip.y/2.0;
+                relPos.y+=tip.y/2.0;
                 float a1 = height / (tip.x + halfWidth);
                 float b1 = (relPos.x + halfWidth) * a1 - relPos.y;
                 float a2 = height / (tip.x - halfWidth);
@@ -257,8 +263,8 @@ export default class VoltCanvas {
                 float l0 = -halfWidth - relPos.x;
                 float l1 = tip.x - relPos.x;
                 float l2 = halfWidth - relPos.x;
-
-                volt+=chargeDensity*(tri3(l1,a1,b1) - tri3(l0,a1,b1) + tri3(l2,a2,b2) - tri3(l1,a2,b2) + tri1(relPos,l0) - tri1(relPos,l2));
+                volt+=chargeDensity* (triADC2(l0,l1,a1,b1)+ triADC2(l1,l2,a2,b2));
+                volt+=chargeDensity*(-triAD1(relPos,l0)+triAD1(relPos,l2));
             }
 
             float dVolt = 2.0/(1.0+exp(-volt*2.0))-1.0;
