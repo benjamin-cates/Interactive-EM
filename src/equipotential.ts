@@ -298,12 +298,13 @@ export default class VoltCanvas {
             for(int i = 0; i < conductor_count; i++) {
                 for(int x = 0; x < conductor_sizes[i]; x++) {
                     int ind = i*50 + x;
-                    float charge = conductor_point_data[ind].z/2.0;
-                    float dist = max(0.1,distance(conductor_point_data[ind].xy,p.xy));
+                    float charge = conductor_point_data[ind].z * 0.666666;
+                    vec2 point = conductor_point_data[ind].xy;
+                    float dist = max(0.1,distance(point,p.xy));
                     volt += charge / dist;
                     int next = i*50 + (x+1)%conductor_sizes[i];
-                    charge = (conductor_point_data[ind].z+conductor_point_data[next].z)/2.0;
-                    vec2 point = (conductor_point_data[ind].xy+conductor_point_data[next].xy)/2.0;
+                    charge = (conductor_point_data[ind].z+conductor_point_data[next].z)*0.333333;
+                    point = (conductor_point_data[ind].xy+conductor_point_data[next].xy)/2.0;
                     dist = max(0.1,distance(point,p.xy));
                     volt += charge / dist;
                 }
