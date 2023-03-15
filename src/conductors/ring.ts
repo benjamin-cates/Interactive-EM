@@ -27,5 +27,9 @@ export default class RingConductor extends Conductor {
         ctx.stroke();
         ctx.closePath();
     }
+    distanceFrom = (pos: Vector) => {
+        let dist = Vector.distance(this.position, pos);
+        return Math.abs(dist - this.radius);
+    }
     getType = (): ObjectTypes => "ring_conductor";
 }
