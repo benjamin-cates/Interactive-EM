@@ -59,7 +59,7 @@ export default class Conductor extends Object {
     voltageAt = (pos: Vector): number => {
         let volts = 0;
         for (let i = 0; i < this.points.length; i++) {
-            volts += Constants.K * this.charges[i] / Vector.distance(this.worldSpacePoints[i], this.points[i]);
+            volts += Constants.K * this.charges[i] / Vector.distance(this.worldSpacePoints[i], pos);
         }
         return volts;
     }
