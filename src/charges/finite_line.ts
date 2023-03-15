@@ -35,6 +35,13 @@ export default class FiniteLine extends Object {
         return fieldVec;
     }
 
+    voltageAt = (pos: Vector): number => {
+        //See Overleaf document for derivation
+        let relPos = Vector.subtract(pos, this.position);
+        let g = Vector.dot(relPos, new Vector(Math.cos(this.rotation), Math.sin(this.rotation)));
+        return constants.K * Math.sign(g) * this.chargeDensity * Math.log((Vector.distance(pos, this.startPoint) + Math.abs(g) + Math.sign(g)*this.length / 2) / (Vector.distance(pos, this.endPoint) + Math.abs(g) - Math.sign(g)*this.length / 2));
+    }
+
     constructor(chargeDensity: number, mass: number, position: Vector, rotation: number, length: number) {
         super(mass, position, rotation);
         this.chargeDensity = chargeDensity;
