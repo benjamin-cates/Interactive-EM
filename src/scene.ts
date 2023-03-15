@@ -28,6 +28,10 @@ export default class Scene {
         equipotential: "#ff0000",
         fieldLines: "#cccccc",
     }
+    static chargeColor = (charginess: number) => {
+        let percent = 1 / (1 + Math.exp(-charginess));
+        return "#" + Math.round(255 * percent).toString(16).padStart(2,"0") + "00" + Math.round(255 * (1 - percent)).toString(16).padStart(2,"0");
+    }
     static getChargeColor(charge: number) {
         if (charge < 0) return Scene.colors.negative;
         if (charge > 0) return Scene.colors.positive;
