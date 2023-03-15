@@ -1,9 +1,10 @@
 import { Object, ObjectTypes } from "./base";
-import Conductor from "./charges/conductor";
+import Conductor from "./conductors/conductor";
 import FiniteLine from "./charges/finite_line";
 import InfinitePlane from "./charges/infinite_plane";
 import PointCharge from "./charges/point_charge";
 import Triangle from "./charges/triangle";
+import RingConductor from "./conductors/ring";
 import Vector from "./vector";
 import Equipotential from "./equipotential";
 import ObjEditor from "./object_editor";
@@ -83,12 +84,7 @@ export default class Scene {
         this.objects.push(object);
         this.updateObjects();
     }
-    static defaultObjects: { [key: string]: Object } = {
-        "point_charge": new PointCharge(1, 1, new Vector(0, 0)),
-        "infinite_plane": new InfinitePlane(0.02, 1, new Vector(0, 0)),
-        "finite_line": new FiniteLine(0.4, 1, new Vector(0, 0), 0, 10),
-        "triangle": new Triangle(1, new Vector(0, 0), 0, 1, new Vector(0, 0), new Vector(0, 1), new Vector(1, 0)),
-    };
+    static defaultObjects: { [key: string]: Object };
     pushDefaultObject = (type: ObjectTypes) => {
         this.pushObject(Scene.defaultObjects[type].clone());
     }
@@ -286,6 +282,14 @@ document.addEventListener("DOMContentLoaded", () => {
     scene = new Scene(canvas, voltCanvas, objectEditor);
     //@ts-ignore
     window.scene = scene;
+    Scene.defaultObjects = {
+        "point_charge": new PointCharge(1, 1, new Vector(0, 0)),
+        "infinite_plane": new InfinitePlane(0.02, 1, new Vector(0, 0)),
+        "finite_line": new FiniteLine(0.4, 1, new Vector(0, 0), 0, 10),
+        "triangle": new Triangle(1, new Vector(0, 0), 0, 1, new Vector(0, 0), new Vector(0, 1), new Vector(1, 0)),
+        //@ts-ignore
+        "ring_conductor": new RingConductor(1, new Vector(0, 0), 0, 30, 2, 0.1, window.scene, 0),
+    };
     scene.updateObjects();
     window.addEventListener("mousedown", scene.mouseDown);
     window.addEventListener("mouseup", scene.mouseUp);

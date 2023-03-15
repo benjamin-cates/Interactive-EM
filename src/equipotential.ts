@@ -2,6 +2,7 @@ import PointCharge from "./charges/point_charge";
 import FiniteLine from "./charges/finite_line";
 import InfinitePlane from "./charges/infinite_plane";
 import Triangle from "./charges/triangle";
+import Conductor from "./conductors/conductor";
 import { Object, ObjectTypes } from "./base";
 
 export default class VoltCanvas {
@@ -19,6 +20,10 @@ export default class VoltCanvas {
         "tri_count",
         "tri_data1",
         "tri_data2",
+        "conductor_count",
+        "conductor_data",
+        "conductor_sizes",
+        "conductor_point_data",
         "canvas",
         "scene",
         "positive_color",
@@ -150,6 +155,25 @@ export default class VoltCanvas {
             this.gl.uniform3fv(this.uniLoc.tri_data2, triData2);
         }
 
+        //Conductors
+        let conductors = objects.filter((obj) => obj instanceof Conductor) as Conductor[];
+        let conductorSizes = new Int32Array(conductors.length);
+        let conductorPointData = new Float32Array(conductors.length * 200 * 3);
+        conductors.forEach((conductor, i) => {
+            conductorSizes[i] = conductor.points.length;
+            conductor.worldSpacePoints.forEach((point, j) => {
+                let ind = i*50 * 3 + j * 3;
+                conductorPointData[ind + 0] = point.x;
+                conductorPointData[ind + 1] = point.y;
+                conductorPointData[ind + 2] = conductor.charges[j];
+            });
+        });
+        this.gl.uniform1i(this.uniLoc.conductor_count, conductors.length);
+        if (conductors.length > 0) {
+            this.gl.uniform1iv(this.uniLoc.conductor_sizes, conductorSizes);
+            this.gl.uniform3fv(this.uniLoc.conductor_point_data, conductorPointData);
+        }
+
     }
     static vertexShader = `#version 300 es
         precision mediump float;
@@ -165,18 +189,22 @@ export default class VoltCanvas {
         uniform vec2 scene;
 
         uniform int point_count;
-        uniform vec3 point_data[100];
+        uniform vec3 point_data[40];
 
         uniform int line_count;
-        uniform vec3 line_pos[100];
-        uniform vec2 line_data[100];
+        uniform vec3 line_pos[40];
+        uniform vec2 line_data[40];
 
         uniform int plane_count;
-        uniform vec4 plane_data[100];
+        uniform vec4 plane_data[20];
 
         uniform int tri_count;
-        uniform vec4 tri_data1[100];
-        uniform vec3 tri_data2[100];
+        uniform vec4 tri_data1[40];
+        uniform vec3 tri_data2[40];
+
+        uniform int conductor_count;
+        uniform int conductor_sizes[20];
+        uniform vec3 conductor_point_data[400];
 
 
         uniform vec4 neutral_color;
@@ -265,6 +293,20 @@ export default class VoltCanvas {
                 float l2 = halfWidth - relPos.x;
                 volt+=chargeDensity* (triADC2(l0,l1,a1,b1)+ triADC2(l1,l2,a2,b2));
                 volt+=chargeDensity*(-triAD1(relPos,l0)+triAD1(relPos,l2));
+            }
+
+            for(int i = 0; i < conductor_count; i++) {
+                for(int x = 0; x < conductor_sizes[i]; x++) {
+                    int ind = i*50 + x;
+                    float charge = conductor_point_data[ind].z/2.0;
+                    float dist = max(0.1,distance(conductor_point_data[ind].xy,p.xy));
+                    volt += charge / dist;
+                    int next = i*50 + (x+1)%conductor_sizes[i];
+                    charge = (conductor_point_data[ind].z+conductor_point_data[next].z)/2.0;
+                    vec2 point = (conductor_point_data[ind].xy+conductor_point_data[next].xy)/2.0;
+                    dist = max(0.1,distance(point,p.xy));
+                    volt += charge / dist;
+                }
             }
 
             float dVolt = 2.0/(1.0+exp(-volt*2.0))-1.0;
