@@ -45,11 +45,9 @@ export default class Conductor extends Object {
     }
     updateRotation = () => {
         this.updateWorldSpace();
-        this.conduct();
     }
     updatePosition = () => {
         this.updateWorldSpace();
-        this.conduct();
     }
 
     decompose = (detail: number) => {

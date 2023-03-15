@@ -14,6 +14,7 @@ export default class Scene {
     static parameters = {
         viewportHeight: 10,
         physicsPerSecond: 100,
+        conductionPerSecond: 20,
         timeSpeed: 1,
         showGridLines: true,
         showVectorGrid: true,
@@ -30,7 +31,7 @@ export default class Scene {
     }
     static chargeColor = (charginess: number) => {
         let percent = 1 / (1 + Math.exp(-charginess));
-        return "#" + Math.round(255 * percent).toString(16).padStart(2,"0") + "00" + Math.round(255 * (1 - percent)).toString(16).padStart(2,"0");
+        return "#" + Math.round(255 * percent).toString(16).padStart(2, "0") + "00" + Math.round(255 * (1 - percent)).toString(16).padStart(2, "0");
     }
     static getChargeColor(charge: number) {
         if (charge < 0) return Scene.colors.negative;
@@ -187,8 +188,15 @@ export default class Scene {
         });
         return potential;
     }
+    physicsFrameCount: number = 0;
     physics = (dt: number) => {
+        this.physicsFrameCount++;
         this.objects.forEach((object) => {
+            if (object instanceof Conductor) {
+                let physicsPerConduct = Math.floor(Scene.parameters.physicsPerSecond / Scene.parameters.conductionPerSecond);
+                if(this.physicsFrameCount % physicsPerConduct == 0)
+                    object.conduct();
+            }
             object.incrementPosition(dt);
             //Destroy objects that are more than 100 units away
             if (object.position.x > 100 || object.position.x < -100 || object.position.y > 100 || object.position.y < -100) {
