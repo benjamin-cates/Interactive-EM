@@ -13,6 +13,11 @@ export default class InfinitePlane extends Object {
         return Vector.multiply(this.normal, Math.sign(Vector.dot(this.normal, deltaPos)) * 2 * this.chargeDensity * constants.K * Math.PI);
     }
 
+    voltageAt = (pos: Vector) => {
+        //V = C - 2πKσr
+        return 20 - 2 * this.chargeDensity * constants.K * Math.PI * this.distanceFrom(pos);
+    }
+
     constructor(chargeDensity: number, mass: number, position: Vector, rotation: number = 0) {
         super(mass, position, rotation);
         this.chargeDensity = chargeDensity;
