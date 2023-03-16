@@ -3,27 +3,25 @@ import Vector from "../vector";
 import PointCharge from "../charges/point_charge";
 import Scene from "../scene";
 import Constants from "../constants";
+import * as math from "mathjs";
+import { SQRT1_2 } from "mathjs";
 
 export default class Conductor extends Object {
     points: Vector[];
     charges: number[];
     netCharge: number;
-    sphereSize: number;
     sceneRef: Scene;
     worldSpacePoints: Vector[];
-    private voltageCoef: number;
-    private invVoltageCoef: number;
     private distanceCache: number[][];
+    private matrix: math.Matrix;
+    private voltage: number;
 
-    constructor(mass: number, position: Vector, rotation: number, points: Vector[], sphereSize: number, scene: Scene, netCharge: number = 0) {
+    constructor(mass: number, position: Vector, rotation: number, points: Vector[], scene: Scene, netCharge: number = 0) {
         super(mass, position, rotation);
         this.sceneRef = scene;
         this.points = points;
         this.netCharge = netCharge;
-        this.sphereSize = sphereSize;
         //Calculate some predefined constants
-        this.voltageCoef = 1.5 * Constants.K / this.sphereSize;
-        this.invVoltageCoef = 1 / this.voltageCoef;
         this.charges = new Array(this.points.length).fill(this.netCharge / this.points.length);
         this.distanceCache = this.points.map(() => []);
         for (let x = 0; x < this.points.length; x++) {
@@ -33,6 +31,20 @@ export default class Conductor extends Object {
                 this.distanceCache[y][x] = dist;
             }
         }
+        let n = this.points.length + 1;
+        const selfAffectance = 4.5;
+        let mat = [[]];
+        mat[0] = new Array(n - 1).fill(1);
+        mat[0][n - 1] = 0;
+        for (let i = 0; i < n - 1; i++) {
+            mat[i + 1] = [];
+            for (let j = 0; j < n - 1; j++) {
+                if (i == j) mat[i + 1][j] = selfAffectance;
+                else mat[i + 1][j] = 1 / this.distanceCache[i][j]
+            }
+            mat[i + 1][n - 1] = 1;
+        }
+        this.matrix = math.inv(math.matrix(mat));
         this.updateWorldSpace();
     }
     updateWorldSpace = () => {
@@ -75,48 +87,12 @@ export default class Conductor extends Object {
 
 
     conduct = () => {
-        let volts = this.worldSpacePoints.map((point: Vector) => this.sceneRef.voltageAt(point, this));
-        let updateVoltage = (i: number, deltaQ: number) => {
-            for (let x = 0; x < i; x++) volts[x] += Constants.K * deltaQ / this.distanceCache[i][x];
-            for (let x = i + 1; x < volts.length; x++) volts[x] += Constants.K * deltaQ / this.distanceCache[i][x];
-        }
-        //Add the voltage caused by points on the conductor
-        for (let i = 0; i < this.points.length; i++) {
-            for (let y = i + 1; y < this.points.length; y++) {
-                let dist = this.distanceCache[i][y];
-                volts[y] += Constants.K * this.charges[i] / dist;
-                volts[i] += Constants.K * this.charges[y] / dist;
-            }
-        }
-        //Add the voltage caused by itself
-        for (let i = 0; i < this.points.length; i++) {
-            volts[i] += this.voltageCoef * this.charges[i];
-        }
-
-        const maxIterations = 100;
-        let iterations = 0, keepGoing = true;
-        while (keepGoing && iterations < maxIterations) {
-            keepGoing = false;
-            const actionableDelta = 0.0001;
-            for (let i = 0; i < this.points.length - 1; i++) {
-                let next = (i + 8) % this.points.length;
-                let deltaV = volts[next] - volts[i];
-                if (Math.abs(deltaV) < actionableDelta) continue;
-
-                let deltaQ = deltaV * this.invVoltageCoef / 2;
-                this.charges[i] += deltaQ;
-                this.charges[next] -= deltaQ;
-
-                volts[i] += deltaV;
-                volts[next] -= deltaV;
-                updateVoltage(i, deltaQ);
-                updateVoltage(next, -deltaQ);
-
-                keepGoing = true;
-            }
-            iterations++;
-            if (iterations == maxIterations)
-                console.error("Conductor failed to converge");
-        }
+        const conductiness = 1;
+        //See the overleaf document for details on how this works
+        let volts = this.worldSpacePoints.map((point: Vector) => -conductiness * this.sceneRef.voltageAt(point, this));
+        volts.unshift(this.netCharge);
+        let charges = math.multiply(this.matrix, volts);
+        this.charges.map((charge: number, i: number) => this.charges[i] = Number(charges.toArray()[i]) / Constants.K);
+        this.voltage = Number(charges.get([this.points.length - 1]));
     }
 }

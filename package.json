@@ -9,6 +9,8 @@
   "author": "Benjamin Cates, Jerricho Ensign, Joey Battistoni",
   "license": "MIT",
   "dependencies": {
+    "@types/mathjs": "^9.4.2",
+    "mathjs": "^11.7.0",
     "ts-loader": "^9.4.2",
     "typescript": "^4.9.5",
     "webpack": "^5.75.0",

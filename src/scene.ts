@@ -300,7 +300,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "finite_line": new FiniteLine(0.4, 1, new Vector(0, 0), 0, 10),
         "triangle": new Triangle(1, new Vector(0, 0), 0, 1, new Vector(0, 0), new Vector(0, 1), new Vector(1, 0)),
         //@ts-ignore
-        "ring_conductor": new RingConductor(1, new Vector(0, 0), 0, 30, 2, 0.1, window.scene, 0),
+        "ring_conductor": new RingConductor(1, new Vector(0, 0), 0, 30, 2, window.scene, 0),
     };
     scene.updateObjects();
     window.addEventListener("mousedown", scene.mouseDown);

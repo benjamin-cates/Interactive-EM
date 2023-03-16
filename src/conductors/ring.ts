@@ -6,18 +6,18 @@ import Scene from "../scene";
 
 export default class RingConductor extends Conductor {
     radius: number;
-    constructor(mass: number, position: Vector, rotation: number, detail: number, radius: number, sphereSize: number, scene: Scene, netCharge: number = 0) {
+    constructor(mass: number, position: Vector, rotation: number, detail: number, radius: number, scene: Scene, netCharge: number = 0) {
         let points = [];
         let pointRadius = radius * 0.95;
         for (let i = 0; i < detail; i++) {
             let angle = i / detail * 2 * Math.PI;
             points.push(new Vector(pointRadius * Math.cos(angle), pointRadius * Math.sin(angle)));
         }
-        super(mass, position, rotation, points, sphereSize, scene, netCharge);
+        super(mass, position, rotation, points, scene, netCharge);
         this.radius = radius;
     }
 
-    clone = () => new RingConductor(this.mass, this.position.copy(), this.rotation, this.points.length, this.radius, this.sphereSize, this.sceneRef, this.netCharge);
+    clone = () => new RingConductor(this.mass, this.position.copy(), this.rotation, this.points.length, this.radius, this.sceneRef, this.netCharge);
     render = (ctx: CanvasRenderingContext2D) => {
         //Draw ring
         ctx.strokeStyle = "grey";
