@@ -8,7 +8,7 @@ export default class RingConductor extends Conductor {
     radius: number;
     constructor(mass: number, position: Vector, rotation: number, detail: number, radius: number, scene: Scene, netCharge: number = 0) {
         let pointRadius = radius * 0.95;
-        let testRadiuses = [radius * 1.05, radius * 0.85, radius * 0.6];
+        let testRadiuses = [radius * 0.9, radius * 0.85, radius * 0.6];
         let points = [];
         let testPoints = [];
         for (let i = 0; i < detail; i++) {
