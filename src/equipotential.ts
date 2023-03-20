@@ -128,7 +128,7 @@ export default class VoltCanvas {
             planeData[i * 4] = plane.position.x;
             planeData[i * 4 + 1] = plane.position.y;
             planeData[i * 4 + 2] = plane.rotation;
-            planeData[i * 4 + 3] = plane.chargeDensity;
+            planeData[i * 4 + 3] = plane.chargeDensity / 1000;
         });
         this.gl.uniform1i(this.uniLoc.plane_count, planes.length);
         if (planes.length > 0) this.gl.uniform4fv(this.uniLoc.plane_data, planeData);

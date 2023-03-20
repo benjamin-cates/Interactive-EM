@@ -110,12 +110,19 @@ export default class Triangle extends Object {
     }
     getType = (): ObjectTypes => "triangle_charge";
 
-    updateRotation = () => {
-        //TODO: update cached values for rotation and position
+    updateProperty = (property: string, value: number | Vector) => {
+        if (property == "chargeDensity") {
+            this.chargeDensity = value as number;
+        }
+        else if (property == "p1" || property == "p2" || property == "p3") {
+            if (property == "p1") this.points[0] = value as Vector;
+            if (property == "p2") this.points[1] = value as Vector;
+            if (property == "p3") this.points[2] = value as Vector;
+            window.Object.assign(this, this.clone());
+        }
+        else this.updateBaseProperty(property, value);
     }
-    updatePosition = () => {
-        //TODO: update cached values for rotation and position
-    }
+
     render = (ctx: CanvasRenderingContext2D) => {
         ctx.save();
         ctx.fillStyle = Scene.getChargeColor(this.chargeDensity);

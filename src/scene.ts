@@ -241,7 +241,7 @@ export default class Scene {
         for (let i = 0; i < this.objects.length; i++) {
             if (this.objects[i].distanceFrom(this.selected.dragPositions[0]) < 0.5) {
                 this.selected.obj = this.objects[i];
-                this.selected.obj.velocity = Vector.origin();
+                this.selected.obj.updateProperty("velocity", Vector.origin());
                 this.objEditor.setObj(this.objects[i])
                 this.selected.isGrab = true;
                 this.selected.posOffset = Vector.subtract(this.selected.obj.position, this.selected.dragPositions[0]);
@@ -261,8 +261,7 @@ export default class Scene {
             this.selected.dragPositions.shift();
             this.selected.dragTime.shift();
         }
-        this.selected.obj.position = pos;
-        this.selected.obj.updatePosition();
+        this.selected.obj.updateProperty("position", pos);
         this.objEditor.updateDisplay("position", pos);
         this.updateObjects();
         this.selected.dragTime.push(new Date().getTime());
@@ -277,9 +276,9 @@ export default class Scene {
         if (new Date().getTime() - this.selected.dragTime[this.selected.dragTime.length - 1] < 60) {
             let dt = new Date().getTime() - this.selected.dragTime[0];
             let dx = Vector.add(pos, Vector.multiply(this.selected.dragPositions[0], -1));
-            this.selected.obj.velocity = Vector.multiply(dx, 1000 / dt);
+            this.selected.obj.updateProperty("velocity", Vector.multiply(dx, 1000 / dt));
         }
-        else this.selected.obj.velocity = Vector.origin();
+        else this.selected.obj.updateProperty("velocity", Vector.origin());
         this.objEditor.updateDisplay("velocity", this.selected.obj.velocity);
         this.updateObjects();
     }
@@ -296,7 +295,7 @@ document.addEventListener("DOMContentLoaded", () => {
     window.scene = scene;
     Scene.defaultObjects = {
         "point_charge": new PointCharge({}),
-        "infinite_plane": new InfinitePlane({ chargeDensity: 0.02 }),
+        "infinite_plane": new InfinitePlane({ chargeDensity: 20 }),
         "finite_line": new FiniteLine({ chargeDensity: 0.4, length: 10 }),
         "triangle": new Triangle({ chargeDensity: 1, p1: new Vector(0, 0), p2: new Vector(0, 1), p3: new Vector(1, 0) }),
         //@ts-ignore

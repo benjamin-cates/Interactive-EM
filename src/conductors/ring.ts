@@ -48,6 +48,30 @@ export default class RingConductor extends Conductor {
             ctx.closePath();
         }
     }
+
+    updateProperty = (property: string, value: number | Vector) => {
+        if (property == "radius") {
+            this.radius = value as number;
+            window.Object.assign(this, this.clone());
+        }
+        else if (property == "detail") {
+            this.points.length = value as number;
+            window.Object.assign(this, this.clone());
+        }
+        else if (property == "netCharge") {
+            this.netCharge = value as number;
+            this.conduct();
+        }
+        else if (property == "position") {
+            this.position = value as Vector;
+            this.updateWorldSpace();
+        }
+        else if (property == "rotation") {
+            this.rotation = value as number;
+            this.updateWorldSpace();
+        }
+        else this.updateBaseProperty(property, value);
+    }
     distanceFrom = (pos: Vector) => {
         let dist = Vector.distance(this.position, pos);
         return Math.abs(dist - this.radius);

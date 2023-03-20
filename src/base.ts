@@ -25,6 +25,18 @@ export class Object {
 
     }
     getType: () => ObjectTypes = () => "all";
+    //Implemented for each class
+    updateProperty = (property: string, value: number | Vector) => {
+
+    }
+    updateBaseProperty = (property: string, value: number | Vector) => {
+        if (property == "velocity") this.velocity = value as Vector;
+        else if (property == "position") this.position = value as Vector;
+        else if (property == "rotation") this.rotation = value as number;
+        else if (property == "angularVelocity") this.angularVelocity = value as number;
+        else if (property == "mass") this.mass = value as number;
+        else throw new Error("Invalid property: " + property + " on type " + this.getType());
+    }
 
 
     //Electric field properties
@@ -46,21 +58,13 @@ export class Object {
         this.rotation += this.angularVelocity * dt;
         if (this.rotation > Math.PI) this.rotation -= 2 * Math.PI;
         if (this.rotation < -Math.PI) this.rotation += 2 * Math.PI;
-        if (this.angularVelocity != 0) this.updateRotation();
-        if (this.velocity.x != 0 || this.velocity.y != 0) this.updatePosition();
+        if (this.angularVelocity != 0) this.updateProperty("rotation", this.rotation);
+        if (this.velocity.x != 0 || this.velocity.y != 0) this.updateProperty("position", this.position);
     }
     distanceFrom(pos: Vector): number {
         return Vector.subtract(this.position, pos).magnitude();
     }
 
-    //Updates properties related to position (such as end points)
-    updatePosition = () => {
-
-    }
-    //Updates properties related to rotation (such as normal vector)
-    updateRotation = () => {
-
-    }
     applyForces = (dt: number, force: Vector, torque: number) => {
         this.incrementPosition(dt);
         this.velocity.add(Vector.multiply(force, dt / this.mass));

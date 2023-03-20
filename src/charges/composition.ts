@@ -41,16 +41,19 @@ export default class Composition extends Object {
         }
         return { force: netForce, torque: netTorque };
     }
-    updatePosition = () => {
-        let rotmat = Vector.rotationMatrix(this.rotation);
-        for (let i = 0; i < this.objs.length; i++) {
-            this.objs[i].position = Vector.add(this.position, Vector.transform(this.relPos[i], rotmat));
-            this.objs[i].updatePosition();
-            this.objs[i].rotation = this.rotation + this.relRot[i];
+    updateProperty = (property: string, value: number | Vector) => {
+        if (property == "position" || property == "rotation") {
+            if (property == "position") this.position = value as Vector;
+            else if (property == "rotation") this.rotation = value as number;
+            let rotmat = Vector.rotationMatrix(this.rotation);
+            for (let i = 0; i < this.objs.length; i++) {
+                this.objs[i].position = Vector.add(this.position, Vector.transform(this.relPos[i], rotmat));
+                this.objs[i].updateProperty("position", this.objs[i].position);
+                this.objs[i].rotation = this.rotation + this.relRot[i];
+                this.objs[i].updateProperty("rotation", this.objs[i].rotation);
+            }
         }
-    }
-    updateRotation = () => {
-        this.updatePosition();
+        else this.updateBaseProperty(property, value);
     }
 
     render = (ctx: CanvasRenderingContext2D) => {

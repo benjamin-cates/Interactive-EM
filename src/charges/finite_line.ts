@@ -47,20 +47,33 @@ export default class FiniteLine extends Object {
         super(properties);
         this.chargeDensity = properties.chargeDensity as number || 0;
         this.length = properties.length as number || 5;
-        this.updateRotation();
-        this.updatePosition();
+        this.updateProperty("rotation", this.rotation);
     }
     clone = () => {
         return new FiniteLine({ chargeDensity: this.chargeDensity, mass: this.mass, position: this.position.copy(), rotation: this.rotation, length: this.length, angularVelocity: this.angularVelocity, velocity: this.velocity.copy() });
     }
-    updatePosition = () => {
-        let dir = new Vector(Math.cos(this.rotation), Math.sin(this.rotation));
-        this.startPoint = Vector.add(this.position, Vector.multiply(dir, -this.length / 2));
-        this.endPoint = Vector.add(this.position, Vector.multiply(dir, this.length / 2));
-    }
-    updateRotation = () => {
-        this.normal = new Vector(-Math.sin(this.rotation), Math.cos(this.rotation));
-        this.updatePosition();
+    updateProperty = (property: string, value: number | Vector) => {
+        let updateEndPoints = false;
+        if (property == "chargeDensity") this.chargeDensity = value as number;
+        else if (property == "length") {
+            this.length = value as number;
+            updateEndPoints = true;
+        }
+        else if (property == "rotation") {
+            this.rotation = value as number;
+            this.normal = new Vector(-Math.sin(this.rotation), Math.cos(this.rotation));
+            updateEndPoints = true;
+        }
+        else if (property == "position") {
+            this.position = value as Vector;
+            updateEndPoints = true;
+        }
+        else this.updateBaseProperty(property, value);
+        if (updateEndPoints) {
+            let dir = new Vector(Math.cos(this.rotation), Math.sin(this.rotation));
+            this.startPoint = Vector.add(this.position, Vector.multiply(dir, -this.length / 2));
+            this.endPoint = Vector.add(this.position, Vector.multiply(dir, this.length / 2));
+        }
     }
     momentOfInertia = () => {
         return this.mass * Math.pow(this.length, 2) / 12;
