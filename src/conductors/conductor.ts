@@ -5,9 +5,6 @@ import Scene from "../scene";
 import Constants from "../constants";
 import * as math from "mathjs";
 
-//Remember to also change in the equipotential code
-const conductorDepth = 2;
-
 export default class Conductor extends Object {
     points: Vector[];
     testPoints: Vector[];
@@ -33,9 +30,8 @@ export default class Conductor extends Object {
         for (let j = 0; j < this.testPoints.length; j++) {
             mat[j + 1] = [];
             for (let i = 0; i < this.points.length; i++) {
-                let dist = Vector.distance(this.points[i], this.testPoints[j]);
-                let g = Math.sqrt(conductorDepth * conductorDepth + dist * dist);
-                mat[j + 1][i] = Constants.K / conductorDepth / 2.0 * Math.log((conductorDepth + g) / (-conductorDepth + g));
+                let delta = Vector.subtract(this.points[i], this.testPoints[j]);
+                mat[j + 1][i] = Constants.K * 4 / Math.sqrt(delta.x * delta.x + delta.y * delta.y + 0.83);
             }
             mat[j + 1][this.points.length] = 1;
         }
@@ -69,9 +65,9 @@ export default class Conductor extends Object {
     voltageAt = (pos: Vector): number => {
         let volts = 0;
         for (let i = 0; i < this.points.length; i++) {
-            let dist = Vector.distance(pos, this.worldSpacePoints[i]);
-            let g = Math.sqrt(dist * dist + conductorDepth * conductorDepth);
-            volts += Constants.K * (this.charges[i] / conductorDepth / 2.0) * Math.log((conductorDepth + g) / (-conductorDepth + g));
+            let delta = Vector.subtract(pos, this.worldSpacePoints[i]);
+            //See overleaf document for the derivation of this approximation
+            volts += Constants.K * 4.0 * this.charges[i] / Math.sqrt(delta.x * delta.x + delta.y * delta.y + 0.83);
         }
         return volts;
     }
@@ -81,8 +77,12 @@ export default class Conductor extends Object {
         for (let i = 0; i < this.points.length; i++) {
             let rhat = Vector.rHat(pos, this.worldSpacePoints[i]);
             let dist = Vector.distance(pos, this.worldSpacePoints[i]);
-            let scale = Constants.K * this.charges[i] / dist / Math.sqrt(dist * dist + conductorDepth * conductorDepth);
-            field.add(new Vector(rhat.x * scale, rhat.y * scale));
+            //See overleaf document for the derivation of this approximation
+            let root = Math.sqrt(dist * dist + 0.83);
+            let scale = Constants.K * this.charges[i] * 4 * dist / (root * root * root);
+            rhat.x *= scale;
+            rhat.y *= scale;
+            field.add(rhat);
         }
         return field;
     }
