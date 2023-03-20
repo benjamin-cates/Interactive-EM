@@ -39,21 +39,19 @@ export default class FiniteLine extends Object {
         //See Overleaf document for derivation
         let relPos = Vector.subtract(pos, this.position);
         let g = Vector.dot(relPos, new Vector(Math.cos(this.rotation), Math.sin(this.rotation)));
-        return constants.K * Math.sign(g) * this.chargeDensity * Math.log((Vector.distance(pos, this.startPoint) + Math.abs(g) + Math.sign(g)*this.length / 2) / (Vector.distance(pos, this.endPoint) + Math.abs(g) - Math.sign(g)*this.length / 2));
+        return constants.K * Math.sign(g) * this.chargeDensity * Math.log((Vector.distance(pos, this.startPoint) + Math.abs(g) + Math.sign(g) * this.length / 2) / (Vector.distance(pos, this.endPoint) + Math.abs(g) - Math.sign(g) * this.length / 2));
     }
 
-    constructor(chargeDensity: number, mass: number, position: Vector, rotation: number, length: number) {
-        super(mass, position, rotation);
-        this.chargeDensity = chargeDensity;
-        this.length = length;
+    constructor(properties: { [key: string]: number | Vector }) {
+        //chargeDensity: number, mass: number, position: Vector, rotation: number, length: number}) {
+        super(properties);
+        this.chargeDensity = properties.chargeDensity as number || 0;
+        this.length = properties.length as number || 5;
         this.updateRotation();
         this.updatePosition();
     }
     clone = () => {
-        let clone = new FiniteLine(this.chargeDensity, this.mass, this.position.copy(), this.rotation, this.length);
-        clone.velocity = this.velocity.copy();
-        clone.angularVelocity = this.angularVelocity;
-        return clone;
+        return new FiniteLine({ chargeDensity: this.chargeDensity, mass: this.mass, position: this.position.copy(), rotation: this.rotation, length: this.length, angularVelocity: this.angularVelocity, velocity: this.velocity.copy() });
     }
     updatePosition = () => {
         let dir = new Vector(Math.cos(this.rotation), Math.sin(this.rotation));
@@ -107,7 +105,7 @@ export default class FiniteLine extends Object {
         let step = Vector.multiply(Vector.subtract(this.endPoint, this.startPoint), 1 / detail);
         let charge = this.chargeDensity / detail;
         for (let i = 0; i < detail; i++) {
-            objs.push(new PointCharge(charge, this.mass / detail, Vector.add(this.startPoint, Vector.multiply(step, i))));
+            objs.push(new PointCharge({ charge: charge, position: Vector.add(this.startPoint, Vector.multiply(step, i)) }));
         }
         return objs;
     }

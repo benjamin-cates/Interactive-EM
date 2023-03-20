@@ -6,7 +6,10 @@ import Scene from "../scene";
 
 export default class RingConductor extends Conductor {
     radius: number;
-    constructor(mass: number, position: Vector, rotation: number, detail: number, radius: number, scene: Scene, netCharge: number = 0) {
+    constructor(properties: { [key: string]: number | Vector | Vector[] | Scene }) {
+        //mass: number, position: Vector, rotation: number, detail: number, radius: number, scene: Scene, netCharge: number = 0) {
+        let radius = properties.radius as number || 1;
+        let detail = properties.detail as number || 20;
         let pointRadius = radius * 0.95;
         let testRadiuses = [radius * 0.9, radius * 0.85, radius * 0.6];
         let points = [];
@@ -19,11 +22,13 @@ export default class RingConductor extends Conductor {
             testPoints.push(new Vector(testRadiuses[1] * Math.cos(angleAndHalf), testRadiuses[1] * Math.sin(angleAndHalf)));
             testPoints.push(new Vector(testRadiuses[2] * Math.cos(angleAndHalf), testRadiuses[2] * Math.sin(angleAndHalf)));
         }
-        super(mass, position, rotation, points, testPoints, scene, netCharge);
+        properties.points = points;
+        properties.testPoints = testPoints;
+        super(properties);
         this.radius = radius;
     }
 
-    clone = () => new RingConductor(this.mass, this.position.copy(), this.rotation, this.points.length, this.radius, this.sceneRef, this.netCharge);
+    clone = () => new RingConductor({ mass: this.mass, position: this.position.copy(), rotation: this.rotation, radius: this.radius, scene: this.sceneRef, netCharge: this.netCharge, detail: this.points.length, points: this.points, testPoints: this.testPoints, angularVelocity: this.angularVelocity, velocity: this.velocity.copy() });
     render = (ctx: CanvasRenderingContext2D) => {
         //Draw ring
         ctx.strokeStyle = "grey";

@@ -18,13 +18,13 @@ export default class InfinitePlane extends Object {
         return 20 - 2 * this.chargeDensity * constants.K * Math.PI * this.distanceFrom(pos);
     }
 
-    constructor(chargeDensity: number, mass: number, position: Vector, rotation: number = 0) {
-        super(mass, position, rotation);
-        this.chargeDensity = chargeDensity;
+    constructor(properties: { [key: string]: number | Vector }) {
+        super(properties);
+        this.chargeDensity = properties.chargeDensity as number || 0;
         this.updateRotation();
     }
     clone = () => {
-        let clone = new InfinitePlane(this.chargeDensity, this.mass, this.position.copy(), this.rotation);
+        let clone = new InfinitePlane({ chargeDensity: this.chargeDensity, mass: this.mass, position: this.position.copy(), rotation: this.rotation, velocity: this.velocity.copy(), angularVelocity: this.angularVelocity });
         clone.velocity = this.velocity.copy();
         clone.angularVelocity = this.angularVelocity;
         return clone;

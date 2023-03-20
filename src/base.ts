@@ -9,19 +9,16 @@ export class Object {
     rotation: number;
     angularVelocity: number;
 
-    constructor(mass: number, position: Vector, rotation: number = 0) {
-        this.velocity = new Vector(0, 0);
-        this.position = position;
-        this.mass = mass;
-        this.rotation = rotation;
-        this.angularVelocity = 0;
+    constructor(properties: { [key: string]: number | Vector }) {
+        this.velocity = properties.velocity as Vector || new Vector(0, 0);
+        this.position = (properties.position as Vector) || Vector.origin();
+        this.mass = properties.mass as number || 1;
+        this.rotation = properties.rotation as number || 0;
+        this.angularVelocity = properties.angularVelocity as number || 0;
     }
 
     clone = () => {
-        let clone = new Object(this.mass, this.position.copy(), this.rotation);
-        clone.velocity = this.velocity.copy();
-        clone.angularVelocity = this.angularVelocity;
-        return clone;
+        return new Object({ mass: this.mass, position: this.position.copy(), rotation: this.rotation, angularVelocity: this.angularVelocity });
     }
 
     render = (ctx: CanvasRenderingContext2D) => {

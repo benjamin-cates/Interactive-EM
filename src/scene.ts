@@ -14,7 +14,7 @@ export default class Scene {
     static parameters = {
         viewportHeight: 10,
         physicsPerSecond: 100,
-        conductionPerSecond: 50,
+        conductionPerSecond: 33,
         timeSpeed: 1,
         showGridLines: true,
         showVectorGrid: true,
@@ -194,7 +194,7 @@ export default class Scene {
         this.objects.forEach((object) => {
             if (object instanceof Conductor) {
                 let physicsPerConduct = Math.floor(Scene.parameters.physicsPerSecond / Scene.parameters.conductionPerSecond);
-                if(this.physicsFrameCount % physicsPerConduct == 0)
+                if (this.physicsFrameCount % physicsPerConduct == 0)
                     object.conduct();
             }
             object.incrementPosition(dt);
@@ -295,12 +295,12 @@ document.addEventListener("DOMContentLoaded", () => {
     //@ts-ignore
     window.scene = scene;
     Scene.defaultObjects = {
-        "point_charge": new PointCharge(1, 1, new Vector(0, 0)),
-        "infinite_plane": new InfinitePlane(0.02, 1, new Vector(0, 0)),
-        "finite_line": new FiniteLine(0.4, 1, new Vector(0, 0), 0, 10),
-        "triangle": new Triangle(1, new Vector(0, 0), 0, 1, new Vector(0, 0), new Vector(0, 1), new Vector(1, 0)),
+        "point_charge": new PointCharge({}),
+        "infinite_plane": new InfinitePlane({ chargeDensity: 0.02 }),
+        "finite_line": new FiniteLine({ chargeDensity: 0.4, length: 10 }),
+        "triangle": new Triangle({ chargeDensity: 1, p1: new Vector(0, 0), p2: new Vector(0, 1), p3: new Vector(1, 0) }),
         //@ts-ignore
-        "ring_conductor": new RingConductor(1, new Vector(0, 0), 0, 30, 2, window.scene, 0),
+        "ring_conductor": new RingConductor({ detail: 30, radius: 2, scene: window.scene }),
     };
     scene.updateObjects();
     window.addEventListener("mousedown", scene.mouseDown);

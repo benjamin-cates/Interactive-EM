@@ -9,14 +9,16 @@ export default class Triangle extends Object {
     chargeDensity: number;
     tip: Vector;
     halfWidth: number;
-    constructor(mass: number, position: Vector, rotation: number, chargeDensity: number, p1: Vector, p2: Vector, p3: Vector) {
-        super(mass, position, rotation);
-        this.points = [p1, p2, p3];
-        this.chargeDensity = chargeDensity;
+    constructor(properties: { [key: string]: number | Vector }) {
+        //mass: number, position: Vector, rotation: number, chargeDensity: number, p1: Vector, p2: Vector, p3: Vector) {
+        super(properties);
+        if (!properties.p1 || !properties.p2 || !properties.p3) throw new Error("Triangle must have 3 points in properties constructor");
+        this.points = [properties.p1 as Vector, properties.p2 as Vector, properties.p3 as Vector];
+        this.chargeDensity = properties.chargeDensity as number || 1;
         //Find lengths
-        let d1 = Vector.distance(p1, p2);
-        let d2 = Vector.distance(p2, p3);
-        let d3 = Vector.distance(p3, p1);
+        let d1 = Vector.distance(this.points[0], this.points[1]);
+        let d2 = Vector.distance(this.points[1], this.points[2]);
+        let d3 = Vector.distance(this.points[2], this.points[0]);
         let hypot = 2, hypot2 = 0, tip = 1;
         if (d1 >= d2 && d1 >= d3) hypot = 0, hypot2 = 1, tip = 2;
         else if (d2 >= d1 && d2 >= d3) hypot = 1, hypot2 = 2, tip = 0;
@@ -24,7 +26,7 @@ export default class Triangle extends Object {
         let hypotVec = Vector.add(this.points[hypot], Vector.multiply(this.points[hypot2], -1));
         this.halfWidth = hypotVec.magnitude() / 2;
         //Shift so that the center of mass is in the middle
-        let COM = Vector.multiply(Vector.add(Vector.add(p1, p2), p3), 1 / 3);
+        let COM = Vector.multiply(Vector.add(Vector.add(this.points[0], this.points[1]), this.points[2]), 1 / 3);
         this.position.add(COM);
         let negCOM = Vector.multiply(COM, -1);
         this.points.forEach(p => p.add(negCOM));
@@ -48,7 +50,7 @@ export default class Triangle extends Object {
         //Set position relative to center of the hypotenuse
         p.y -= this.tip.y / 2;
         let halfWidth = this.halfWidth;
-        let height = this.tip.y * 3/2;
+        let height = this.tip.y * 3 / 2;
         let ox = this.tip.x;
 
         //Do funky calculations
@@ -104,7 +106,7 @@ export default class Triangle extends Object {
         );
     }
     clone = (): Triangle => {
-        return new Triangle(this.mass, this.position.copy(), this.rotation, this.chargeDensity, this.points[0].copy(), this.points[1].copy(), this.points[2].copy());
+        return new Triangle({ mass: this.mass, position: this.position.copy(), rotation: this.rotation, chargeDensity: this.chargeDensity, p1: this.points[0].copy(), p2: this.points[1].copy(), p3: this.points[2].copy() });
     }
     getType = (): ObjectTypes => "triangle_charge";
 
@@ -143,8 +145,10 @@ export default class Triangle extends Object {
         //Generate all points that are an integer linear combination of unit1 and unit2 and that are on the triangle
         for (let x = 0; x <= sideLen; x++) {
             for (let y = 0; y <= sideLen - x; y++) {
-                objs.push(new PointCharge(charge, 1,
-                    Vector.add(this.points[0], Vector.add(Vector.multiply(unit1, x), Vector.multiply(unit2, y)))));
+                objs.push(new PointCharge({
+                    charge,
+                    position: Vector.add(this.points[0], Vector.add(Vector.multiply(unit1, x), Vector.multiply(unit2, y)))
+                }));
             }
         }
         objs.forEach(obj => obj.position.rotate(this.rotation));

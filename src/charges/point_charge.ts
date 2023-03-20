@@ -1,4 +1,4 @@
-import {Object, ObjectTypes} from "../base";
+import { Object, ObjectTypes } from "../base";
 import Vector from "../vector";
 import constants from "../constants";
 import Scene from "../scene";
@@ -8,23 +8,18 @@ export default class PointCharge extends Object {
     charge: number;
 
     fieldAt = (pos: Vector) => {
-        return  Vector.multiply(Vector.inverseSquareField(pos, this.position), constants.K * this.charge);
+        return Vector.multiply(Vector.inverseSquareField(pos, this.position), constants.K * this.charge);
     }
     voltageAt = (pos: Vector) => {
         let distance: number = Vector.distance(pos, this.position)
-        return ((constants.K * this.charge)/ distance);
+        return ((constants.K * this.charge) / distance);
     }
 
-    constructor(charge: number, mass: number, position: Vector) {
-        super(mass, position);
-        this.charge = charge;
+    constructor(properties: { [key: string]: number | Vector }) {
+        super(properties);
+        this.charge = properties.charge as number || 1;
     }
-    clone = () => {
-        let clone = new PointCharge(this.charge, this.mass, this.position.copy());
-        clone.velocity = this.velocity.copy();
-        clone.angularVelocity = this.angularVelocity;
-        return clone;
-    }
+    clone = () => new PointCharge({ charge: this.charge, position: this.position.copy(), velocity: this.velocity.copy(), mass: this.mass });
     getType: () => ObjectTypes = () => "point_charge";
 
     render = (ctx: CanvasRenderingContext2D) => {

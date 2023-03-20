@@ -16,12 +16,16 @@ export default class Conductor extends Object {
     private matrix: math.Matrix;
     private voltage: number;
 
-    constructor(mass: number, position: Vector, rotation: number, points: Vector[], testPoints: Vector[], scene: Scene, netCharge: number = 0) {
-        super(mass, position, rotation);
-        this.sceneRef = scene;
-        this.points = points;
-        this.testPoints = testPoints;
-        this.netCharge = netCharge;
+    constructor(properties: { [key: string]: number | Vector | Vector[] | Scene }) {
+        //mass: number, position: Vector, rotation: number, points: Vector[], testPoints: Vector[], scene: Scene, netCharge: number = 0) {
+        super(properties as { [key: string]: number | Vector });
+        if (!properties.points) throw new Error("Conductor must have charge points");
+        if (!properties.testPoints) throw new Error("Conductor must have test points");
+        if (!properties.scene) throw new Error("Conductor properties must reference a scene");
+        this.sceneRef = properties.scene as Scene;
+        this.points = properties.points as Vector[];
+        this.testPoints = properties.testPoints as Vector[];
+        this.netCharge = properties.netCharge as number || 0;
         //Calculate some predefined constants
         this.charges = new Array(this.points.length).fill(this.netCharge / this.points.length);
         let mat = [[]];
@@ -59,7 +63,7 @@ export default class Conductor extends Object {
     }
 
     decompose = (detail: number) => {
-        return this.worldSpacePoints.map((point: Vector, i: number) => new PointCharge(this.charges[i], 1, point));
+        return this.worldSpacePoints.map((point: Vector, i: number) => new PointCharge({ charge: this.charges[i], position: point }));
     }
 
     voltageAt = (pos: Vector): number => {

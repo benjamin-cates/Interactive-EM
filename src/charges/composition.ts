@@ -8,15 +8,17 @@ export default class Composition extends Object {
     relPos: Vector[];
     relRot: number[];
 
-    constructor(objs: Object[], position: Vector, rotation: number = 0) {
+    constructor(properties: { [key: string]: number | Vector | Object[] }) {
+        if (!properties.objs) throw new Error("Composition must have objs property");
         //Calculate total mass and translate all objects relative to the center of mass
         let mass = 0;
         let COM = Vector.origin();
+        let objs = properties.objs as Object[];
         objs.forEach(obj => {
             mass += obj.mass;
             COM.add(Vector.multiply(obj.position, obj.mass));
         });
-        super(mass, position, rotation);
+        super(properties as { [key: string]: number | Vector });
         this.relPos = [];
         this.relRot = [];
         objs.forEach((obj, i) => {
