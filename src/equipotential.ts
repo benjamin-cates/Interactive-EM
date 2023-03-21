@@ -221,10 +221,9 @@ export default class VoltCanvas {
             float l = sqrt(a*a+1.0);
             return y*asinh(f)+b/l*log(abs((g+l)/(g-l)));
         }
-        float triAD0(float s,float a, float b) {
+        float triAD0(float a, float b) {
             float l = sqrt(a*a+1.0);
-            float g = s*a+1.0;
-            return b/l*log(abs((g+l)/(g-l)));
+            return 2.0*b/l*log(abs((l-1.0)/a));
         }
 
         out vec4 fragColor;
@@ -281,7 +280,7 @@ export default class VoltCanvas {
                 float b2 = relPos.y*a2 - halfWidth - relPos.x;
 
                 if(sign(relPos.y-height)!=sign(relPos.y)) {
-                    float corr = -triAD0(1.0,a1,b1)-triAD0(-1.0,a1,b1)+triAD0(1.0,a2,b2)+triAD0(-1.0,a2,b2);
+                    float corr = triAD0(a1,b1)-triAD0(a2,b2);
                     volt+=chargeDensity*(triAD(height-relPos.y,a1,b1)+triAD(-relPos.y,a1,b1)-triAD(height-relPos.y,a2,b2)-triAD(-relPos.y,a2,b2)+corr);
                 }
                 else {
