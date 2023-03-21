@@ -215,24 +215,16 @@ export default class VoltCanvas {
         const float contour = 1.0;
 
 
-        float triAD1(vec2 p, float x) {
-            float l = sqrt(p.y*p.y/(x*x)+1.0000001);
-            return sign(x)*(x*asinh(p.y/x) + p.y/2.0 * log((l+1.0)/(l-1.0)));
+        float triAD(float y,float a,float b) {
+            float f = a+b/y;
+            float g = (a*sqrt(f*f+1.0)-a)/f + 1.0;
+            float l = sqrt(a*a+1.0);
+            return y*asinh(f)+b/l*log(abs((g+l)/(g-l)));
         }
-        float triAD2(float x, float a, float b) {
-            float abx = a+b/x;
-            float t = a * (sqrt(abx*abx+1.0)-1.0) / abx;
-            float l = sqrt(a*a + 1.0);
-            return x * asinh(abx) + b/l * log(abs((t+l+1.0)/(t-l+1.0)));
-        }
-
-        float triADC2(float L, float U, float a, float b) {
-            if(sign(L)!=sign(U)) {
-                float l = sqrt(a*a+1.0);
-                float corr =  sign(a)*abs(b)/l*abs(log(abs((a+l+1.0)/(a-l+1.0)))-log(abs((-a+l+1.0)/(-a-l+1.0))));
-                return triAD2(U,a,b)-triAD2(L,a,b) - 2.0*corr;
-            }
-            return sign(U)*(triAD2(U,a,b)-triAD2(L,a,b));
+        float triAD0(float s,float a, float b) {
+            float l = sqrt(a*a+1.0);
+            float g = s*a+1.0;
+            return b/l*log(abs((g+l)/(g-l)));
         }
 
         out vec4 fragColor;
@@ -282,17 +274,21 @@ export default class VoltCanvas {
                 relPos = vec2(cosRot * relPos.x - sinRot * relPos.y, sinRot * relPos.x + cosRot * relPos.y);
 
                 relPos.y+=tip.y/2.0;
-                float a1 = height / (tip.x + halfWidth);
-                float b1 = (relPos.x + halfWidth) * a1 - relPos.y;
-                float a2 = height / (tip.x - halfWidth);
-                float b2 = (relPos.x-tip.x) * a2 + height - relPos.y;
+
+                float a1 = (tip.x-halfWidth)/height;
+                float a2 = (tip.x+halfWidth)/height;
+                float b1 = relPos.y*a1 + halfWidth - relPos.x;
+                float b2 = relPos.y*a2 - halfWidth - relPos.x;
+
+                if(sign(relPos.y-height)!=sign(relPos.y)) {
+                    float corr = -triAD0(1.0,a1,b1)-triAD0(-1.0,a1,b1)+triAD0(1.0,a2,b2)+triAD0(-1.0,a2,b2);
+                    volt+=chargeDensity*(triAD(height-relPos.y,a1,b1)+triAD(-relPos.y,a1,b1)-triAD(height-relPos.y,a2,b2)-triAD(-relPos.y,a2,b2)+corr);
+                }
+                else {
+                    volt += chargeDensity*sign(-relPos.y)*(triAD(height-relPos.y,a1,b1)-triAD(-relPos.y,a1,b1)-triAD(height-relPos.y,a2,b2)+triAD(-relPos.y,a2,b2));
+                }
 
 
-                float l0 = -halfWidth - relPos.x;
-                float l1 = tip.x - relPos.x;
-                float l2 = halfWidth - relPos.x;
-                volt+=chargeDensity* (triADC2(l0,l1,a1,b1)+ triADC2(l1,l2,a2,b2));
-                volt+=chargeDensity*(-triAD1(relPos,l0)+triAD1(relPos,l2));
             }
 
             for(int i = 0; i < conductor_count; i++) {
