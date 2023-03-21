@@ -42,35 +42,40 @@ export default class Triangle extends Object {
     }
 
     voltageAt = (pos: Vector): number => {
+        const triAD = (y: number, a: number, b: number) => {
+            let f = a + b / y;
+            let g = (a * Math.sqrt(f * f + 1.0) - a) / f + 1.0;
+            let l = Math.sqrt(a * a + 1.0);
+            return y * Math.asinh(f) + b / l * Math.log(Math.abs((g + l) / (g - l)));
+        }
+        const triAD0 = (a: number, b: number) => {
+            let l = Math.sqrt(a * a + 1.0);
+            return 2.0 * b / l * Math.log(Math.abs((l - 1.0) / a));
+        }
         //TODO: Make sure these are correct
         //TODO: Cache some of these calculations to improve efficiency
         //Translate so the center of the hypotenuse is at the origin
         let p = Vector.add(pos, Vector.multiply(this.position, -1));
         p.rotate(this.rotation);
         //Set position relative to center of the hypotenuse
-        p.y -= this.tip.y / 2;
+        p.y += this.tip.y / 2;
         let halfWidth = this.halfWidth;
         let height = this.tip.y * 3 / 2;
         let ox = this.tip.x;
 
         //Do funky calculations
-        let a = height / halfWidth;
-        let b = p.x * a - p.y;
-        let c = height / (ox - halfWidth);
-        let d = (halfWidth * height - p.x * height - p.y * halfWidth + ox * p.y) / (halfWidth - ox);
 
-        let l0 = -halfWidth - p.x;
-        let l1 = ox - p.x;
-        let l2 = halfWidth - p.x;
-
-        const f1 = (x: number) => -p.y * Math.log(Math.abs(-p.y * Math.sqrt(x * x + p.y * p.y) + Math.abs(p.y) * x)) + x * Math.asinh(-p.y / x);
-        const f2 = (x: number, a: number, b: number) => a * (Math.sqrt((a + x / b) ** 2 + 1) - 1) / (a + x / b);
-        const f3 = (x: number, a: number, b: number) => {
-            let t = f2(x, a, b);
-            let l = Math.sqrt(a * a + 1);
-            return x * Math.asinh(a + b / x) + b / l * Math.log(Math.abs((t + l + 1) / (t - l + 1)))
+        let a1 = (this.tip.x - halfWidth) / height;
+        let a2 = (this.tip.x + halfWidth) / height;
+        let b1 = p.y * a1 + halfWidth - p.x;
+        let b2 = p.y * a2 - halfWidth - p.x;
+        if (Math.sign(p.y - height) != Math.sign(p.y)) {
+            let corr = triAD0(a1, b1) - triAD0(a2, b2);
+            return constants.K * this.chargeDensity * (triAD(height - p.y, a1, b1) + triAD(-p.y, a1, b1) - triAD(height - p.y, a2, b2) - triAD(-p.y, a2, b2) + corr);
         }
-        return constants.K * this.chargeDensity * (f3(l1, a, b) - f3(l0, a, b) + f3(l2, c, d) - f3(l1, c, d) + f1(l0) - f1(l2));
+        else {
+            return constants.K * this.chargeDensity * Math.sign(-p.y) * (triAD(height - p.y, a1, b1) - triAD(-p.y, a1, b1) - triAD(height - p.y, a2, b2) + triAD(-p.y, a2, b2));
+        }
     }
 
     fieldAt = (pos: Vector): Vector => {
