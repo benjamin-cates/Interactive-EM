@@ -40,6 +40,7 @@ interface Slider {
 }
 const canMove: ObjectTypes[] = ["point_charge", "finite_line", "triangle_charge", "ring_conductor"];
 const canRotate: ObjectTypes[] = ["finite_line", "infinite_plane", "triangle_charge", "conductor"];
+const conductor: ObjectTypes[] = ["conductor", "ring_conductor"];
 const sliders: Slider[] = [
 
     //Universal
@@ -134,6 +135,14 @@ const sliders: Slider[] = [
         for: ["ring_conductor"],
         correction: logCorrection,
     },
+    {
+        name: "netCharge",
+        display: "Net Charge",
+        type: "number", unit: "μC",
+        min: -3, max: 3,
+        for: conductor,
+        correction: powerCorrection,
+    }
 ];
 function getSliderId(name: string, type: ObjectTypes) {
     return sliders.findIndex((slider) => (slider.name == name && (slider.for == "all" || slider.for.includes(type))));
@@ -296,7 +305,8 @@ export default class ObjEditor {
                     else if (this.curType == "infinite_plane") this.curState[slider.name] = (obj as InfinitePlane).chargeDensity;
                     else if (this.curType == "triangle_charge") this.curState[slider.name] = (obj as Triangle).chargeDensity;
                 }
-                else if(slider.name == "radius") this.curState[slider.name] = (obj as RingConductor).radius;
+                else if (slider.name == "radius") this.curState[slider.name] = (obj as RingConductor).radius;
+                else if (slider.name == "netCharge") this.curState[slider.name] = (obj as Conductor).netCharge;
             }
         }
         this.generateHTML();

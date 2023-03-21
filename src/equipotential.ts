@@ -300,7 +300,7 @@ export default class VoltCanvas {
                     int ind = i*50 + x;
                     float charge = conductor_point_data[ind].z;
                     vec2 delta = conductor_point_data[ind].xy - p;
-                    volt += charge*4.0/sqrt(delta.x*delta.x+delta.y*delta.y+0.83);
+                    volt += charge/sqrt(delta.x*delta.x+delta.y*delta.y+0.83);
                 }
             }
 

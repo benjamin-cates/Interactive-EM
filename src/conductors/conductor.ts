@@ -35,7 +35,7 @@ export default class Conductor extends Object {
             mat[j + 1] = [];
             for (let i = 0; i < this.points.length; i++) {
                 let delta = Vector.subtract(this.points[i], this.testPoints[j]);
-                mat[j + 1][i] = Constants.K * 4 / Math.sqrt(delta.x * delta.x + delta.y * delta.y + 0.83);
+                mat[j + 1][i] = Constants.K / Math.sqrt(delta.x * delta.x + delta.y * delta.y + 0.83);
             }
             mat[j + 1][this.points.length] = 1;
         }
@@ -71,7 +71,7 @@ export default class Conductor extends Object {
         for (let i = 0; i < this.points.length; i++) {
             let delta = Vector.subtract(pos, this.worldSpacePoints[i]);
             //See overleaf document for the derivation of this approximation
-            volts += Constants.K * 4.0 * this.charges[i] / Math.sqrt(delta.x * delta.x + delta.y * delta.y + 0.83);
+            volts += Constants.K * this.charges[i] / Math.sqrt(delta.x * delta.x + delta.y * delta.y + 0.83);
             if(isNaN(volts)) console.log("NaN", i,Constants.K * 4.0 * this.charges[i], Math.sqrt(delta.x * delta.x + delta.y * delta.y + 0.83));
         }
         return volts;
@@ -84,7 +84,7 @@ export default class Conductor extends Object {
             let dist = Vector.distance(pos, this.worldSpacePoints[i]);
             //See overleaf document for the derivation of this approximation
             let root = Math.sqrt(dist * dist + 0.83);
-            let scale = Constants.K * this.charges[i] * 4 * dist / (root * root * root);
+            let scale = Constants.K * this.charges[i] * dist / (root * root * root);
             rhat.x *= scale;
             rhat.y *= scale;
             field.add(rhat);
