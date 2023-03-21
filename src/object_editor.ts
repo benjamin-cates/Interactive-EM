@@ -290,24 +290,8 @@ export default class ObjEditor {
         //Update curState to match sliders
         for (let i = 0; i < sliders.length; i++) {
             let slider = sliders[i];
-            if (slider.for == "all" || slider.for.includes(this.curType)) {
-                //Universal
-                if (slider.name == "position") this.curState[slider.name] = obj.position;
-                else if (slider.name == "velocity") this.curState[slider.name] = obj.velocity;
-                else if (slider.name == "rotation") this.curState[slider.name] = obj.rotation;
-                else if (slider.name == "angularVelocity") this.curState[slider.name] = obj.angularVelocity;
-                else if (slider.name == "mass") this.curState[slider.name] = obj.mass;
-                //Specific
-                else if (slider.name == "charge") this.curState[slider.name] = (obj as PointCharge).charge;
-                else if (slider.name == "length") this.curState[slider.name] = (obj as FiniteLine).length;
-                else if (slider.name == "chargeDensity") {
-                    if (this.curType == "finite_line") this.curState[slider.name] = (obj as FiniteLine).chargeDensity;
-                    else if (this.curType == "infinite_plane") this.curState[slider.name] = (obj as InfinitePlane).chargeDensity;
-                    else if (this.curType == "triangle_charge") this.curState[slider.name] = (obj as Triangle).chargeDensity;
-                }
-                else if (slider.name == "radius") this.curState[slider.name] = (obj as RingConductor).radius;
-                else if (slider.name == "netCharge") this.curState[slider.name] = (obj as Conductor).netCharge;
-            }
+            if (slider.for == "all" || slider.for.includes(this.curType))
+                this.curState[slider.name] = obj[slider.name];
         }
         this.generateHTML();
         this.show();
