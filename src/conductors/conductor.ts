@@ -13,7 +13,7 @@ export default class Conductor extends Object {
     sceneRef: Scene;
     worldSpacePoints: Vector[];
     worldSpaceTestPoints: Vector[];
-    private matrix: math.Matrix;
+    matrix: math.Matrix;
     private voltage: number;
 
     constructor(properties: { [key: string]: number | Vector | Vector[] | Scene }) {
@@ -72,6 +72,7 @@ export default class Conductor extends Object {
             let delta = Vector.subtract(pos, this.worldSpacePoints[i]);
             //See overleaf document for the derivation of this approximation
             volts += Constants.K * 4.0 * this.charges[i] / Math.sqrt(delta.x * delta.x + delta.y * delta.y + 0.83);
+            if(isNaN(volts)) console.log("NaN", i,Constants.K * 4.0 * this.charges[i], Math.sqrt(delta.x * delta.x + delta.y * delta.y + 0.83));
         }
         return volts;
     }

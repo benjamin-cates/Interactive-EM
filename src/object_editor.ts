@@ -3,6 +3,7 @@ import InfinitePlane from "./charges/infinite_plane";
 import Conductor from "./conductors/conductor";
 import FiniteLine from "./charges/finite_line";
 import Triangle from "./charges/triangle";
+import RingConductor from "./conductors/ring";
 import Vector from "./vector";
 import constants from "./constants";
 import { Object, ObjectTypes } from "./base";
@@ -123,6 +124,15 @@ const sliders: Slider[] = [
         min: -1.5, max: 1.5,
         for: ["triangle_charge"],
         correction: powerCorrection,
+    },
+
+    //Ring conductor
+    {
+        name: "radius",
+        type: "number", unit: "m",
+        min: 0.4, max: 5,
+        for: ["ring_conductor"],
+        correction: logCorrection,
     },
 ];
 function getSliderId(name: string, type: ObjectTypes) {
@@ -286,6 +296,7 @@ export default class ObjEditor {
                     else if (this.curType == "infinite_plane") this.curState[slider.name] = (obj as InfinitePlane).chargeDensity;
                     else if (this.curType == "triangle_charge") this.curState[slider.name] = (obj as Triangle).chargeDensity;
                 }
+                else if(slider.name == "radius") this.curState[slider.name] = (obj as RingConductor).radius;
             }
         }
         this.generateHTML();

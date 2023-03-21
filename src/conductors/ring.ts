@@ -7,13 +7,12 @@ import Scene from "../scene";
 export default class RingConductor extends Conductor {
     radius: number;
     constructor(properties: { [key: string]: number | Vector | Vector[] | Scene }) {
-        //mass: number, position: Vector, rotation: number, detail: number, radius: number, scene: Scene, netCharge: number = 0) {
         let radius = properties.radius as number || 1;
-        let detail = properties.detail as number || 20;
         let pointRadius = radius * 0.95;
         let testRadiuses = [radius * 0.9, radius * 0.85, radius * 0.6];
         let points = [];
         let testPoints = [];
+        let detail = Math.floor(radius * 10);
         for (let i = 0; i < detail; i++) {
             let angle = i / detail * 2 * Math.PI;
             points.push(new Vector(pointRadius * Math.cos(angle), pointRadius * Math.sin(angle)));
@@ -28,7 +27,7 @@ export default class RingConductor extends Conductor {
         this.radius = radius;
     }
 
-    clone = () => new RingConductor({ mass: this.mass, position: this.position.copy(), rotation: this.rotation, radius: this.radius, scene: this.sceneRef, netCharge: this.netCharge, detail: this.points.length, points: this.points, testPoints: this.testPoints, angularVelocity: this.angularVelocity, velocity: this.velocity.copy() });
+    clone = () => new RingConductor({ mass: this.mass, position: this.position.copy(), rotation: this.rotation, radius: this.radius, scene: this.sceneRef, netCharge: this.netCharge, angularVelocity: this.angularVelocity, velocity: this.velocity.copy() });
     render = (ctx: CanvasRenderingContext2D) => {
         //Draw ring
         ctx.strokeStyle = "grey";
@@ -52,7 +51,13 @@ export default class RingConductor extends Conductor {
     updateProperty = (property: string, value: number | Vector) => {
         if (property == "radius") {
             this.radius = value as number;
-            window.Object.assign(this, this.clone());
+            let next = this.clone();
+            this.charges = next.charges;
+            this.points = next.points;
+            this.testPoints = next.testPoints;
+            this.matrix = next.matrix;
+            this.updateWorldSpace();
+            this.conduct();
         }
         else if (property == "detail") {
             this.points.length = value as number;
