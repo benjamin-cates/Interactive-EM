@@ -299,13 +299,14 @@ export default class VoltCanvas {
                 }
             }
 
-            float dVolt = 2.0/(1.0+exp(-volt*2.0))-1.0;
-            fragColor = mix(mix(neutral_color,negative_color,0.0-dVolt), mix(neutral_color, positive_color, dVolt), step(dVolt, 0.0));
+            float colVolt = 2.0/(1.0+exp(-volt*2.0))-1.0;
+            fragColor = mix(mix(neutral_color,negative_color,0.0-colVolt), mix(neutral_color, positive_color, colVolt), step(colVolt, 0.0));
+            float dVolt = sign(volt)*log(abs(volt)+1.0);
             float dx = dFdx(dVolt);
             float dy = dFdy(dVolt);
             float dv = min(sqrt(abs(dx*dx)+abs(dy*dy)),0.5);
-            dVolt*=12.0;
-            const float lineWidth = 20.0;
+            dVolt*=10.0;
+            float lineWidth = 18.0;
             float fracv = fract(dVolt);
             vec4 vLines = vec4(equipotential_color.rgb,smoothstep(1.0,0.0,min(fracv,1.0-fracv)/dv/lineWidth));
             vLines.a*=equipotential_color.a;
