@@ -8,8 +8,8 @@ export default class RingConductor extends Conductor {
     radius: number;
     constructor(properties: { [key: string]: number | Vector | Vector[] | Scene }) {
         let radius = properties.radius as number || 1;
-        let pointRadius = radius * 0.95;
-        let testRadiuses = [radius * 0.9, radius * 0.85, radius * 0.6];
+        let pointRadius = radius - 0.05;
+        let testRadiuses = [radius - 0.1, radius - 0.2, radius * 0.65];
         let points = [];
         let testPoints = [];
         let detail = Math.floor(radius * 10);
@@ -40,7 +40,7 @@ export default class RingConductor extends Conductor {
         ctx.lineWidth = 10;
         let step = 2 * Math.PI / this.points.length;
         for (let i = 0; i < this.points.length; i++) {
-            ctx.strokeStyle = Scene.chargeColor(this.charges[i] * this.points.length * 1.5);
+            ctx.strokeStyle = Scene.chargeColor(this.charges[i] * this.points.length * 1.0);
             ctx.beginPath();
             ctx.arc(this.position.x * 100, this.position.y * 100, this.radius * 100 - 15, this.rotation + step * i, this.rotation + step * (i + 1));
             ctx.stroke();
