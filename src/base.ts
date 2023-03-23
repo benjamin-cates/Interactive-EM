@@ -1,5 +1,5 @@
 import Vector from "./vector";
-export type ObjectTypes = "point_charge" | "infinite_plane" | "conductor" | "finite_line" | "triangle_charge" | "ring_conductor" | "all";
+export type ObjectTypes = "point_charge" | "infinite_plane" | "conductor" | "finite_line" | "triangle_charge" | "ring_conductor" | "line_conductor" | "all";
 export class Object {
     //Physical properties
     mass: number;

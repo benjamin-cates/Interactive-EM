@@ -38,9 +38,9 @@ interface Slider {
     unit?: string;
     correction: Correction;
 }
-const canMove: ObjectTypes[] = ["point_charge", "finite_line", "triangle_charge", "ring_conductor"];
-const canRotate: ObjectTypes[] = ["finite_line", "infinite_plane", "triangle_charge", "conductor"];
-const conductor: ObjectTypes[] = ["conductor", "ring_conductor"];
+const canMove: ObjectTypes[] = ["point_charge", "finite_line", "triangle_charge", "ring_conductor", "line_conductor"];
+const canRotate: ObjectTypes[] = ["finite_line", "infinite_plane", "triangle_charge", "conductor", "line_conductor"];
+const conductor: ObjectTypes[] = ["conductor", "ring_conductor", "line_conductor"];
 const sliders: Slider[] = [
 
     //Universal
@@ -142,7 +142,15 @@ const sliders: Slider[] = [
         min: -3, max: 3,
         for: conductor,
         correction: powerCorrection,
-    }
+    },
+    //Line conductor
+    {
+        name: "length",
+        type: "number", unit: "m",
+        min: 1, max: 10,
+        for: ["line_conductor"],
+        correction: logCorrection,
+    },
 ];
 function getSliderId(name: string, type: ObjectTypes) {
     return sliders.findIndex((slider) => (slider.name == name && (slider.for == "all" || slider.for.includes(type))));
