@@ -95,6 +95,7 @@ export default class LineConductor extends Conductor {
             this.endPoint = Vector.add(this.position, Vector.multiply(dir, this.length / 2));
         }
     }
+    momentOfInertia = () => this.mass * this.length * this.length / 12;
     distanceFrom = (pos: Vector) => {
         if (this.length == 0) return Vector.distance(pos, this.position);
         let t = Vector.dot(Vector.subtract(pos, this.endPoint), Vector.subtract(this.startPoint, this.endPoint)) / this.length / this.length;

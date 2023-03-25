@@ -77,6 +77,7 @@ export default class RingConductor extends Conductor {
         }
         else this.updateBaseProperty(property, value);
     }
+    momentOfInertia = () => Infinity;
     distanceFrom = (pos: Vector) => {
         let dist = Vector.distance(this.position, pos);
         return Math.abs(dist - this.radius);

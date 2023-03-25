@@ -115,6 +115,8 @@ export default class Triangle extends Object {
     }
     getType = (): ObjectTypes => "triangle_charge";
 
+    momentOfInertia = (): number => Infinity;
+
     updateProperty = (property: string, value: number | Vector) => {
         if (property == "chargeDensity") {
             this.chargeDensity = value as number;

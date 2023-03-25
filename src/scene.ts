@@ -9,6 +9,7 @@ import LineConductor from "./conductors/line";
 import Vector from "./vector";
 import Equipotential from "./equipotential";
 import ObjEditor from "./object_editor";
+import forceOn from "./force_on";
 
 
 export default class Scene {
@@ -16,7 +17,7 @@ export default class Scene {
         viewportHeight: 10,
         physicsPerSecond: 100,
         conductionPerSecond: 33,
-        timeSpeed: 1,
+        timeSpeed: 30,
         showGridLines: true,
         showVectorGrid: true,
         debugField: false,
@@ -40,7 +41,6 @@ export default class Scene {
         return Scene.colors.neutral;
     }
     objects: Object[];
-    timeSpeed: number;
     width: number;
     height: number;
     element: HTMLCanvasElement;
@@ -199,6 +199,15 @@ export default class Scene {
                     object.conduct();
             }
             object.incrementPosition(dt);
+            //Apply forces
+            if (Scene.parameters.timeSpeed != 0) {
+                let net = forceOn(object, this, 20);
+                let acceleration = Vector.multiply(net.force, Scene.parameters.timeSpeed * dt / object.mass);
+                let angularAcceleration = net.torque * Scene.parameters.timeSpeed * dt / object.momentOfInertia();
+                object.velocity.add(acceleration);
+                object.angularVelocity += angularAcceleration;
+            }
+
             //Destroy objects that are more than 100 units away
             if (object.position.x > 100 || object.position.x < -100 || object.position.y > 100 || object.position.y < -100) {
                 this.removeObject(object);
@@ -210,14 +219,6 @@ export default class Scene {
             }
         });
         this.updateObjects();
-    }
-
-    //Returns the force and torque between two objects. Force is measured on object a and the opposite directional force is on object b. Torque is measured for both from the midpoint of a.position and b.position. Use the parallel axis theorem to find the torque on an objects center of mass.
-    forceBetween = (a: Object, b: Object): { force: Vector, torque: number } => {
-        if (a instanceof PointCharge) {
-
-        }
-        return { force: Vector.origin(), torque: 0 };
     }
 
     private selected: {

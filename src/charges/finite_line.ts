@@ -76,7 +76,7 @@ export default class FiniteLine extends Object {
         }
     }
     momentOfInertia = () => {
-        return this.mass * Math.pow(this.length, 2) / 12;
+        return this.mass * this.length * this.length / 12;
     }
 
     getType: () => ObjectTypes = () => "finite_line";
