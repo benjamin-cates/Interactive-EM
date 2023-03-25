@@ -1,8 +1,9 @@
 import PointCharge from "./charges/point_charge";
 import InfinitePlane from "./charges/infinite_plane";
-import Conductor from "./charges/conductor";
+import Conductor from "./conductors/conductor";
 import FiniteLine from "./charges/finite_line";
 import Triangle from "./charges/triangle";
+import RingConductor from "./conductors/ring";
 import Vector from "./vector";
 import constants from "./constants";
 import { Object, ObjectTypes } from "./base";
@@ -30,14 +31,16 @@ const powerCorrection = {
 interface Slider {
     name: string;
     type: "vector" | "number" | "boolean";
+    display?: string;
     min?: number | Vector;
     max?: number | Vector;
     for?: "all" | ObjectTypes[];
     unit?: string;
     correction: Correction;
 }
-const canMove: ObjectTypes[] = ["point_charge", "finite_line", "triangle_charge", "conductor"];
-const canRotate: ObjectTypes[] = ["finite_line", "infinite_plane", "triangle_charge", "conductor"];
+const canMove: ObjectTypes[] = ["point_charge", "finite_line", "triangle_charge", "ring_conductor", "line_conductor"];
+const canRotate: ObjectTypes[] = ["finite_line", "infinite_plane", "triangle_charge", "conductor", "line_conductor"];
+const conductor: ObjectTypes[] = ["conductor", "ring_conductor", "line_conductor"];
 const sliders: Slider[] = [
 
     //Universal
@@ -63,7 +66,8 @@ const sliders: Slider[] = [
         correction: noCorrection,
     },
     {
-        name: "angular_velocity",
+        name: "angularVelocity",
+        display: "Angular Velocity",
         type: "number", unit: "rad/s",
         min: -1.7, max: 1.7,
         for: canRotate,
@@ -95,7 +99,8 @@ const sliders: Slider[] = [
         correction: logCorrection,
     },
     {
-        name: "charge_density",
+        name: "chargeDensity",
+        display: "Charge Density",
         type: "number", unit: "μC/m",
         min: -1.5, max: 1.5,
         for: ["finite_line"],
@@ -104,13 +109,48 @@ const sliders: Slider[] = [
 
     //Infinite Plane
     {
-        name: "charge_density",
+        name: "chargeDensity",
+        display: "Charge Density",
         type: "number", unit: "nC/m²",
         min: -40, max: 40,
         for: ["infinite_plane"],
         correction: powerCorrection,
     },
 
+    //Triangle
+    {
+        name: "chargeDensity",
+        display: "Charge Density",
+        type: "number", unit: "μC/m²",
+        min: -1.5, max: 1.5,
+        for: ["triangle_charge"],
+        correction: powerCorrection,
+    },
+
+    //Ring conductor
+    {
+        name: "radius",
+        type: "number", unit: "m",
+        min: 0.4, max: 5,
+        for: ["ring_conductor"],
+        correction: logCorrection,
+    },
+    {
+        name: "netCharge",
+        display: "Net Charge",
+        type: "number", unit: "μC",
+        min: -3, max: 3,
+        for: conductor,
+        correction: powerCorrection,
+    },
+    //Line conductor
+    {
+        name: "length",
+        type: "number", unit: "m",
+        min: 1, max: 10,
+        for: ["line_conductor"],
+        correction: logCorrection,
+    },
 ];
 function getSliderId(name: string, type: ObjectTypes) {
     return sliders.findIndex((slider) => (slider.name == name && (slider.for == "all" || slider.for.includes(type))));
@@ -161,6 +201,7 @@ export default class ObjEditor {
         for (let i in this.curState) {
             let id = getSliderId(i, this.curType);
             let name = sliders[id].name.charAt(0).toUpperCase() + sliders[id].name.slice(1).replace(/_/g, " ");
+            if (sliders[id].display) name = sliders[id].display;
             let html = `<div class="input_slider slider_${i}">`;
             html += `<div class="input_slider_name">${name}</div>`;
             html += `<div class="input_slider_display">
@@ -217,7 +258,7 @@ export default class ObjEditor {
             if (direction == "x") this.curObj.position.x = value;
             if (direction == "y") this.curObj.position.y = value;
             this.updateDisplay("position", this.curObj.position, false);
-            this.curObj.updatePosition();
+            this.curObj.updateProperty("position", this.curObj.position);
             return;
         }
         else if (name == "velocity") {
@@ -226,21 +267,7 @@ export default class ObjEditor {
             this.updateDisplay("velocity", this.curObj.velocity, false);
             return;
         }
-        else if (name == "rotation") {
-            this.curObj.rotation = value;
-            this.curObj.updateRotation();
-        }
-        else if (name == "angular_velocity") this.curObj.angularVelocity = value;
-        else if (name == "mass") this.curObj.mass = value;
-        else if (name == "charge") (this.curObj as PointCharge).charge = value;
-        else if (name == "length") {
-            (this.curObj as FiniteLine).length = value;
-            this.curObj.updatePosition();
-        }
-        else if (name == "charge_density") {
-            if (this.curType == "finite_line") (this.curObj as FiniteLine).chargeDensity = value;
-            else if (this.curType == "infinite_plane") (this.curObj as InfinitePlane).chargeDensity = value / 1000;
-        }
+        else this.curObj.updateProperty(name, value);
         this.scene.updateObjects();
         this.updateDisplay(name, value, false);
     }
@@ -271,21 +298,8 @@ export default class ObjEditor {
         //Update curState to match sliders
         for (let i = 0; i < sliders.length; i++) {
             let slider = sliders[i];
-            if (slider.for == "all" || slider.for.includes(this.curType)) {
-                //Universal
-                if (slider.name == "position") this.curState[slider.name] = obj.position;
-                else if (slider.name == "velocity") this.curState[slider.name] = obj.velocity;
-                else if (slider.name == "rotation") this.curState[slider.name] = obj.rotation;
-                else if (slider.name == "angular_velocity") this.curState[slider.name] = obj.angularVelocity;
-                else if (slider.name == "mass") this.curState[slider.name] = obj.mass;
-                //Specific
-                else if (slider.name == "charge") this.curState[slider.name] = (obj as PointCharge).charge;
-                else if (slider.name == "length") this.curState[slider.name] = (obj as FiniteLine).length;
-                else if (slider.name == "charge_density") {
-                    if (this.curType == "finite_line") this.curState[slider.name] = (obj as FiniteLine).chargeDensity;
-                    else if (this.curType == "infinite_plane") this.curState[slider.name] = (obj as InfinitePlane).chargeDensity * 1000;
-                }
-            }
+            if (slider.for == "all" || slider.for.includes(this.curType))
+                this.curState[slider.name] = obj[slider.name];
         }
         this.generateHTML();
         this.show();

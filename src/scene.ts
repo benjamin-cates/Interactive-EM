@@ -1,9 +1,11 @@
 import { Object, ObjectTypes } from "./base";
-import Conductor from "./charges/conductor";
+import Conductor from "./conductors/conductor";
 import FiniteLine from "./charges/finite_line";
 import InfinitePlane from "./charges/infinite_plane";
 import PointCharge from "./charges/point_charge";
 import Triangle from "./charges/triangle";
+import RingConductor from "./conductors/ring";
+import LineConductor from "./conductors/line";
 import Vector from "./vector";
 import Equipotential from "./equipotential";
 import ObjEditor from "./object_editor";
@@ -13,6 +15,7 @@ export default class Scene {
     static parameters = {
         viewportHeight: 10,
         physicsPerSecond: 100,
+        conductionPerSecond: 33,
         timeSpeed: 1,
         showGridLines: true,
         showVectorGrid: true,
@@ -26,6 +29,10 @@ export default class Scene {
         negative: "#0000ff",
         equipotential: "#ff0000",
         fieldLines: "#cccccc",
+    }
+    static chargeColor = (charginess: number) => {
+        let percent = 1 / (1 + Math.exp(-charginess));
+        return "#" + Math.round(255 * percent).toString(16).padStart(2, "0") + "00" + Math.round(255 * (1 - percent)).toString(16).padStart(2, "0");
     }
     static getChargeColor(charge: number) {
         if (charge < 0) return Scene.colors.negative;
@@ -83,12 +90,7 @@ export default class Scene {
         this.objects.push(object);
         this.updateObjects();
     }
-    static defaultObjects: { [key: string]: Object } = {
-        "point_charge": new PointCharge(1, 1, new Vector(0, 0)),
-        "infinite_plane": new InfinitePlane(0.02, 1, new Vector(0, 0)),
-        "finite_line": new FiniteLine(0.4, 1, new Vector(0, 0), 0, 10),
-        "triangle": new Triangle(1, new Vector(0, 0), 0, 1, new Vector(0, 0), new Vector(0, 1), new Vector(1, 0)),
-    };
+    static defaultObjects: { [key: string]: Object };
     pushDefaultObject = (type: ObjectTypes) => {
         this.pushObject(Scene.defaultObjects[type].clone());
     }
@@ -187,8 +189,15 @@ export default class Scene {
         });
         return potential;
     }
+    physicsFrameCount: number = 0;
     physics = (dt: number) => {
+        this.physicsFrameCount++;
         this.objects.forEach((object) => {
+            if (object instanceof Conductor) {
+                let physicsPerConduct = Math.floor(Scene.parameters.physicsPerSecond / Scene.parameters.conductionPerSecond);
+                if (this.physicsFrameCount % physicsPerConduct == 0)
+                    object.conduct();
+            }
             object.incrementPosition(dt);
             //Destroy objects that are more than 100 units away
             if (object.position.x > 100 || object.position.x < -100 || object.position.y > 100 || object.position.y < -100) {
@@ -233,7 +242,7 @@ export default class Scene {
         for (let i = 0; i < this.objects.length; i++) {
             if (this.objects[i].distanceFrom(this.selected.dragPositions[0]) < 0.5) {
                 this.selected.obj = this.objects[i];
-                this.selected.obj.velocity = Vector.origin();
+                this.selected.obj.updateProperty("velocity", Vector.origin());
                 this.objEditor.setObj(this.objects[i])
                 this.selected.isGrab = true;
                 this.selected.posOffset = Vector.subtract(this.selected.obj.position, this.selected.dragPositions[0]);
@@ -253,8 +262,7 @@ export default class Scene {
             this.selected.dragPositions.shift();
             this.selected.dragTime.shift();
         }
-        this.selected.obj.position = pos;
-        this.selected.obj.updatePosition();
+        this.selected.obj.updateProperty("position", pos);
         this.objEditor.updateDisplay("position", pos);
         this.updateObjects();
         this.selected.dragTime.push(new Date().getTime());
@@ -269,9 +277,9 @@ export default class Scene {
         if (new Date().getTime() - this.selected.dragTime[this.selected.dragTime.length - 1] < 60) {
             let dt = new Date().getTime() - this.selected.dragTime[0];
             let dx = Vector.add(pos, Vector.multiply(this.selected.dragPositions[0], -1));
-            this.selected.obj.velocity = Vector.multiply(dx, 1000 / dt);
+            this.selected.obj.updateProperty("velocity", Vector.multiply(dx, 1000 / dt));
         }
-        else this.selected.obj.velocity = Vector.origin();
+        else this.selected.obj.updateProperty("velocity", Vector.origin());
         this.objEditor.updateDisplay("velocity", this.selected.obj.velocity);
         this.updateObjects();
     }
@@ -286,6 +294,16 @@ document.addEventListener("DOMContentLoaded", () => {
     scene = new Scene(canvas, voltCanvas, objectEditor);
     //@ts-ignore
     window.scene = scene;
+    Scene.defaultObjects = {
+        "point_charge": new PointCharge({}),
+        "infinite_plane": new InfinitePlane({ chargeDensity: 20 }),
+        "finite_line": new FiniteLine({ chargeDensity: 0.4, length: 10 }),
+        "triangle": new Triangle({ chargeDensity: 1, p1: new Vector(0, 0), p2: new Vector(0, 1), p3: new Vector(1, 0) }),
+        //@ts-ignore
+        "ring_conductor": new RingConductor({ radius: 2, scene: window.scene }),
+        //@ts-ignore
+        "line_conductor": new LineConductor({ length: 5, scene: window.scene }),
+    };
     scene.updateObjects();
     window.addEventListener("mousedown", scene.mouseDown);
     window.addEventListener("mouseup", scene.mouseUp);
