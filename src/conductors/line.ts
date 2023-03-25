@@ -10,7 +10,7 @@ export default class LineConductor extends Conductor {
     private endPoint: Vector;
     constructor(properties: { [key: string]: number | Vector | Vector[] | Scene }) {
         let length = properties.length as number || 1;
-        let pointCount = Math.floor(length * 4);
+        let pointCount = Math.floor(length * 3.5);
         let separation = length / (pointCount - 1);
         let points = [];
         let testPoints = [];
@@ -20,9 +20,7 @@ export default class LineConductor extends Conductor {
             testPoints.push(new Vector((i + 0.00) * separation - length / 2, 0.1));
             if (i != pointCount - 1) {
                 testPoints.push(new Vector((i + 0.33) * separation - length / 2, -0.05));
-                testPoints.push(new Vector((i + 0.33) * separation - length / 2, 0.05));
                 testPoints.push(new Vector((i + 0.66) * separation - length / 2, 0.05));
-                testPoints.push(new Vector((i + 0.66) * separation - length / 2, -0.05));
             }
         }
         properties.points = points;

@@ -39,10 +39,8 @@ export default class Conductor extends Object {
             }
             mat[j + 1][this.points.length] = 1;
         }
-        console.log(mat);
         let matObj = math.matrix(mat);
         this.matrix = math.multiply(math.inv(math.multiply(math.transpose(matObj), matObj)), math.transpose(matObj));
-        console.log("inverse mat", this.matrix);
         this.updateWorldSpace();
     }
     updateWorldSpace = () => {
@@ -55,12 +53,6 @@ export default class Conductor extends Object {
         this.worldSpacePoints = this.points.map(transform);
         this.worldSpaceTestPoints = this.testPoints.map(transform);
     }
-    updateRotation = () => {
-        this.updateWorldSpace();
-    }
-    updatePosition = () => {
-        this.updateWorldSpace();
-    }
 
     decompose = (detail: number) => {
         return this.worldSpacePoints.map((point: Vector, i: number) => new PointCharge({ charge: this.charges[i], position: point }));
@@ -71,25 +63,22 @@ export default class Conductor extends Object {
         for (let i = 0; i < this.points.length; i++) {
             let delta = Vector.subtract(pos, this.worldSpacePoints[i]);
             //See overleaf document for the derivation of this approximation
-            volts += Constants.K * this.charges[i] / Math.sqrt(delta.x * delta.x + delta.y * delta.y + 0.83);
-            if(isNaN(volts)) console.log("NaN", i,Constants.K * 4.0 * this.charges[i], Math.sqrt(delta.x * delta.x + delta.y * delta.y + 0.83));
+            volts += this.charges[i] / Math.sqrt(delta.x * delta.x + delta.y * delta.y + 0.83);
         }
-        return volts;
+        return Constants.K * volts;
     }
 
     fieldAt = (pos: Vector): Vector => {
         let field = new Vector(0, 0);
         for (let i = 0; i < this.points.length; i++) {
-            let rhat = Vector.rHat(pos, this.worldSpacePoints[i]);
-            let dist = Vector.distance(pos, this.worldSpacePoints[i]);
+            let delta = Vector.subtract(pos, this.worldSpacePoints[i]);
+            let dist = delta.magnitude();
             //See overleaf document for the derivation of this approximation
             let root = Math.sqrt(dist * dist + 0.83);
-            let scale = Constants.K * this.charges[i] * dist / (root * root * root);
-            rhat.x *= scale;
-            rhat.y *= scale;
-            field.add(rhat);
+            let magnitude = this.charges[i] * dist / (root * root * root);
+            field.add(delta.scale(magnitude / dist));
         }
-        return field;
+        return field.scale(Constants.K);
     }
 
 
