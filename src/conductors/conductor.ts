@@ -48,7 +48,7 @@ export default class Conductor extends Object {
     updateWorldSpace = () => {
         let rotationMatrix = Vector.rotationMatrix(this.rotation);
         let transform = (point: Vector) => {
-            let out = Vector.transform(point, rotationMatrix);
+            let out = Vector.transform2D(point, rotationMatrix);
             out.add(this.position);
             return out;
         };

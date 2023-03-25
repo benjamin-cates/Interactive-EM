@@ -1,19 +1,21 @@
 export default class Vector {
     x: number;
     y: number;
-    constructor(x: number, y: number) {
+    z: number
+    constructor(x: number, y: number, z: number = 0) {
         this.x = x;
         this.y = y;
+        this.z = z;
     }
     toString() {
-        return `<${this.x.toFixed(2)}, ${this.y.toFixed(2)}>`;
+        return `<${this.x.toFixed(2)}, ${this.y.toFixed(2)}, ${this.z.toFixed(2)}>`;
     }
     isZero = (): boolean => {
-        return this.x === 0 && this.y === 0;
+        return this.x === 0 && this.y === 0 && this.z == 0;
     }
     //Returns the magnitude of the vector
     magnitude = (): number => {
-        return Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
+        return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
     }
     //Returns the unit vector of the vector v/||v||
     unit = (): Vector => {
@@ -21,11 +23,13 @@ export default class Vector {
     }
     //Returns a new vector that is a clone
     copy = (): Vector => {
-        return new Vector(this.x, this.y);
+        return new Vector(this.x, this.y, this.z);
     }
     add = (v: Vector) => {
         this.x += v.x;
         this.y += v.y;
+        this.z += v.z;
+        return this;
     }
     rotate = (angle: number) => {
         let sin = Math.sin(angle);
@@ -34,6 +38,13 @@ export default class Vector {
         let y = this.x * sin + this.y * cos;
         this.x = x;
         this.y = y;
+        return this;
+    }
+    scale = (scalar: number) => {
+        this.x *= scalar;
+        this.y *= scalar;
+        this.z *= scalar;
+        return this;
     }
     rotateByVector = (vec: Vector) => {
         let uVec = vec.unit();
@@ -43,21 +54,25 @@ export default class Vector {
         let y = this.x * sin + this.y * cos;
         this.x = x;
         this.y = y;
+        return this;
     }
     static add = (a: Vector, b: Vector): Vector => {
-        return new Vector(a.x + b.x, a.y + b.y);
+        return new Vector(a.x + b.x, a.y + b.y, a.z + b.z);
     };
     static subtract = (a: Vector, sub: Vector): Vector => {
-        return new Vector(a.x - sub.x, a.y - sub.y);
+        return new Vector(a.x - sub.x, a.y - sub.y, a.z - sub.z);
     }
     static multiply = (a: Vector, scalar: number): Vector => {
-        return new Vector(a.x * scalar, a.y * scalar);
+        return new Vector(a.x * scalar, a.y * scalar, a.z * scalar);
     }
     static distance = (a: Vector, b: Vector): number => {
-        return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
+        let dx = a.x - b.x;
+        let dy = a.y - b.y;
+        let dz = a.z - b.z;
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
     static dot = (a: Vector, b: Vector): number => {
-        return a.x * b.x + a.y * b.y;
+        return a.x * b.x + a.y * b.y + a.z * b.z;
     }
     static cross2D = (a: Vector, b: Vector): number => {
         return a.x * b.y - a.y * b.x;
@@ -71,7 +86,7 @@ export default class Vector {
     static rotationMatrix = (angle: number): number[][] => {
         return [[Math.cos(angle), -Math.sin(angle)], [Math.sin(angle), Math.cos(angle)]];
     }
-    static transform = (a: Vector, matrix: number[][]): Vector => {
+    static transform2D = (a: Vector, matrix: number[][]): Vector => {
         return new Vector(a.x * matrix[0][0] + a.y * matrix[0][1], a.x * matrix[1][0] + a.y * matrix[1][1]);
     }
     //Convert [x,y] array to a vector
@@ -82,7 +97,8 @@ export default class Vector {
         return Vector.subtract(pos, chargePos).unit();
     }
     static inverseSquareField = (pos: Vector, chargePos: Vector): Vector => {
-        return Vector.multiply(Vector.rHat(pos, chargePos), 1 / Math.pow(Vector.distance(pos, chargePos), 2));
+        let dist = Vector.distance(pos, chargePos);
+        return Vector.multiply(Vector.rHat(pos, chargePos), 1 / (dist * dist));
     }
     static origin = (): Vector => {
         return new Vector(0, 0);
