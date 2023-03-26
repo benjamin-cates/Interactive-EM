@@ -3,16 +3,27 @@ import Vector from "../vector";
 import constants from "../constants";
 import Scene from "../scene";
 
+const ballRadius = 0.3;
 export default class PointCharge extends Object {
     //Stored in microcoloumbs
     charge: number;
 
     fieldAt = (pos: Vector) => {
-        return Vector.multiply(Vector.inverseSquareField(pos, this.position), constants.K * this.charge);
+        let delta = Vector.subtract(pos, this.position);
+        let dist = delta.magnitude();
+        if (dist < ballRadius) {
+            //Derived from field of a solid ball charge
+            return delta.scale(constants.K * this.charge / (ballRadius * ballRadius))
+        }
+        return delta.scale(constants.K * this.charge / (dist * dist * dist));
     }
     voltageAt = (pos: Vector) => {
-        let distance: number = Vector.distance(pos, this.position)
-        return ((constants.K * this.charge) / distance);
+        let dist: number = Vector.distance(pos, this.position)
+        if (dist < ballRadius) {
+            //Derived from voltge of a solid ball charge
+            return (constants.K * this.charge) / (2 * ballRadius) * (3 - dist * dist / (ballRadius * ballRadius));
+        }
+        return ((constants.K * this.charge) / dist);
     }
 
     constructor(properties: { [key: string]: number | Vector }) {
