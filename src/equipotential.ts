@@ -37,8 +37,8 @@ export default class VoltCanvas {
     } = {};
     private colors = {
         "positive_color": [0.894, 0.094, 0.094, 1],
+        "neutral_color": [0.525, 0.133, 0.463, 1],
         "negative_color": [0.160, 0.160, 0.810, 1],
-        "neutral_color": [0.650, 0.133, 0.600, 1],
         "equipotential_color": [0.180, 0.780, 0.180, 0.75],
     };
     //Update color state by passing in an object with the color names as keys

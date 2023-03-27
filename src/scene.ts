@@ -19,6 +19,8 @@ export default class Scene {
         conductionPerSecond: 33,
         timeSpeed: 30,
         showGridLines: true,
+        vectorGridSpacing: 1.2,
+        vectorGridLength: 0.8,
         showVectorGrid: true,
         debugField: false,
     };
@@ -135,17 +137,19 @@ export default class Scene {
     renderVectorField = () => {
         this.context.strokeStyle = Scene.colors.fieldLines;
         this.context.lineCap = "round";
+        let horArrowCount = Math.floor((this.width / 2) / Scene.parameters.vectorGridSpacing);;
+        let verArrowCount = Math.floor((this.height / 2) / Scene.parameters.vectorGridSpacing);;
         //Iterate over grid with step size 2
-        for (let i = Math.floor(-this.width - 1); i < this.width + 1; i += 2) {
-            for (let j = Math.floor(-this.height - 1); j < this.height + 1; j += 2) {
+        for (let i = -horArrowCount; i <= horArrowCount; i++) {
+            for (let j = -verArrowCount; j <= verArrowCount; j++) {
                 //Get field at grid point
-                let pos = new Vector(i, j);
+                let pos = new Vector(i * Scene.parameters.vectorGridSpacing, j * Scene.parameters.vectorGridSpacing);
                 let field = this.fieldAt(pos);
                 let fieldMag = field.magnitude();
                 if (fieldMag > 0.0001) {
                     this.context.beginPath();
                     let unit = field.unit();
-                    let len = 1 / (1 + Math.exp(-fieldMag * 1000)) - 0.5;
+                    let len = Scene.parameters.vectorGridLength * (1 / (1 + Math.exp(-fieldMag * 1000)) - 0.5);
                     if (Scene.parameters.debugField) len = 1;
                     let size = Math.abs(len) * 20;
                     this.context.lineWidth = size;
