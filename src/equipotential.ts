@@ -36,10 +36,10 @@ export default class VoltCanvas {
         [key: string]: WebGLUniformLocation;
     } = {};
     private colors = {
-        "positive_color": [1, 0, 0.4, 1],
-        "negative_color": [0.3, 0, 1, 1],
-        "neutral_color": [0.5, 0, 0.6, 1],
-        "equipotential_color": [0.2, 0.8, 0.2, 0.9],
+        "positive_color": [0.894, 0.094, 0.094, 1],
+        "negative_color": [0.160, 0.160, 0.810, 1],
+        "neutral_color": [0.650, 0.133, 0.600, 1],
+        "equipotential_color": [0.180, 0.780, 0.180, 0.75],
     };
     //Update color state by passing in an object with the color names as keys
     setColors(cols: any) {
@@ -300,7 +300,7 @@ export default class VoltCanvas {
             }
 
             float colVolt = 2.0/(1.0+exp(-volt*2.0))-1.0;
-            fragColor = mix(mix(neutral_color,negative_color,0.0-colVolt), mix(neutral_color, positive_color, colVolt), step(colVolt, 0.0));
+            fragColor = mix(mix(negative_color,neutral_color,1.0+colVolt), mix(neutral_color, positive_color, colVolt), step(0.0,colVolt));
             float dVolt = sign(volt)*log(abs(volt)+1.0);
             float dx = dFdx(dVolt);
             float dy = dFdy(dVolt);

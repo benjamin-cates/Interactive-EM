@@ -24,7 +24,7 @@ export default class Scene {
     };
     static colors = {
         background: "#ffffff",
-        gridLines: "#666666",
+        gridLines: "#00000022",
         neutral: "#000000",
         positive: "#ff0000",
         negative: "#0000ff",
@@ -118,7 +118,7 @@ export default class Scene {
         });
     }
     renderGridLines = () => {
-        this.context.lineWidth = 1.5;
+        this.context.lineWidth = 4.0;
         this.context.strokeStyle = Scene.colors.gridLines;
         this.context.beginPath();
         for (let i = Math.floor(-this.width); i < this.width; i++) {
