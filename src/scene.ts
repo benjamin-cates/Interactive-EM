@@ -24,7 +24,7 @@ export default class Scene {
     };
     static colors = {
         background: "#ffffff",
-        gridLines: "#00000022",
+        gridLines: "#00000011",
         neutral: "#000000",
         positive: "#ff0000",
         negative: "#0000ff",
