@@ -37,6 +37,11 @@ interface Slider {
     for?: "all" | ObjectTypes[];
     unit?: string;
     correction: Correction;
+    presets?: Preset[];
+}
+interface Preset {
+    name: string;
+    replacementFunc: (x: number | Vector) => (number | Vector);
 }
 const canMove: ObjectTypes[] = ["point_charge", "finite_line", "triangle_charge", "ring_conductor", "line_conductor"];
 const canRotate: ObjectTypes[] = ["finite_line", "infinite_plane", "triangle_charge", "conductor", "line_conductor"];
@@ -57,6 +62,9 @@ const sliders: Slider[] = [
         min: new Vector(-20, -20), max: new Vector(20, 20),
         for: canMove,
         correction: powerCorrection,
+        presets: [
+            { name: "stop", replacementFunc: (x) => new Vector(0, 0) },
+        ],
     },
     {
         name: "rotation",
@@ -67,11 +75,14 @@ const sliders: Slider[] = [
     },
     {
         name: "angularVelocity",
-        display: "Angular Velocity",
+        display: "Angular Vel.",
         type: "number", unit: "rad/s",
         min: -1.7, max: 1.7,
         for: canRotate,
         correction: powerCorrection,
+        presets: [
+            { name: "stop", replacementFunc: (x) => 0 },
+        ],
     },
     {
         name: "mass",
@@ -79,6 +90,10 @@ const sliders: Slider[] = [
         min: 0.5, max: 1000,
         for: canMove,
         correction: logCorrection,
+        presets: [
+            { name: "heavy", replacementFunc: (x) => Infinity },
+            { name: "light", replacementFunc: (x) => 0.5 },
+        ],
     },
 
     //Point charge
@@ -88,6 +103,9 @@ const sliders: Slider[] = [
         min: -3, max: 3,
         for: ["point_charge"],
         correction: powerCorrection,
+        presets: [
+            { name: "flip", replacementFunc: (x: number | Vector) => -(x as number) },
+        ],
     },
 
     //Finite line
@@ -105,6 +123,9 @@ const sliders: Slider[] = [
         min: -1.5, max: 1.5,
         for: ["finite_line"],
         correction: powerCorrection,
+        presets: [
+            { name: "flip", replacementFunc: (x: number | Vector) => -(x as number) },
+        ],
     },
 
     //Infinite Plane
@@ -115,6 +136,9 @@ const sliders: Slider[] = [
         min: -40, max: 40,
         for: ["infinite_plane"],
         correction: powerCorrection,
+        presets: [
+            { name: "flip", replacementFunc: (x: number | Vector) => -(x as number) },
+        ],
     },
 
     //Triangle
@@ -125,6 +149,9 @@ const sliders: Slider[] = [
         min: -1.5, max: 1.5,
         for: ["triangle_charge"],
         correction: powerCorrection,
+        presets: [
+            { name: "flip", replacementFunc: (x: number | Vector) => -(x as number) },
+        ],
     },
 
     //Ring conductor
@@ -203,7 +230,12 @@ export default class ObjEditor {
             let name = sliders[id].name.charAt(0).toUpperCase() + sliders[id].name.slice(1).replace(/_/g, " ");
             if (sliders[id].display) name = sliders[id].display;
             let html = `<div class="input_slider slider_${i}">`;
-            html += `<div class="input_slider_name">${name}</div>`;
+            html += `<div class="input_slider_name">${name}`;
+            if (sliders[id].presets) for (let x = 0; x < sliders[id].presets.length; x++) {
+                let preset = sliders[id].presets[x];
+                html += `<button class="input_slider_preset" onclick="scene.objEditor.preset('${i}',${x})" id="preset_${i}">${preset.name}</button>`;
+            }
+            html += "</div>";
             html += `<div class="input_slider_display">
                 <span class="slider_value" id="slider_value${i}">${prettyToString(this.curState[i])}</span>
                 <span class="slider_units">${sliders[id].unit}</span></div>`;
@@ -217,6 +249,7 @@ export default class ObjEditor {
                 let min = uncorrect(sliders[id].min as number);
                 let max = uncorrect(sliders[id].max as number);
                 let val = uncorrect(this.curState[i] as number);
+                if (val == Infinity) val = max;
                 html += `
                     <div class="input_slider_range">
                         <input id="slider_range${i}" type="range" min="${min}" max="${max}" value="${val}" step="0.001" oninput="scene.objEditor.input('${i}',this.value)"/></div>
@@ -248,6 +281,18 @@ export default class ObjEditor {
                 <button class="delete_button" onclick="scene.objEditor.deleteElement()">&times; Destroy</button>
         </div>`;
         this.element.innerHTML = outHtml;
+    }
+    preset = (name: string, index: number) => {
+        let slider = sliders[getSliderId(name, this.curType)];
+        let preset = slider.presets[index];
+        let value: number | Vector = this.curObj[name];
+        let next = preset.replacementFunc(value);
+        if (next instanceof Vector) {
+            this.input(name, slider.correction.uncorrect(next.x), "x");
+            this.input(name, slider.correction.uncorrect(next.y), "y");
+        }
+        else this.input(name, slider.correction.uncorrect(next));
+        this.updateDisplay(name, next);
     }
     input = (name: string, value: number | string, direction?: "x" | "y") => {
         if (!this.curObj) return;
@@ -287,6 +332,7 @@ export default class ObjEditor {
             let roundedValue = Math.round(value * 100) / 100;
             document.querySelector("#slider_value" + name).innerHTML = prettyToString(roundedValue);
             value = uncorrect(value);
+            if (value == Infinity) value = 10000;
             if (setInput) document.querySelector<HTMLInputElement>("#slider_range" + name).value = value.toString();
         }
     }
