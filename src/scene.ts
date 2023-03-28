@@ -204,7 +204,7 @@ export default class Scene {
             }
             object.incrementPosition(dt);
             //Apply forces
-            if (Scene.parameters.timeSpeed != 0) {
+            if (object.mass != Infinity && Scene.parameters.timeSpeed != 0) {
                 let net = forceOn(object, this, 20);
                 let acceleration = Vector.multiply(net.force, Scene.parameters.timeSpeed * dt / object.mass);
                 let angularAcceleration = net.torque * Scene.parameters.timeSpeed * dt / object.momentOfInertia();
