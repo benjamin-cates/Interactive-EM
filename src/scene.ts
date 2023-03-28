@@ -15,7 +15,7 @@ import forceOn from "./force_on";
 export default class Scene {
     static parameters = {
         viewportHeight: 10,
-        physicsPerSecond: 100,
+        physicsPerSecond: 150,
         conductionPerSecond: 33,
         timeSpeed: 30,
         showGridLines: true,
@@ -198,6 +198,7 @@ export default class Scene {
     physicsFrameCount: number = 0;
     physics = (dt: number) => {
         this.physicsFrameCount++;
+        let isFullPhysics = this.physicsFrameCount % 4 == 0;
         this.objects.forEach((object) => {
             if (object instanceof Conductor) {
                 let physicsPerConduct = Math.floor(Scene.parameters.physicsPerSecond / Scene.parameters.conductionPerSecond);
@@ -205,27 +206,30 @@ export default class Scene {
                     object.conduct();
             }
             object.incrementPosition(dt);
-            //Apply forces
-            if (object.mass != Infinity && Scene.parameters.timeSpeed != 0) {
-                let net = forceOn(object, this, 20);
-                let acceleration = Vector.multiply(net.force, Scene.parameters.timeSpeed * dt / object.mass);
-                let angularAcceleration = net.torque * Scene.parameters.timeSpeed * dt / object.momentOfInertia();
-                object.velocity.add(acceleration);
-                object.angularVelocity += angularAcceleration;
-                if (object == this.selected.obj) {
-                    this.objEditor.updateDisplay("velocity", object.velocity);
-                    this.objEditor.updateDisplay("angularVelocity", object.angularVelocity);
+            if (isFullPhysics) {
+                //Apply forces
+                if (object.mass != Infinity && Scene.parameters.timeSpeed != 0) {
+                    let net = forceOn(object, this, 20);
+                    let acceleration = Vector.multiply(net.force, Scene.parameters.timeSpeed * dt / object.mass);
+                    let angularAcceleration = net.torque * Scene.parameters.timeSpeed * dt / object.momentOfInertia();
+                    object.velocity.add(acceleration);
+                    object.angularVelocity += angularAcceleration;
+                    if (object == this.selected.obj) {
+                        this.objEditor.updateDisplay("velocity", object.velocity);
+                        this.objEditor.updateDisplay("angularVelocity", object.angularVelocity);
+                    }
                 }
-            }
 
-            //Destroy objects that are more than 100 units away
-            if (object.position.x > 100 || object.position.x < -100 || object.position.y > 100 || object.position.y < -100) {
-                this.removeObject(object);
-                return;
-            }
-            if (object == this.selected.obj) {
-                this.objEditor.updateDisplay("position", object.position);
-                this.objEditor.updateDisplay("rotation", object.rotation);
+                //Destroy objects that are more than 100 units away
+                if (object.position.x > 100 || object.position.x < -100 || object.position.y > 100 || object.position.y < -100) {
+                    this.removeObject(object);
+                    return;
+                }
+                if (object == this.selected.obj) {
+                    this.objEditor.updateDisplay("position", object.position);
+                    this.objEditor.updateDisplay("rotation", object.rotation);
+                }
+
             }
         });
         this.updateObjects();
