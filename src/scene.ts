@@ -50,6 +50,7 @@ export default class Scene {
     objEditor: ObjEditor;
     context: CanvasRenderingContext2D;
     physicsInterval: number;
+    renderIndex: number = 0;
     constructor(element: HTMLCanvasElement, voltCanvas: HTMLCanvasElement, objectEditor: HTMLElement) {
         this.objects = [] as Object[];
         this.element = element;
@@ -104,6 +105,7 @@ export default class Scene {
         this.updateObjects();
     }
     render = () => {
+        this.renderIndex++;
         requestAnimationFrame(this.render);
 
         this.context.clearRect(-100 * this.width, -100 * this.height, this.width * 200, this.height * 200);
@@ -134,42 +136,42 @@ export default class Scene {
         this.context.stroke();
         this.context.closePath();
     }
+    vectorFieldCache: Vector[][] = [];
     renderVectorField = () => {
         this.context.strokeStyle = Scene.colors.fieldLines;
         this.context.lineCap = "round";
         let horArrowCount = Math.floor((this.width / 2) / Scene.parameters.vectorGridSpacing);;
         let verArrowCount = Math.floor((this.height / 2) / Scene.parameters.vectorGridSpacing);;
         //Iterate over grid with step size 2
+        let useCache = this.renderIndex % 2 == 0 && this.vectorFieldCache.length > 0;
+        if (!useCache) this.vectorFieldCache = [];
         for (let i = -horArrowCount; i <= horArrowCount; i++) {
+            if (!useCache) this.vectorFieldCache[i + horArrowCount] = [];
             for (let j = -verArrowCount; j <= verArrowCount; j++) {
                 //Get field at grid point
                 let pos = new Vector(i * Scene.parameters.vectorGridSpacing, j * Scene.parameters.vectorGridSpacing);
-                let field = this.fieldAt(pos);
+                let field: Vector;
+                if (!useCache) this.vectorFieldCache[i + horArrowCount][j + verArrowCount] = this.fieldAt(pos);
+                field = this.vectorFieldCache[i + horArrowCount][j + verArrowCount];
                 let fieldMag = field.magnitude();
-                if (fieldMag > 0.0001) {
-                    this.context.beginPath();
-                    let unit = field.unit();
+                if (fieldMag > 0.0003) {
                     let len = Scene.parameters.vectorGridLength * (1 / (1 + Math.exp(-fieldMag * 1000)) - 0.5);
                     if (Scene.parameters.debugField) len = 1;
                     let size = Math.abs(len) * 20;
                     this.context.lineWidth = size;
-                    let fieldEnd = Vector.add(pos, Vector.multiply(unit, len));
-                    let normal = new Vector(-unit.y * size, unit.x * size);
-                    let along = new Vector(unit.x * size, unit.y * size);
+                    pos.scale(100);
+                    let fieldEnd = Vector.add(pos, Vector.multiply(field, 100 * len / fieldMag));
+                    let scale = size / fieldMag;
+                    let normal = new Vector(-field.y * scale, field.x * scale);
+                    let along = new Vector(field.x * scale, field.y * scale);
                     //Draw arrow shape
-                    this.context.moveTo(pos.x * 100, pos.y * 100);
-                    this.context.lineTo(fieldEnd.x * 100, fieldEnd.y * 100);
-                    this.context.moveTo(fieldEnd.x * 100, fieldEnd.y * 100);
-                    this.context.lineTo(fieldEnd.x * 100 - along.x + normal.x, fieldEnd.y * 100 - along.y + normal.y);
-                    this.context.moveTo(fieldEnd.x * 100, fieldEnd.y * 100);
-                    this.context.lineTo(fieldEnd.x * 100 - along.x - normal.x, fieldEnd.y * 100 - along.y - normal.y);
-                    //Draw perpendicular to arrow line (to ensure they match voltage fields)
-                    if (Scene.parameters.debugField) {
-                        this.context.moveTo(pos.x * 100, pos.y * 100);
-                        this.context.lineTo(pos.x * 100 + normal.x, pos.y * 100 + normal.y);
-                        this.context.moveTo(pos.x * 100, pos.y * 100);
-                        this.context.lineTo(pos.x * 100 - normal.x, pos.y * 100 - normal.y);
-                    }
+                    this.context.beginPath();
+                    this.context.moveTo(pos.x, pos.y);
+                    this.context.lineTo(fieldEnd.x, fieldEnd.y);
+                    this.context.moveTo(fieldEnd.x, fieldEnd.y);
+                    this.context.lineTo(fieldEnd.x - along.x + normal.x, fieldEnd.y - along.y + normal.y);
+                    this.context.moveTo(fieldEnd.x, fieldEnd.y);
+                    this.context.lineTo(fieldEnd.x - along.x - normal.x, fieldEnd.y - along.y - normal.y);
                     this.context.stroke();
                     this.context.closePath();
                 }
