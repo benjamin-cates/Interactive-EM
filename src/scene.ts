@@ -210,6 +210,10 @@ export default class Scene {
                 let angularAcceleration = net.torque * Scene.parameters.timeSpeed * dt / object.momentOfInertia();
                 object.velocity.add(acceleration);
                 object.angularVelocity += angularAcceleration;
+                if (object == this.selected.obj) {
+                    this.objEditor.updateDisplay("velocity", object.velocity);
+                    this.objEditor.updateDisplay("angularVelocity", object.angularVelocity);
+                }
             }
 
             //Destroy objects that are more than 100 units away
