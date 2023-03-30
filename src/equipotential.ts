@@ -158,20 +158,22 @@ export default class VoltCanvas {
         //Conductors
         let conductors = objects.filter((obj) => obj instanceof Conductor) as Conductor[];
         let conductorSizes = new Int32Array(conductors.length);
-        let conductorPointData = new Float32Array(conductors.length * 200 * 3);
+        let conductorPointData = new Float32Array(conductors.length * 200 * 4);
         conductors.forEach((conductor, i) => {
-            conductorSizes[i] = conductor.points.length;
-            conductor.worldSpacePoints.forEach((point, j) => {
-                let ind = i * 50 * 3 + j * 3;
+            conductorSizes[i] = conductor.worldSpacePoints.length;
+            for (let j = 0; j < conductor.worldSpacePoints.length; j++) {
+                let point = conductor.worldSpacePoints[j];
+                let ind = i * 50 * 4 + j * 4;
                 conductorPointData[ind + 0] = point.x;
                 conductorPointData[ind + 1] = point.y;
-                conductorPointData[ind + 2] = conductor.charges[j];
-            });
+                conductorPointData[ind + 2] = point.z;
+                conductorPointData[ind + 3] = conductor.charges[j];
+            }
         });
         this.gl.uniform1i(this.uniLoc.conductor_count, conductors.length);
         if (conductors.length > 0) {
             this.gl.uniform1iv(this.uniLoc.conductor_sizes, conductorSizes);
-            this.gl.uniform3fv(this.uniLoc.conductor_point_data, conductorPointData);
+            this.gl.uniform4fv(this.uniLoc.conductor_point_data, conductorPointData);
         }
 
     }
@@ -204,7 +206,7 @@ export default class VoltCanvas {
 
         uniform int conductor_count;
         uniform int conductor_sizes[20];
-        uniform vec3 conductor_point_data[400];
+        uniform vec4 conductor_point_data[400];
 
 
         uniform vec4 neutral_color;
@@ -293,9 +295,9 @@ export default class VoltCanvas {
             for(int i = 0; i < conductor_count; i++) {
                 for(int x = 0; x < conductor_sizes[i]; x++) {
                     int ind = i*50 + x;
-                    float charge = conductor_point_data[ind].z;
-                    vec2 delta = conductor_point_data[ind].xy - p;
-                    volt += charge/sqrt(delta.x*delta.x+delta.y*delta.y+0.83);
+                    vec3 p3d = vec3(p,0.0);
+                    float charge = conductor_point_data[ind].w;
+                    volt += 2.0 * charge/distance(p3d,conductor_point_data[ind].xyz);
                 }
             }
 
