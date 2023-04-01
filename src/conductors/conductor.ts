@@ -36,6 +36,7 @@ export default class Conductor extends Object {
         this.netCharge = properties.netCharge as number || 0;
         this.zSpacing = properties.zSpacing as number || zSpacingDefault;
         this.zPoints = properties.zPoints as number || zPointsDefault;
+        if(properties.skipMatrixCreation) return;
 
         //Extrude charge points in 3d
         this.chargePoints3D = [];

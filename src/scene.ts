@@ -315,9 +315,9 @@ document.addEventListener("DOMContentLoaded", () => {
         "finite_line": new FiniteLine({ chargeDensity: 0.4, length: 10 }),
         "triangle": new Triangle({ chargeDensity: 1, p1: new Vector(0, 0), p2: new Vector(0, 1), p3: new Vector(1, 0) }),
         //@ts-ignore
-        "ring_conductor": new RingConductor({ radius: 2, scene: window.scene }),
+        "ring_conductor": new RingConductor({ radius: 2, scene: window.scene, skipMatrixCreation: true }),
         //@ts-ignore
-        "line_conductor": new LineConductor({ length: 5, scene: window.scene }),
+        "line_conductor": new LineConductor({ length: 5, scene: window.scene, skipMatrixCreation: true }),
     };
     scene.updateObjects();
     window.addEventListener("mousedown", scene.mouseDown);
