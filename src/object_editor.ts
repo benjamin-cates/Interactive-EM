@@ -184,8 +184,7 @@ function getSliderId(name: string, type: ObjectTypes) {
 }
 function prettyToString(val: number | Vector) {
     if (typeof val == "number") {
-        let negativeBuffer = val < 0 ? "" : "&nbsp;";
-        return negativeBuffer + val.toFixed(2);
+        return val.toFixed(2);
     }
     else return val.toString();
 
