@@ -158,7 +158,7 @@ const sliders: Slider[] = [
     {
         name: "radius",
         type: "number", unit: "m",
-        min: 0.4, max: 5,
+        min: 0.4, max: 4,
         for: ["ring_conductor"],
         correction: logCorrection,
     },

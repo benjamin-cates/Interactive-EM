@@ -5,14 +5,16 @@ import Scene from "../scene";
 import Constants from "../constants";
 import * as math from "mathjs";
 
-const zPoints = 3;
-const zSpacing = 0.8;
+const zPointsDefault = 3;
+const zSpacingDefault = 0.8;
 
 export default class Conductor extends Object {
     points: Vector[];
     testPoints: Vector[];
     chargePoints3D: Vector[];
     testPoints3D: Vector[];
+    zPoints: number;
+    zSpacing: number;
     charges: number[];
     netCharge: number;
     sceneRef: Scene;
@@ -31,12 +33,14 @@ export default class Conductor extends Object {
         this.points = properties.points as Vector[];
         this.testPoints = properties.testPoints as Vector[];
         this.netCharge = properties.netCharge as number || 0;
+        this.zSpacing = properties.zSpacing as number || zSpacingDefault;
+        this.zPoints = properties.zPoints as number || zPointsDefault;
 
         //Extrude charge points in 3d
         this.chargePoints3D = [];
         for (let i = 0; i < this.points.length; i++) {
-            for (let z = 0; z < zPoints; z++) {
-                this.points[i].z = (z + 0.5) * zSpacing;
+            for (let z = 0; z < this.zPoints; z++) {
+                this.points[i].z = (z + 0.5) * this.zSpacing;
                 this.chargePoints3D.push(this.points[i].copy());
             }
             this.points[i].z = 0;
@@ -44,8 +48,8 @@ export default class Conductor extends Object {
         //Extrude test points in 3d
         this.testPoints3D = [];
         for (let i = 0; i < this.testPoints.length; i++) {
-            for (let z = 0; z < zPoints; z++) {
-                this.testPoints[i].z = (z + 0.1) * zSpacing;
+            for (let z = 0; z < this.zPoints; z++) {
+                this.testPoints[i].z = (z + 0.1) * this.zSpacing;
                 this.testPoints3D.push(this.testPoints[i].copy());
             }
             this.testPoints[i].z = 0;
@@ -88,10 +92,10 @@ export default class Conductor extends Object {
 
     getChargeAt = (index: number) => {
         let sum = 0;
-        for (let i = 0; i < zPoints; i++) {
-            sum += this.charges[index * zPoints + i];
+        for (let i = 0; i < this.zPoints; i++) {
+            sum += this.charges[index * this.zPoints + i];
         }
-        return sum * 2 / zPoints;
+        return sum * 2 / this.zPoints;
     }
 
     voltageAt = (pos: Vector): number => {

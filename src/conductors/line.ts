@@ -25,6 +25,8 @@ export default class LineConductor extends Conductor {
         }
         properties.points = points;
         properties.testPoints = testPoints;
+        properties.zPoints = 2;
+        properties.zSpacing = 0.8;
         super(properties);
         this.length = length;
         let dir = new Vector(Math.cos(this.rotation), Math.sin(this.rotation));
@@ -67,6 +69,8 @@ export default class LineConductor extends Conductor {
             this.charges = next.charges;
             this.points = next.points;
             this.testPoints = next.testPoints;
+            this.testPoints3D = next.testPoints3D;
+            this.chargePoints3D = next.chargePoints3D;
             this.matrix = next.matrix;
             this.updateWorldSpace();
             updateEndPoints = true;
