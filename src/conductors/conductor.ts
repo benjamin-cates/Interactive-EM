@@ -105,8 +105,16 @@ export default class Conductor extends Object {
         for (let i = 0; i < this.worldSpacePoints.length; i++) {
             let delta = Vector.subtract(pos, this.worldSpacePoints[i]);
             let dist = delta.magnitude();
+            let charge = this.charges[i];
+            //Treat z charges as at the same point when far away
+            if (i % this.zPoints == 0 && dist > this.zSpacing * 4) {
+                for (let j = 1; j < this.zPoints; j++) {
+                    charge += this.charges[i + j];
+                }
+                i += this.zPoints - 1;
+            }
             //See overleaf document for the derivation of this approximation
-            volts += this.charges[i] / dist;
+            volts += charge / dist;
         }
         return 2 * Constants.K * volts;
     }
@@ -116,7 +124,17 @@ export default class Conductor extends Object {
         for (let i = 0; i < this.worldSpacePoints.length; i++) {
             let delta = Vector.subtract(pos, this.worldSpacePoints[i]);
             let dist = delta.magnitude();
-            field.add(delta.scale(this.charges[i] / (dist * dist * dist)));
+            let charge = this.charges[i];
+            //Treat charges in the z plane as the same when far away
+            if (i % this.zPoints == 0 && dist > this.zSpacing * 4) {
+                for (let j = 1; j < this.zPoints; j++) {
+                    charge += this.charges[i + j];
+                }
+                i += this.zPoints - 1;
+            }
+            let scale = charge / (dist * dist * dist);
+            field.x += delta.x * scale;
+            field.y += delta.y * scale;
         }
         field.z = 0;
         field.scale(2 * Constants.K)

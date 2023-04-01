@@ -202,7 +202,6 @@ export default class Scene {
         this.objects.forEach((object) => {
             if (object instanceof Conductor) {
                 let physicsPerConduct = Math.floor(Scene.parameters.physicsPerSecond / Scene.parameters.conductionPerSecond);
-                console.log(physicsPerConduct);
                 if (this.physicsFrameCount % physicsPerConduct == 0)
                     object.conduct();
             }
