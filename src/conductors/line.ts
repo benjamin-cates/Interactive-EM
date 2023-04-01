@@ -25,6 +25,8 @@ export default class LineConductor extends Conductor {
         }
         properties.points = points;
         properties.testPoints = testPoints;
+        properties.zPoints = 2;
+        properties.zSpacing = 0.8;
         super(properties);
         this.length = length;
         let dir = new Vector(Math.cos(this.rotation), Math.sin(this.rotation));
@@ -50,7 +52,7 @@ export default class LineConductor extends Conductor {
         ctx.lineCap = "butt";
         let step = this.length / this.points.length;
         for (let i = 0; i < this.points.length; i++) {
-            ctx.strokeStyle = Scene.chargeColor(this.charges[i] * this.points.length * 0.1);
+            ctx.strokeStyle = Scene.chargeColor(this.getChargeAt(i) * this.points.length * 1.0);
             ctx.beginPath();
             ctx.moveTo((this.position.x - dir.x * this.length / 2 + dir.x * step * i) * 100, (this.position.y - dir.y * this.length / 2 + dir.y * step * i) * 100);
             ctx.lineTo((this.position.x - dir.x * this.length / 2 + dir.x * step * (i + 1)) * 100, (this.position.y - dir.y * this.length / 2 + dir.y * step * (i + 1)) * 100);
@@ -67,6 +69,8 @@ export default class LineConductor extends Conductor {
             this.charges = next.charges;
             this.points = next.points;
             this.testPoints = next.testPoints;
+            this.testPoints3D = next.testPoints3D;
+            this.chargePoints3D = next.chargePoints3D;
             this.matrix = next.matrix;
             this.updateWorldSpace();
             updateEndPoints = true;

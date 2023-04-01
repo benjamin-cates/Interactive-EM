@@ -16,7 +16,7 @@ export default class Scene {
     static parameters = {
         viewportHeight: 10,
         physicsPerSecond: 150,
-        conductionPerSecond: 33,
+        conductionPerSecond: 20,
         timeSpeed: 30,
         showGridLines: true,
         vectorGridSpacing: 1.2,
