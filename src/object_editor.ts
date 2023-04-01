@@ -322,7 +322,7 @@ export default class ObjEditor {
         let uncorrect = slider.correction.uncorrect;
         //Update interface display
         if (value instanceof Vector) {
-            document.querySelector("#slider_value" + name).innerHTML = prettyToString(value);
+            document.querySelector("#slider_value" + name).textContent = prettyToString(value);
             let valx = uncorrect(value.x);
             let valy = uncorrect(value.y);
             if (setInput) document.querySelector<HTMLInputElement>("#range_x" + name).value = valx.toString();
@@ -330,7 +330,7 @@ export default class ObjEditor {
         }
         else if (typeof value == "number") {
             let roundedValue = Math.round(value * 100) / 100;
-            document.querySelector("#slider_value" + name).innerHTML = prettyToString(roundedValue);
+            document.querySelector("#slider_value" + name).textContent = prettyToString(roundedValue);
             value = uncorrect(value);
             if (value == Infinity) value = 10000;
             if (setInput) document.querySelector<HTMLInputElement>("#slider_range" + name).value = value.toString();
