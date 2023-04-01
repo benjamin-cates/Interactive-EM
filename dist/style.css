@@ -44,6 +44,7 @@ canvas {
     border: 0;
     font-size: 1.2rem;
     background: #ffffff33;
+    user-select: none;
 }
 
 #add_menu>button:hover {
