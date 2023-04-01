@@ -20,6 +20,7 @@ export default class Conductor extends Object {
     sceneRef: Scene;
     worldSpacePoints: Vector[];
     worldSpaceTestPoints: Vector[];
+    voltageCache: number[];
     matrix: math.Matrix;
     private voltage: number;
 
@@ -54,6 +55,7 @@ export default class Conductor extends Object {
             }
             this.testPoints[i].z = 0;
         }
+        this.voltageCache = [];
         this.charges = new Array(this.chargePoints3D.length).fill(this.netCharge / 2 / this.chargePoints3D.length);
         let mat = [[]];
         mat[0] = new Array(this.chargePoints3D.length).fill(2);
@@ -121,13 +123,21 @@ export default class Conductor extends Object {
         return field;
     }
 
-
+    conductCount: number = 0;
     conduct = () => {
         //See the overleaf document for details on how this works
-        let volts = this.worldSpaceTestPoints.map((point: Vector) => -this.sceneRef.voltageAt(point, this));
+        let volts = this.worldSpaceTestPoints.map((point: Vector, i: number) => {
+            let cache = this.voltageCache[i];
+            if (this.conductCount % 4 != 0)
+                if (Math.abs(cache - this.voltageCache[i + this.zSpacing]) < 0.0004)
+                    return cache;
+            this.voltageCache[i] = -this.sceneRef.voltageAt(point, this)
+            return this.voltageCache[i];
+        });
         volts.unshift(this.netCharge);
         let charges = math.multiply(this.matrix, volts);
         this.charges = charges.toArray().map(v => Number(v));
         this.voltage = Number(charges.get([this.chargePoints3D.length - 1]));
+        this.conductCount++;
     }
 }
