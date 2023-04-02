@@ -33,8 +33,9 @@ export default class LineConductor extends Conductor {
         this.startPoint = Vector.add(this.position, Vector.multiply(dir, -this.length / 2));
         this.endPoint = Vector.add(this.position, Vector.multiply(dir, this.length / 2));
     }
-
-    clone = () => new LineConductor({ mass: this.mass, position: this.position.copy(), rotation: this.rotation, length: this.length, scene: this.sceneRef, netCharge: this.netCharge, angularVelocity: this.angularVelocity, velocity: this.velocity.copy() });
+    getProperties = (): { [key: string]: any } => {
+        return { mass: this.mass, position: this.position.copy(), rotation: this.rotation, length: this.length, scene: this.sceneRef, angularVelocity: this.angularVelocity, velocity: this.velocity.copy() };
+    }
     render = (ctx: CanvasRenderingContext2D) => {
         //Draw ring
         ctx.strokeStyle = "grey";

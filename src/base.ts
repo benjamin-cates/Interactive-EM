@@ -18,7 +18,11 @@ export class Object {
     }
 
     clone = () => {
-        return new Object({ mass: this.mass, position: this.position.copy(), rotation: this.rotation, angularVelocity: this.angularVelocity });
+        //@ts-ignore
+        return new this.constructor(this.getProperties());
+    }
+    getProperties = (): { [key: string]: any } => {
+        return { mass: this.mass, position: this.position.copy(), velocity: this.velocity.copy(), rotation: this.rotation, angularVelocity: this.angularVelocity };
     }
 
     render = (ctx: CanvasRenderingContext2D) => {

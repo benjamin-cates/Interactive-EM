@@ -34,7 +34,9 @@ export default class PointCharge extends Object {
         if (property == "charge") this.charge = value as number;
         else this.updateBaseProperty(property, value);
     }
-    clone = () => new PointCharge({ charge: this.charge, position: this.position.copy(), velocity: this.velocity.copy(), mass: this.mass });
+    getProperties = (): { [key: string]: any } => {
+        return { charge: this.charge, position: this.position.copy(), velocity: this.velocity.copy(), mass: this.mass }
+    }
     getType: () => ObjectTypes = () => "point_charge";
 
     render = (ctx: CanvasRenderingContext2D) => {

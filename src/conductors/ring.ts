@@ -28,7 +28,9 @@ export default class RingConductor extends Conductor {
         this.radius = radius;
     }
 
-    clone = () => new RingConductor({ mass: this.mass, position: this.position.copy(), rotation: this.rotation, radius: this.radius, scene: this.sceneRef, netCharge: this.netCharge, angularVelocity: this.angularVelocity, velocity: this.velocity.copy() });
+    getProperties = (): { [key: string]: any } => {
+        return { mass: this.mass, position: this.position.copy(), rotation: this.rotation, radius: this.radius, scene: this.sceneRef, netCharge: this.netCharge, angularVelocity: this.angularVelocity, velocity: this.velocity.copy() }
+    }
     render = (ctx: CanvasRenderingContext2D) => {
         //Draw ring
         ctx.strokeStyle = "grey";

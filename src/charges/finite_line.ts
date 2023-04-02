@@ -49,8 +49,8 @@ export default class FiniteLine extends Object {
         this.length = properties.length as number || 5;
         this.updateProperty("rotation", this.rotation);
     }
-    clone = () => {
-        return new FiniteLine({ chargeDensity: this.chargeDensity, mass: this.mass, position: this.position.copy(), rotation: this.rotation, length: this.length, angularVelocity: this.angularVelocity, velocity: this.velocity.copy() });
+    getProperties = (): { [key: string]: any } => {
+        return { chargeDensity: this.chargeDensity, mass: this.mass, position: this.position.copy(), rotation: this.rotation, length: this.length, angularVelocity: this.angularVelocity, velocity: this.velocity.copy() };
     }
     updateProperty = (property: string, value: number | Vector) => {
         let updateEndPoints = false;
