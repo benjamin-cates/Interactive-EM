@@ -10,7 +10,7 @@ import Vector from "./vector";
 import Equipotential from "./equipotential";
 import ObjEditor from "./object_editor";
 import forceOn from "./force_on";
-
+import Properties from "./properties";
 
 export default class Scene {
     static parameters = {
@@ -344,3 +344,5 @@ window.InfinitePlane = InfinitePlane;
 window.Vector = Vector;
 //@ts-ignore
 window.Conductor = Conductor;
+//@ts-ignore
+window.Properties = Properties;
