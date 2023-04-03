@@ -27,11 +27,65 @@ export default class Scene {
     static colors = {
         background: "#ffffff",
         gridLines: "#00000011",
-        neutral: "#000000",
-        positive: "#ff0000",
-        negative: "#0000ff",
-        equipotential: "#ff0000",
-        fieldLines: "#cccccc",
+        neutral: "#862277ff",
+        positive: "#e51818ff",
+        negative: "#2929cfff",
+        equipotential: "#2ec82ec0",
+        fieldLines: "#ccccccff",
+    }
+    updateProperty = (property: string, value: number | Vector | string | boolean) => {
+        const colorToArray = (color: string) => {
+            let col = [parseInt(color.slice(1, 3), 16), parseInt(color.slice(3, 5), 16), parseInt(color.slice(5, 7), 16), parseInt(color.slice(7, 9), 16)];
+            col = col.map(x => x / 255);
+            return col;
+        }
+        if (property == "viewportHeight") {
+            Scene.parameters.viewportHeight = value as number;
+            this.updateAspectRatio();
+            this.sceneDefaults();
+        }
+        else if (property == "vectorGridSpacing") Scene.parameters.vectorGridSpacing = value as number;
+        else if (property == "vectorGridLength") Scene.parameters.vectorGridLength = value as number;
+        else if (property == "showVectorGrid") Scene.parameters.showVectorGrid = value as boolean;
+        else if (property == "showGridLines") Scene.parameters.showGridLines = value as boolean;
+        else if (property == "timeScale") Scene.parameters.timeSpeed = value as number;
+        else if (property == "equipotentialColor") {
+            let v = value as string;
+            Scene.colors.equipotential = v;
+            this.voltCanvas.setColors({ equipotential_color: colorToArray(v) });
+        }
+        else if (property == "negativeColor") {
+            let v = value as string;
+            Scene.colors.negative = v;
+            this.voltCanvas.setColors({ negative_color: colorToArray(v) });
+        }
+        else if (property == "positiveColor") {
+            let v = value as string;
+            Scene.colors.positive = v;
+            this.voltCanvas.setColors({ positive_color: colorToArray(v) });
+        }
+        else if (property == "neutralColor") {
+            let v = value as string;
+            Scene.colors.neutral = v;
+            this.voltCanvas.setColors({ neutral_color: colorToArray(v) });
+        }
+        else if (property == "fieldLineColor") Scene.colors.fieldLines = value as string;
+    }
+    getProperties = () => {
+        return {
+            viewportHeight: Scene.parameters.viewportHeight,
+            vectorGridSpacing: Scene.parameters.vectorGridSpacing,
+            vectorGridLength: Scene.parameters.vectorGridLength,
+            showVectorGrid: Scene.parameters.showVectorGrid,
+            showGridLines: Scene.parameters.showGridLines,
+            equipotentialColor: Scene.colors.equipotential,
+            positiveColor: Scene.colors.positive,
+            negativeColor: Scene.colors.negative,
+            neutralColor: Scene.colors.neutral,
+            fieldLineColor: Scene.colors.fieldLines,
+            timeScale: Scene.parameters.timeSpeed,
+        }
+
     }
     static chargeColor = (charginess: number) => {
         let percent = 1 / (1 + Math.exp(-charginess));
@@ -62,6 +116,7 @@ export default class Scene {
         this.physicsInterval = window.setInterval(this.physics, 1000 / Scene.parameters.physicsPerSecond, 1 / Scene.parameters.physicsPerSecond);
         this.objEditor = new ObjEditor(objectEditor, this);
     }
+    getType = () => "scene";
 
     updateAspectRatio = () => {
         let aspectRatio = window.innerWidth / window.innerHeight;
@@ -138,6 +193,8 @@ export default class Scene {
     }
     vectorFieldCache: Vector[][] = [];
     renderVectorField = () => {
+        //Skip if alpha is zero
+        if (Scene.colors.fieldLines.slice(7, 9) == "00") return;
         this.context.strokeStyle = Scene.colors.fieldLines;
         this.context.lineCap = "round";
         let horArrowCount = Math.floor((this.width / 2) / Scene.parameters.vectorGridSpacing);;
