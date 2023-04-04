@@ -1,3 +1,5 @@
+import { sign, sqrt } from "mathjs";
+
 export default class Vector {
     x: number;
     y: number;
@@ -74,12 +76,39 @@ export default class Vector {
         let dz = a.z - b.z;
         return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
+    static angleBetweenAsVector = (vectorOne: Vector, vectorTwo: Vector): Vector => {
+        let vectorOneMagnitude = vectorOne.magnitude();
+        let vectorTwoMagnitude = vectorTwo.magnitude();
+
+        let x = Vector.dot(vectorOne,vectorTwo) / (vectorOneMagnitude*vectorTwoMagnitude);
+        let y = Vector.cross3D(vectorOne, vectorTwo).magnitude() / (vectorOneMagnitude*vectorTwoMagnitude);
+
+        return new Vector(x,y);
+    }
+    static halfAngle = (vect: Vector): Vector => { //be normal 
+        let unitVect = vect.unit();
+        let cos = unitVect.x;
+        let sin = unitVect.y;
+
+        let x = sign(sin) * Math.sqrt((1+cos)/2); 
+        let y = Math.sqrt((1-sin)/2);
+
+        return new Vector(x,y);
+    }
     static dot = (a: Vector, b: Vector): number => {
         return a.x * b.x + a.y * b.y + a.z * b.z;
     }
     static cross2D = (a: Vector, b: Vector): number => {
         return a.x * b.y - a.y * b.x;
     }
+    static cross3D = (a: Vector, b: Vector): Vector => {
+        let x = a.y * b.z - b.y * a.z;
+        let y = a.x * b.z - b.x * a.z;
+        let z = a.x * b.y - b.x * a.y;
+
+        return new Vector(x,y,z);
+    }
+
     static scalarProject = (a: Vector, targetVector: Vector): number => {
         return Vector.dot(a, targetVector) / targetVector.magnitude();
     }
