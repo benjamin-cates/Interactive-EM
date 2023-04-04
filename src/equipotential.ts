@@ -96,11 +96,14 @@ export default class VoltCanvas {
         let tris = objects.filter((obj) => obj instanceof Triangle) as Triangle[];
         this.gl.uniform1i(this.uniLoc.tri_count, tris.length);
         let conductors = objects.filter((obj) => obj instanceof Conductor) as Conductor[];
-        let conductorPoints = 0;
-        for (let i = 0; i < conductors.length; i++) conductorPoints += conductors[i].charges.length;
-        this.gl.uniform1i(this.uniLoc.conductor_count, conductorPoints);
+        let conductorSize = 0;
+        for (let i = 0; i < conductors.length; i++) {
+            conductorSize += 1;
+            conductorSize += Math.ceil((conductors[i].zPoints + 1) / 2) * conductors[i].charges.length / conductors[i].zPoints;
+        }
+        this.gl.uniform1i(this.uniLoc.conductor_count, conductors.length);
 
-        let data = new Float32Array(points.length * 4 + lines.length * 8 + planes.length * 4 + tris.length * 8 + conductorPoints * 4);
+        let data = new Float32Array(points.length * 4 + lines.length * 8 + planes.length * 4 + tris.length * 8 + conductorSize * 4);
         let offset = 0;
         points.forEach((point, i) => {
             data[offset + i * 4] = point.position.x;
@@ -147,14 +150,20 @@ export default class VoltCanvas {
 
         //Conductors
         conductors.forEach((conductor, i) => {
-            for (let j = 0; j < conductor.worldSpacePoints.length; j++) {
-                let point = conductor.worldSpacePoints[j];
-                data[offset + j * 4 + 0] = point.x;
-                data[offset + j * 4 + 1] = point.y;
-                data[offset + j * 4 + 2] = point.z;
-                data[offset + j * 4 + 3] = conductor.charges[j];
+            data[offset + 0] = conductor.charges.length / conductor.zPoints;
+            data[offset + 1] = conductor.zPoints;
+            offset += 4;
+            for (let j = 0; j < conductor.charges.length; j += conductor.zPoints) {
+                data[offset + 0] = conductor.worldSpacePoints[j].x;
+                data[offset + 1] = conductor.worldSpacePoints[j].y;
+                offset += 2;
+                for (let i = 0; i < conductor.zPoints; i++) {
+                    data[offset + i * 2 + 0] = conductor.worldSpacePoints[j + i].z;
+                    data[offset + i * 2 + 1] = conductor.charges[j + i];
+                }
+                offset += 2;
+                offset += Math.ceil((conductor.zPoints - 1) / 2) * 4;
             }
-            offset += conductor.charges.length * 4;
         });
         if (data.length > 0) {
             this.gl.uniform4fv(this.uniLoc.data, data);
@@ -209,7 +218,6 @@ export default class VoltCanvas {
             int plane_start = line_start + line_count*2;
             int tri_start = plane_start + plane_count;
             int cond_start = tri_start + tri_count*2;
-            int end = cond_start + conductor_count;
             for(int i = point_start; i < line_start; i++) {
                 vec2 pos = data[i].xy;
                 float charge = data[i].z;
@@ -270,13 +278,24 @@ export default class VoltCanvas {
             }
 
             vec3 p3d = vec3(p.x,p.y,0.0);
-            for(int i = cond_start; i < end; i++) {
-                vec3 center = data[i].xyz;
-                float charge = data[i].w;
-
-                volt += 2.0 * charge/distance(p3d,center);
+            int offset = cond_start;
+            for(int i=0; i < conductor_count; i++) {
+                int point_count = int(data[offset].x);
+                int loopCount = int(ceil((data[offset].y+0.9)/2.0));
+                offset++;
+                for(int j=0; j < point_count; j++) {
+                    vec3 pos = data[offset].xyz;
+                    float dist = distance(p3d,pos);
+                    float v = data[offset].w/dist;
+                    for(int k = 1; k < loopCount; k++) {
+                        vec4 dataVec = data[offset+k];
+                        v += dataVec.y/distance(p3d,vec3(pos.x,pos.y,dataVec.x));
+                        v += dataVec.w/distance(p3d,vec3(pos.x,pos.y,dataVec.z));
+                    }
+                    offset += loopCount;
+                    volt += v * 2.0;
+                }
             }
-
             float colVolt = 2.0/(1.0+exp(-volt*2.0))-1.0;
             fragColor = mix(mix(negative_color,neutral_color,1.0+colVolt), mix(neutral_color, positive_color, colVolt), step(0.0,colVolt));
             ${doEquipotential ? `

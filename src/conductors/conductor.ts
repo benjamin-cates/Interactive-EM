@@ -36,7 +36,7 @@ export default class Conductor extends Object {
         this.netCharge = properties.netCharge as number || 0;
         this.zSpacing = properties.zSpacing as number || zSpacingDefault;
         this.zPoints = properties.zPoints as number || zPointsDefault;
-        if(properties.skipMatrixCreation) return;
+        if (properties.skipMatrixCreation) return;
 
         //Extrude charge points in 3d
         this.chargePoints3D = [];
@@ -156,6 +156,7 @@ export default class Conductor extends Object {
         volts.unshift(this.netCharge);
         let charges = math.multiply(this.matrix, volts);
         this.charges = charges.toArray().map(v => Number(v));
+        this.charges.length--;
         this.voltage = Number(charges.get([this.chargePoints3D.length - 1]));
         this.conductCount++;
     }
