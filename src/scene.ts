@@ -139,10 +139,10 @@ export default class Scene {
 
     getCursorPosition = (event: MouseEvent): Vector => {
         let rect = this.element.getBoundingClientRect();
-        let x = event.clientX - rect.left - this.element.width / 2;
-        let y = event.clientY - rect.top - this.element.height / 2;
-        let aspectRatio = this.element.width / this.element.height;
-        return new Vector(x / this.element.width * 2 * Scene.parameters.viewportHeight * aspectRatio, y / this.element.height * 2 * Scene.parameters.viewportHeight);
+        let x = event.clientX - rect.left - rect.width / 2;
+        let y = event.clientY - rect.top - rect.height / 2;
+        let aspectRatio = rect.width / rect.height;
+        return new Vector(x / rect.width * 2 * Scene.parameters.viewportHeight * aspectRatio, y / rect.height * 2 * Scene.parameters.viewportHeight);
     }
     pushObject(object: Object) {
         this.objects.push(object);
@@ -302,13 +302,15 @@ export default class Scene {
         posOffset: Vector;
         //If being dragged
         isGrab: boolean;
-    } = { dragPositions: [Vector.origin()], obj: null, dragTime: [0], posOffset: null, isGrab: false }
+        pointerId: number;
+    } = { dragPositions: [Vector.origin()], obj: null, dragTime: [0], posOffset: null, isGrab: false, pointerId: null };
 
-    mouseDown = (event: MouseEvent) => {
+    mouseDown = (event: PointerEvent) => {
         //Return if within the bounding box
         let objEditorRect = this.objEditor.element.getBoundingClientRect();
         if (event.clientX > objEditorRect.left && event.clientY < objEditorRect.bottom && event.clientY > objEditorRect.top) return;
         //Get drag position of current cursor
+        this.selected.pointerId = event.pointerId;
         this.selected.dragPositions = [this.getCursorPosition(event)];
         this.selected.dragTime = [new Date().getTime()];
         for (let i = 0; i < this.objects.length; i++) {
@@ -324,9 +326,10 @@ export default class Scene {
         this.objEditor.hide();
     }
 
-    mouseMove = (event: MouseEvent) => {
+    mouseMove = (event: PointerEvent) => {
         if (this.selected.isGrab == false)
             return;
+        if(event.pointerId != this.selected.pointerId) return;
         let pos = this.getCursorPosition(event);
         this.selected.dragPositions.push(pos);
         pos = Vector.add(pos, this.selected.posOffset);
@@ -340,9 +343,10 @@ export default class Scene {
         this.selected.dragTime.push(new Date().getTime());
     }
 
-    mouseUp = (event: MouseEvent) => {
+    mouseUp = (event: PointerEvent) => {
         if (this.selected.isGrab == false)
             return;
+        if(event.pointerId != this.selected.pointerId) return;
         this.selected.isGrab = false;
         if (this.selected.obj.getType() == "infinite_plane") return;
         let pos = this.getCursorPosition(event);
@@ -377,9 +381,9 @@ document.addEventListener("DOMContentLoaded", () => {
         "line_conductor": new LineConductor({ length: 5, scene: window.scene, skipMatrixCreation: true }),
     };
     scene.updateObjects();
-    window.addEventListener("mousedown", scene.mouseDown);
-    window.addEventListener("mouseup", scene.mouseUp);
-    window.addEventListener("mousemove", scene.mouseMove);
+    window.addEventListener("pointerdown", scene.mouseDown);
+    window.addEventListener("pointerup", scene.mouseUp);
+    window.addEventListener("pointermove", scene.mouseMove);
 });
 window.addEventListener("resize", () => {
     scene.updateAspectRatio();

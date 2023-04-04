@@ -170,7 +170,7 @@ export default class VoltCanvas {
     static makeFragmentShader = (uniforms: number, doEquipotential: boolean) => {
 
         return `#version 300 es
-        precision mediump float;
+        precision highp float;
 
         uniform vec2 canvas;
         uniform vec2 scene;
