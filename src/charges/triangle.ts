@@ -110,8 +110,8 @@ export default class Triangle extends Object {
             this.distanceFromFiniteLine(translatedPosition, this.points[2], this.points[0])
         );
     }
-    clone = (): Triangle => {
-        return new Triangle({ mass: this.mass, position: this.position.copy(), rotation: this.rotation, chargeDensity: this.chargeDensity, p1: this.points[0].copy(), p2: this.points[1].copy(), p3: this.points[2].copy() });
+    getProperties = (): { [key: string]: any } => {
+        return { mass: this.mass, position: this.position.copy(), rotation: this.rotation, chargeDensity: this.chargeDensity, p1: this.points[0].copy(), p2: this.points[1].copy(), p3: this.points[2].copy() };
     }
     getType = (): ObjectTypes => "triangle_charge";
 

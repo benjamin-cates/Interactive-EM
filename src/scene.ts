@@ -10,13 +10,13 @@ import Vector from "./vector";
 import Equipotential from "./equipotential";
 import ObjEditor from "./object_editor";
 import forceOn from "./force_on";
-
+import Properties from "./properties";
 
 export default class Scene {
     static parameters = {
         viewportHeight: 10,
         physicsPerSecond: 150,
-        conductionPerSecond: 33,
+        conductionPerSecond: 20,
         timeSpeed: 30,
         showGridLines: true,
         vectorGridSpacing: 1.2,
@@ -27,11 +27,65 @@ export default class Scene {
     static colors = {
         background: "#ffffff",
         gridLines: "#00000011",
-        neutral: "#000000",
-        positive: "#ff0000",
-        negative: "#0000ff",
-        equipotential: "#ff0000",
-        fieldLines: "#cccccc",
+        neutral: "#862277ff",
+        positive: "#e51818ff",
+        negative: "#2929cfff",
+        equipotential: "#2ec82ec0",
+        fieldLines: "#ccccccff",
+    }
+    updateProperty = (property: string, value: number | Vector | string | boolean) => {
+        const colorToArray = (color: string) => {
+            let col = [parseInt(color.slice(1, 3), 16), parseInt(color.slice(3, 5), 16), parseInt(color.slice(5, 7), 16), parseInt(color.slice(7, 9), 16)];
+            col = col.map(x => x / 255);
+            return col;
+        }
+        if (property == "viewportHeight") {
+            Scene.parameters.viewportHeight = value as number;
+            this.updateAspectRatio();
+            this.sceneDefaults();
+        }
+        else if (property == "vectorGridSpacing") Scene.parameters.vectorGridSpacing = value as number;
+        else if (property == "vectorGridLength") Scene.parameters.vectorGridLength = value as number;
+        else if (property == "showVectorGrid") Scene.parameters.showVectorGrid = value as boolean;
+        else if (property == "showGridLines") Scene.parameters.showGridLines = value as boolean;
+        else if (property == "timeScale") Scene.parameters.timeSpeed = value as number;
+        else if (property == "equipotentialColor") {
+            let v = value as string;
+            Scene.colors.equipotential = v;
+            this.voltCanvas.setColors({ equipotential_color: colorToArray(v) });
+        }
+        else if (property == "negativeColor") {
+            let v = value as string;
+            Scene.colors.negative = v;
+            this.voltCanvas.setColors({ negative_color: colorToArray(v) });
+        }
+        else if (property == "positiveColor") {
+            let v = value as string;
+            Scene.colors.positive = v;
+            this.voltCanvas.setColors({ positive_color: colorToArray(v) });
+        }
+        else if (property == "neutralColor") {
+            let v = value as string;
+            Scene.colors.neutral = v;
+            this.voltCanvas.setColors({ neutral_color: colorToArray(v) });
+        }
+        else if (property == "fieldLineColor") Scene.colors.fieldLines = value as string;
+    }
+    getProperties = () => {
+        return {
+            viewportHeight: Scene.parameters.viewportHeight,
+            vectorGridSpacing: Scene.parameters.vectorGridSpacing,
+            vectorGridLength: Scene.parameters.vectorGridLength,
+            showVectorGrid: Scene.parameters.showVectorGrid,
+            showGridLines: Scene.parameters.showGridLines,
+            equipotentialColor: Scene.colors.equipotential,
+            positiveColor: Scene.colors.positive,
+            negativeColor: Scene.colors.negative,
+            neutralColor: Scene.colors.neutral,
+            fieldLineColor: Scene.colors.fieldLines,
+            timeScale: Scene.parameters.timeSpeed,
+        }
+
     }
     static chargeColor = (charginess: number) => {
         let percent = 1 / (1 + Math.exp(-charginess));
@@ -62,6 +116,7 @@ export default class Scene {
         this.physicsInterval = window.setInterval(this.physics, 1000 / Scene.parameters.physicsPerSecond, 1 / Scene.parameters.physicsPerSecond);
         this.objEditor = new ObjEditor(objectEditor, this);
     }
+    getType = () => "scene";
 
     updateAspectRatio = () => {
         let aspectRatio = window.innerWidth / window.innerHeight;
@@ -84,10 +139,10 @@ export default class Scene {
 
     getCursorPosition = (event: MouseEvent): Vector => {
         let rect = this.element.getBoundingClientRect();
-        let x = event.clientX - rect.left - this.element.width / 2;
-        let y = event.clientY - rect.top - this.element.height / 2;
-        let aspectRatio = this.element.width / this.element.height;
-        return new Vector(x / this.element.width * 2 * Scene.parameters.viewportHeight * aspectRatio, y / this.element.height * 2 * Scene.parameters.viewportHeight);
+        let x = event.clientX - rect.left - rect.width / 2;
+        let y = event.clientY - rect.top - rect.height / 2;
+        let aspectRatio = rect.width / rect.height;
+        return new Vector(x / rect.width * 2 * Scene.parameters.viewportHeight * aspectRatio, y / rect.height * 2 * Scene.parameters.viewportHeight);
     }
     pushObject(object: Object) {
         this.objects.push(object);
@@ -138,6 +193,8 @@ export default class Scene {
     }
     vectorFieldCache: Vector[][] = [];
     renderVectorField = () => {
+        //Skip if alpha is zero
+        if (Scene.colors.fieldLines.slice(7, 9) == "00") return;
         this.context.strokeStyle = Scene.colors.fieldLines;
         this.context.lineCap = "round";
         let horArrowCount = Math.floor((this.width / 2) / Scene.parameters.vectorGridSpacing);;
@@ -245,13 +302,15 @@ export default class Scene {
         posOffset: Vector;
         //If being dragged
         isGrab: boolean;
-    } = { dragPositions: [Vector.origin()], obj: null, dragTime: [0], posOffset: null, isGrab: false }
+        pointerId: number;
+    } = { dragPositions: [Vector.origin()], obj: null, dragTime: [0], posOffset: null, isGrab: false, pointerId: null };
 
-    mouseDown = (event: MouseEvent) => {
+    mouseDown = (event: PointerEvent) => {
         //Return if within the bounding box
         let objEditorRect = this.objEditor.element.getBoundingClientRect();
         if (event.clientX > objEditorRect.left && event.clientY < objEditorRect.bottom && event.clientY > objEditorRect.top) return;
         //Get drag position of current cursor
+        this.selected.pointerId = event.pointerId;
         this.selected.dragPositions = [this.getCursorPosition(event)];
         this.selected.dragTime = [new Date().getTime()];
         for (let i = 0; i < this.objects.length; i++) {
@@ -267,9 +326,10 @@ export default class Scene {
         this.objEditor.hide();
     }
 
-    mouseMove = (event: MouseEvent) => {
+    mouseMove = (event: PointerEvent) => {
         if (this.selected.isGrab == false)
             return;
+        if(event.pointerId != this.selected.pointerId) return;
         let pos = this.getCursorPosition(event);
         this.selected.dragPositions.push(pos);
         pos = Vector.add(pos, this.selected.posOffset);
@@ -283,9 +343,10 @@ export default class Scene {
         this.selected.dragTime.push(new Date().getTime());
     }
 
-    mouseUp = (event: MouseEvent) => {
+    mouseUp = (event: PointerEvent) => {
         if (this.selected.isGrab == false)
             return;
+        if(event.pointerId != this.selected.pointerId) return;
         this.selected.isGrab = false;
         if (this.selected.obj.getType() == "infinite_plane") return;
         let pos = this.getCursorPosition(event);
@@ -315,14 +376,14 @@ document.addEventListener("DOMContentLoaded", () => {
         "finite_line": new FiniteLine({ chargeDensity: 0.4, length: 10 }),
         "triangle": new Triangle({ chargeDensity: 1, p1: new Vector(0, 0), p2: new Vector(0, 1), p3: new Vector(1, 0) }),
         //@ts-ignore
-        "ring_conductor": new RingConductor({ radius: 2, scene: window.scene }),
+        "ring_conductor": new RingConductor({ radius: 2, scene: window.scene, skipMatrixCreation: true }),
         //@ts-ignore
-        "line_conductor": new LineConductor({ length: 5, scene: window.scene }),
+        "line_conductor": new LineConductor({ length: 5, scene: window.scene, skipMatrixCreation: true }),
     };
     scene.updateObjects();
-    window.addEventListener("mousedown", scene.mouseDown);
-    window.addEventListener("mouseup", scene.mouseUp);
-    window.addEventListener("mousemove", scene.mouseMove);
+    window.addEventListener("pointerdown", scene.mouseDown);
+    window.addEventListener("pointerup", scene.mouseUp);
+    window.addEventListener("pointermove", scene.mouseMove);
 });
 window.addEventListener("resize", () => {
     scene.updateAspectRatio();
@@ -344,3 +405,5 @@ window.InfinitePlane = InfinitePlane;
 window.Vector = Vector;
 //@ts-ignore
 window.Conductor = Conductor;
+//@ts-ignore
+window.Properties = Properties;

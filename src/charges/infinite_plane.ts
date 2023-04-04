@@ -23,11 +23,8 @@ export default class InfinitePlane extends Object {
         this.chargeDensity = properties.chargeDensity as number || 0;
         this.updateProperty("rotation", this.rotation);
     }
-    clone = () => {
-        let clone = new InfinitePlane({ chargeDensity: this.chargeDensity, mass: this.mass, position: this.position.copy(), rotation: this.rotation, velocity: this.velocity.copy(), angularVelocity: this.angularVelocity });
-        clone.velocity = this.velocity.copy();
-        clone.angularVelocity = this.angularVelocity;
-        return clone;
+    getProperties = (): { [key: string]: any } => {
+        return { chargeDensity: this.chargeDensity, mass: this.mass, position: this.position.copy(), rotation: this.rotation, velocity: this.velocity.copy(), angularVelocity: this.angularVelocity };
     }
     updateProperty = (property: string, value: number | Vector) => {
         if (property == "chargeDensity") this.chargeDensity = value as number;

@@ -11,19 +11,11 @@ export default class VoltCanvas {
     program: WebGLProgram;
     static uniforms = [
         "point_count",
-        "point_data",
         "line_count",
-        "line_pos",
-        "line_data",
         "plane_count",
-        "plane_data",
         "tri_count",
-        "tri_data1",
-        "tri_data2",
         "conductor_count",
-        "conductor_data",
-        "conductor_sizes",
-        "conductor_point_data",
+        "data",
         "canvas",
         "scene",
         "positive_color",
@@ -68,7 +60,8 @@ export default class VoltCanvas {
         //Add vertex and fragment shaders to program
         const vertexShader = VoltCanvas.createShader(this.gl, this.gl.VERTEX_SHADER, VoltCanvas.vertexShader);
         this.gl.attachShader(this.program, vertexShader);
-        const fragmentShader = VoltCanvas.createShader(this.gl, this.gl.FRAGMENT_SHADER, VoltCanvas.fragmentShader);
+        let uniforms = this.gl.getParameter(this.gl.MAX_FRAGMENT_UNIFORM_VECTORS);
+        const fragmentShader = VoltCanvas.createShader(this.gl, this.gl.FRAGMENT_SHADER, VoltCanvas.makeFragmentShader(uniforms, true));
         this.gl.attachShader(this.program, fragmentShader);
         this.gl.linkProgram(this.program);
         this.gl.useProgram(this.program);
@@ -93,87 +86,88 @@ export default class VoltCanvas {
     }
     //Update the uniforms for the object data
     updateObjects = (objects: Object[]) => {
-        //Points
+        //Get array of each type of object
         let points = objects.filter((obj) => obj instanceof PointCharge) as PointCharge[];
-        let pointData = new Float32Array(points.length * 3);
-        points.forEach((point, i) => {
-            pointData[i * 3] = point.position.x;
-            pointData[i * 3 + 1] = point.position.y;
-            pointData[i * 3 + 2] = point.charge;
-        });
         this.gl.uniform1i(this.uniLoc.point_count, points.length);
-        if (points.length > 0) this.gl.uniform3fv(this.uniLoc.point_data, pointData);
+        let lines = objects.filter((obj) => obj instanceof FiniteLine) as FiniteLine[];
+        this.gl.uniform1i(this.uniLoc.line_count, lines.length);
+        let planes = objects.filter((obj) => obj instanceof InfinitePlane) as InfinitePlane[];
+        this.gl.uniform1i(this.uniLoc.plane_count, planes.length);
+        let tris = objects.filter((obj) => obj instanceof Triangle) as Triangle[];
+        this.gl.uniform1i(this.uniLoc.tri_count, tris.length);
+        let conductors = objects.filter((obj) => obj instanceof Conductor) as Conductor[];
+        let conductorSize = 0;
+        for (let i = 0; i < conductors.length; i++) {
+            conductorSize += 1;
+            conductorSize += Math.ceil((conductors[i].zPoints + 1) / 2) * conductors[i].charges.length / conductors[i].zPoints;
+        }
+        this.gl.uniform1i(this.uniLoc.conductor_count, conductors.length);
+
+        let data = new Float32Array(points.length * 4 + lines.length * 8 + planes.length * 4 + tris.length * 8 + conductorSize * 4);
+        let offset = 0;
+        points.forEach((point, i) => {
+            data[offset + i * 4] = point.position.x;
+            data[offset + i * 4 + 1] = point.position.y;
+            data[offset + i * 4 + 2] = point.charge;
+            data[offset + i * 4 + 4] = 0;
+        });
+        offset += points.length * 4;
 
         //Finite lines
-        let lines = objects.filter((obj) => obj instanceof FiniteLine) as FiniteLine[];
-        let linePos = new Float32Array(lines.length * 3);
-        let lineData = new Float32Array(lines.length * 2);
         lines.forEach((line, i) => {
-            linePos[i * 3] = line.position.x;
-            linePos[i * 3 + 1] = line.position.y;
-            linePos[i * 3 + 2] = line.rotation;
-            lineData[i * 2] = line.chargeDensity;
-            lineData[i * 2 + 1] = line.length;
+            data[offset + i * 8 + 0] = line.position.x;
+            data[offset + i * 8 + 1] = line.position.y;
+            data[offset + i * 8 + 2] = line.rotation;
+            data[offset + i * 8 + 3] = line.length / 2;
+            data[offset + i * 8 + 4] = line.chargeDensity;
+            data[offset + i * 8 + 5] = 0;
+            data[offset + i * 8 + 6] = 0;
+            data[offset + i * 8 + 7] = 0;
         });
-        this.gl.uniform1i(this.uniLoc.line_count, lines.length);
-        if (lines.length > 0) {
-            this.gl.uniform2fv(this.uniLoc.line_data, lineData);
-            this.gl.uniform3fv(this.uniLoc.line_pos, linePos);
-        }
+        offset += lines.length * 8;
 
         //Planes
-        let planes = objects.filter((obj) => obj instanceof InfinitePlane) as InfinitePlane[];
-        let planeData = new Float32Array(planes.length * 4);
         planes.forEach((plane, i) => {
-            planeData[i * 4] = plane.position.x;
-            planeData[i * 4 + 1] = plane.position.y;
-            planeData[i * 4 + 2] = plane.rotation;
-            planeData[i * 4 + 3] = plane.chargeDensity / 1000;
+            data[offset + i * 4 + 0] = plane.position.x;
+            data[offset + i * 4 + 1] = plane.position.y;
+            data[offset + i * 4 + 2] = plane.rotation;
+            data[offset + i * 4 + 3] = plane.chargeDensity / 1000;
         });
-        this.gl.uniform1i(this.uniLoc.plane_count, planes.length);
-        if (planes.length > 0) this.gl.uniform4fv(this.uniLoc.plane_data, planeData);
+        offset += planes.length * 4;
 
         //Triangles
-        let tris = objects.filter((obj) => obj instanceof Triangle) as Triangle[];
-        //Stores [x, y, rotation, half width]
-        let triData1 = new Float32Array(tris.length * 4);
-        //Stores [charge, tip.x, tip.y]
-        let triData2 = new Float32Array(tris.length * 3);
         tris.forEach((tri, i) => {
-            triData1[i * 4 + 0] = tri.position.x;
-            triData1[i * 4 + 1] = tri.position.y;
-            triData1[i * 4 + 2] = tri.rotation;
-            triData1[i * 4 + 3] = tri.halfWidth;
-
-            triData2[i * 3 + 0] = tri.chargeDensity;
-            triData2[i * 3 + 1] = tri.tip.x;
-            triData2[i * 3 + 2] = tri.tip.y;
+            data[offset + i * 8 + 0] = tri.position.x;
+            data[offset + i * 8 + 1] = tri.position.y;
+            data[offset + i * 8 + 2] = tri.rotation;
+            data[offset + i * 8 + 3] = tri.halfWidth;
+            data[offset + i * 8 + 4] = tri.tip.x;
+            data[offset + i * 8 + 5] = tri.tip.y;
+            data[offset + i * 8 + 6] = tri.chargeDensity;
+            data[offset + i * 8 + 7] = 0;
         });
-        this.gl.uniform1i(this.uniLoc.tri_count, tris.length);
-        if (tris.length > 0) {
-            this.gl.uniform4fv(this.uniLoc.tri_data1, triData1);
-            this.gl.uniform3fv(this.uniLoc.tri_data2, triData2);
-        }
+        offset += tris.length * 8;
 
         //Conductors
-        let conductors = objects.filter((obj) => obj instanceof Conductor) as Conductor[];
-        let conductorSizes = new Int32Array(conductors.length);
-        let conductorPointData = new Float32Array(conductors.length * 200 * 3);
         conductors.forEach((conductor, i) => {
-            conductorSizes[i] = conductor.points.length;
-            conductor.worldSpacePoints.forEach((point, j) => {
-                let ind = i * 50 * 3 + j * 3;
-                conductorPointData[ind + 0] = point.x;
-                conductorPointData[ind + 1] = point.y;
-                conductorPointData[ind + 2] = conductor.charges[j];
-            });
+            data[offset + 0] = conductor.charges.length / conductor.zPoints;
+            data[offset + 1] = conductor.zPoints;
+            offset += 4;
+            for (let j = 0; j < conductor.charges.length; j += conductor.zPoints) {
+                data[offset + 0] = conductor.worldSpacePoints[j].x;
+                data[offset + 1] = conductor.worldSpacePoints[j].y;
+                offset += 2;
+                for (let i = 0; i < conductor.zPoints; i++) {
+                    data[offset + i * 2 + 0] = conductor.worldSpacePoints[j + i].z;
+                    data[offset + i * 2 + 1] = conductor.charges[j + i];
+                }
+                offset += 2;
+                offset += Math.ceil((conductor.zPoints - 1) / 2) * 4;
+            }
         });
-        this.gl.uniform1i(this.uniLoc.conductor_count, conductors.length);
-        if (conductors.length > 0) {
-            this.gl.uniform1iv(this.uniLoc.conductor_sizes, conductorSizes);
-            this.gl.uniform3fv(this.uniLoc.conductor_point_data, conductorPointData);
+        if (data.length > 0) {
+            this.gl.uniform4fv(this.uniLoc.data, data);
         }
-
     }
     static vertexShader = `#version 300 es
         precision mediump float;
@@ -182,30 +176,20 @@ export default class VoltCanvas {
             gl_Position = a_position;
         }
     `;
-    static fragmentShader = `#version 300 es
-        precision mediump float;
+    static makeFragmentShader = (uniforms: number, doEquipotential: boolean) => {
+
+        return `#version 300 es
+        precision highp float;
 
         uniform vec2 canvas;
         uniform vec2 scene;
 
         uniform int point_count;
-        uniform vec3 point_data[40];
-
         uniform int line_count;
-        uniform vec3 line_pos[40];
-        uniform vec2 line_data[40];
-
         uniform int plane_count;
-        uniform vec4 plane_data[20];
-
         uniform int tri_count;
-        uniform vec4 tri_data1[40];
-        uniform vec3 tri_data2[40];
-
         uniform int conductor_count;
-        uniform int conductor_sizes[20];
-        uniform vec3 conductor_point_data[400];
-
+        uniform vec4 data[${uniforms - 25}];
 
         uniform vec4 neutral_color;
         uniform vec4 positive_color;
@@ -213,7 +197,6 @@ export default class VoltCanvas {
         uniform vec4 equipotential_color;
 
         const float contour = 1.0;
-
 
         float triAD(float y,float a,float b) {
             float f = a+b/y;
@@ -230,16 +213,24 @@ export default class VoltCanvas {
         void main() {
             vec2 p = vec2((gl_FragCoord.x/canvas.x-0.5) * scene.x , -(gl_FragCoord.y/canvas.y-0.5) * scene.y);
             float volt = 0.0;
-            for(int i = 0; i < point_count; i++) {
-                float charge = point_data[i].z;
-                float dist = distance(point_data[i].xy, p.xy);
+            int point_start = 0;
+            int line_start = point_count;
+            int plane_start = line_start + line_count*2;
+            int tri_start = plane_start + plane_count;
+            int cond_start = tri_start + tri_count*2;
+            for(int i = point_start; i < line_start; i++) {
+                vec2 pos = data[i].xy;
+                float charge = data[i].z;
+
+                float dist = distance(pos, p);
                 volt += charge / dist;
             }
-            for(int i = 0; i < line_count; i++) {
-                float chargeDensity = line_data[i].x;
-                float halfLen = line_data[i].y/2.0;
-                vec2 center = line_pos[i].xy;
-                float rotation = line_pos[i].z;
+            for(int i = line_start; i < plane_start; i+=2) {
+                vec2 center = data[i].xy;
+                float rotation = data[i].z;
+                float halfLen = data[i].w;
+                float chargeDensity = data[i+1].x;
+
                 vec2 dir = vec2(cos(rotation), sin(rotation));
                 vec2 relPos = p - center;
                 float g = dot(relPos,dir);
@@ -249,36 +240,34 @@ export default class VoltCanvas {
                 volt+=sign(g)*chargeDensity*log((distance(p,end1)+abs(g)+halfLen)/(distance(p,end2)+abs(g)-halfLen));
             }
 
-            for(int i = 0; i < plane_count; i++) {
-                float chargeDensity = plane_data[i].w;
-                vec2 center = plane_data[i].xy;
-                float rotation = plane_data[i].z;
+            for(int i = plane_start; i < tri_start; i++) {
+                vec2 center = data[i].xy;
+                float rotation = data[i].z;
+                float chargeDensity = data[i].w;
+
                 vec2 dir = vec2(sin(rotation), -cos(rotation));
                 vec2 relPos = p - center;
                 float dist = abs(dot(relPos,dir));
                 volt+=(100.0-6.28317*dist)*chargeDensity;
             }
 
-            for(int i = 0; i < tri_count; i++) {
-                float halfWidth = tri_data1[i].w;
-                float rotation = tri_data1[i].z;
-                vec2 center = tri_data1[i].xy;
-                float chargeDensity = tri_data2[i].x;
-                vec2 tip = tri_data2[i].yz;
-                float height = 3.0/2.0 * tip.y;
+            for(int i = tri_start; i < cond_start; i+=2) {
+                vec2 center = data[i].xy;
+                float rotation = data[i].z;
+                float halfWidth = data[i].w;
+                vec2 tip = data[i+1].xy;
+                float chargeDensity = data[i+1].z;
 
+                float height = 3.0/2.0 * tip.y;
                 vec2 relPos = p - center;
                 float cosRot = cos(rotation);
                 float sinRot = sin(-rotation);
                 relPos = vec2(cosRot * relPos.x - sinRot * relPos.y, sinRot * relPos.x + cosRot * relPos.y);
-
                 relPos.y+=tip.y/2.0;
-
                 float a1 = (tip.x-halfWidth)/height;
                 float a2 = (tip.x+halfWidth)/height;
                 float b1 = relPos.y*a1 + halfWidth - relPos.x;
                 float b2 = relPos.y*a2 - halfWidth - relPos.x;
-
                 if(sign(relPos.y-height)!=sign(relPos.y)) {
                     float corr = triAD0(a1,b1)-triAD0(a2,b2);
                     volt+=chargeDensity*(triAD(height-relPos.y,a1,b1)+triAD(-relPos.y,a1,b1)-triAD(height-relPos.y,a2,b2)-triAD(-relPos.y,a2,b2)+corr);
@@ -286,61 +275,45 @@ export default class VoltCanvas {
                 else {
                     volt += chargeDensity*sign(-relPos.y)*(triAD(height-relPos.y,a1,b1)-triAD(-relPos.y,a1,b1)-triAD(height-relPos.y,a2,b2)+triAD(-relPos.y,a2,b2));
                 }
-
-
             }
 
-            for(int i = 0; i < conductor_count; i++) {
-                for(int x = 0; x < conductor_sizes[i]; x++) {
-                    int ind = i*50 + x;
-                    float charge = conductor_point_data[ind].z;
-                    vec2 delta = conductor_point_data[ind].xy - p;
-                    volt += charge/sqrt(delta.x*delta.x+delta.y*delta.y+0.83);
+            vec3 p3d = vec3(p.x,p.y,0.0);
+            int offset = cond_start;
+            for(int i=0; i < conductor_count; i++) {
+                int point_count = int(data[offset].x);
+                int loopCount = int(ceil((data[offset].y+0.9)/2.0));
+                offset++;
+                for(int j=0; j < point_count; j++) {
+                    vec3 pos = data[offset].xyz;
+                    float dist = distance(p3d,pos);
+                    float v = data[offset].w/dist;
+                    for(int k = 1; k < loopCount; k++) {
+                        vec4 dataVec = data[offset+k];
+                        v += dataVec.y/distance(p3d,vec3(pos.x,pos.y,dataVec.x));
+                        v += dataVec.w/distance(p3d,vec3(pos.x,pos.y,dataVec.z));
+                    }
+                    offset += loopCount;
+                    volt += v * 2.0;
                 }
             }
-
             float colVolt = 2.0/(1.0+exp(-volt*2.0))-1.0;
             fragColor = mix(mix(negative_color,neutral_color,1.0+colVolt), mix(neutral_color, positive_color, colVolt), step(0.0,colVolt));
-            float dVolt = sign(volt)*log(abs(volt)+1.0);
-            float dx = dFdx(dVolt);
-            float dy = dFdy(dVolt);
-            float dv = min(sqrt(abs(dx*dx)+abs(dy*dy)),0.5);
-            dVolt*=10.0;
-            float lineWidth = 18.0;
-            float fracv = fract(dVolt);
-            vec4 vLines = vec4(equipotential_color.rgb,smoothstep(1.0,0.0,min(fracv,1.0-fracv)/dv/lineWidth));
-            vLines.a*=equipotential_color.a;
-            //Blend with contour line
-            fragColor = vec4(fragColor.rgb*(1.0-vLines.a) + vLines.rgb*vLines.a,1.0);
+            ${doEquipotential ? `
+                float dVolt = sign(volt)*log(abs(volt)+1.0);
+                float dx = dFdx(dVolt);
+                float dy = dFdy(dVolt);
+                float dv = min(sqrt(abs(dx*dx)+abs(dy*dy)),0.5);
+                dVolt*=10.0;
+                float lineWidth = 18.0;
+                float fracv = fract(dVolt);
+                vec4 vLines = vec4(equipotential_color.rgb,smoothstep(1.0,0.0,min(fracv,1.0-fracv)/dv/lineWidth));
+                vLines.a*=equipotential_color.a;
+                //Blend with contour line
+                fragColor = vec4(fragColor.rgb*(1.0-vLines.a) + vLines.rgb*vLines.a,1.0);
+            `: ``}
+        }`;
+    }
 
-        }
-
-    `;
-    /*
-        for(int i = 0; i < line_count; i++) {
-            float chargeDensity = line_data[i].x;
-            float halflen = line_data[i].y/2;
-            vec2 center = line_pos[i].xy;
-            float rotation = line_pos[i].z;
-            vec2 dir = vec2(cos(rotation), sin(rotation));
-            vec2 relPos = gl_FragCoord.xy - pos;
-            vec2 end1 = center - dir * halflen;
-            vec2 end2 = center + dir * halflen;
-            float f = dot(relPos,dir)+halfLen;
-            voltage+=chargeDensity*log(abs((dist(pos,end1)+f))/(dist(pos,end2)+f)));
-        }
-        for(int i = 0; i < plane_count; i++) {
-            float chargeDensity = plane_data[i].z;
-            float rotation = plane_data[i].w;
-            vec2 pos = plane_data[i].xy;
-            vec2 dir = vec2(cos(rotation), sin(rotation));
-            vec2 relPos = gl_FragCoord.xy - pos;
-            float dist = dot(relPos, dir);
-        }
-
-
-
-    */
 
     fullscreenRender = () => {
         //Draw pixel shader across whole screen

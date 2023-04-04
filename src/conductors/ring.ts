@@ -12,21 +12,25 @@ export default class RingConductor extends Conductor {
         let testRadiuses = [radius - 0.1, radius - 0.2];
         let points = [];
         let testPoints = [];
-        let detail = Math.floor(radius * 10);
+        let detail = Math.floor(radius * 6);
         for (let i = 0; i < detail; i++) {
             let angle = i / detail * 2 * Math.PI;
             points.push(new Vector(pointRadius * Math.cos(angle), pointRadius * Math.sin(angle)));
             let angleAndHalf = (i + 0.5) / detail * 2 * Math.PI;
             testPoints.push(new Vector(testRadiuses[0] * Math.cos(angle), testRadiuses[0] * Math.sin(angle)));
-            testPoints.push(new Vector(testRadiuses[1] * Math.cos(angleAndHalf), testRadiuses[1] * Math.sin(angleAndHalf)));
+            if (i % 2 == 0) testPoints.push(new Vector(testRadiuses[1] * Math.cos(angleAndHalf), testRadiuses[1] * Math.sin(angleAndHalf)));
         }
         properties.points = points;
         properties.testPoints = testPoints;
+        properties.zPoints = 3;
+        properties.zSpacing = (radius + 2) * 0.4 / 2;
         super(properties);
         this.radius = radius;
     }
 
-    clone = () => new RingConductor({ mass: this.mass, position: this.position.copy(), rotation: this.rotation, radius: this.radius, scene: this.sceneRef, netCharge: this.netCharge, angularVelocity: this.angularVelocity, velocity: this.velocity.copy() });
+    getProperties = (): { [key: string]: any } => {
+        return { mass: this.mass, position: this.position.copy(), rotation: this.rotation, radius: this.radius, scene: this.sceneRef, netCharge: this.netCharge, angularVelocity: this.angularVelocity, velocity: this.velocity.copy() }
+    }
     render = (ctx: CanvasRenderingContext2D) => {
         //Draw ring
         ctx.strokeStyle = "grey";
@@ -39,7 +43,7 @@ export default class RingConductor extends Conductor {
         ctx.lineWidth = 10;
         let step = 2 * Math.PI / this.points.length;
         for (let i = 0; i < this.points.length; i++) {
-            ctx.strokeStyle = Scene.chargeColor(this.charges[i] * this.points.length * 1.0);
+            ctx.strokeStyle = Scene.chargeColor(this.getChargeAt(i) * this.points.length * 1.0);
             ctx.beginPath();
             ctx.arc(this.position.x * 100, this.position.y * 100, this.radius * 100 - 15, this.rotation + step * i, this.rotation + step * (i + 1));
             ctx.stroke();
@@ -54,6 +58,8 @@ export default class RingConductor extends Conductor {
             this.charges = next.charges;
             this.points = next.points;
             this.testPoints = next.testPoints;
+            this.chargePoints3D = next.chargePoints3D;
+            this.testPoints3D = next.testPoints3D;
             this.matrix = next.matrix;
             this.updateWorldSpace();
             this.conduct();

@@ -15,6 +15,15 @@ export default class Vector {
         }
         return `<${this.x.toFixed(2)}, ${this.y.toFixed(2)}, ${this.z.toFixed(2)}>`;
     }
+    static parseVector = (str: string): Vector => {
+        let x = parseFloat(str.substring(1, str.indexOf(",")));
+        let y = parseFloat(str.substring(str.indexOf(",") + 1, str.indexOf(">")));
+        let z = 0;
+        if (str.indexOf(",") != str.lastIndexOf(",")) {
+            z = parseFloat(str.substring(str.lastIndexOf(",") + 1, str.lastIndexOf(">")));
+        }
+        return new Vector(x, y, z);
+    }
     isZero = (): boolean => {
         return this.x === 0 && this.y === 0 && this.z == 0;
     }

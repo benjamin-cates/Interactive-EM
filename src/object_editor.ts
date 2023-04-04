@@ -30,7 +30,7 @@ const powerCorrection = {
 
 interface Slider {
     name: string;
-    type: "vector" | "number" | "boolean";
+    type: "vector" | "number" | "boolean" | "color" | "string";
     display?: string;
     min?: number | Vector;
     max?: number | Vector;
@@ -158,7 +158,7 @@ const sliders: Slider[] = [
     {
         name: "radius",
         type: "number", unit: "m",
-        min: 0.4, max: 5,
+        min: 0.4, max: 4,
         for: ["ring_conductor"],
         correction: logCorrection,
     },
@@ -178,14 +178,75 @@ const sliders: Slider[] = [
         for: ["line_conductor"],
         correction: logCorrection,
     },
+    //Scene
+    {
+        name: "showGridLines",
+        display: "Show Grid Lines",
+        type: "boolean",
+        for: ["scene"],
+        correction: noCorrection,
+    },
+    {
+        name: "equipotentialColor",
+        display: "Equipotential Color",
+        type: "color",
+        for: ["scene"],
+        correction: noCorrection,
+    },
+    {
+        name: "fieldLineColor",
+        display: "Field Color",
+        type: "color",
+        for: ["scene"],
+        correction: noCorrection,
+    },
+    {
+        name: "positiveColor",
+        display: "Positive Color",
+        type: "color",
+        for: ["scene"],
+        min: 1,//Turn off alpha slider
+        correction: noCorrection,
+    },
+    {
+        name: "neutralColor",
+        display: "Neutral Color",
+        type: "color",
+        for: ["scene"],
+        min: 1,//Turn off alpha slider
+        correction: noCorrection,
+    },
+    {
+        name: "negativeColor",
+        display: "Negative Color",
+        type: "color",
+        for: ["scene"],
+        min: 1,//Turn off alpha slider
+        correction: noCorrection,
+    },
+    {
+        name: "timeScale",
+        display: "Force Scaling",
+        type: "number", unit: "N/N",
+        for: ["scene"],
+        min: 0, max: 300,
+        correction: powerCorrection,
+    },
+    {
+        name: "viewportHeight",
+        display: "Viewport Size",
+        type: "number", unit: "m",
+        for: ["scene"],
+        min: 5, max: 15,
+        correction: logCorrection,
+    },
 ];
 function getSliderId(name: string, type: ObjectTypes) {
     return sliders.findIndex((slider) => (slider.name == name && (slider.for == "all" || slider.for.includes(type))));
 }
-function prettyToString(val: number | Vector) {
+function prettyToString(val: number | Vector | string) {
     if (typeof val == "number") {
-        let negativeBuffer = val < 0 ? "" : "&nbsp;";
-        return negativeBuffer + val.toFixed(2);
+        return val.toFixed(2);
     }
     else return val.toString();
 
@@ -202,7 +263,7 @@ export default class ObjEditor {
     element: HTMLElement;
     curObj?: Object;
     curType?: ObjectTypes;
-    curState?: { [key: string]: Vector | number } = {};
+    curState?: { [key: string]: Vector | number | string } = {};
     scene: Scene;
     constructor(element: HTMLElement, scene: Scene) {
         this.element = element;
@@ -227,6 +288,7 @@ export default class ObjEditor {
         //For each element in curState
         for (let i in this.curState) {
             let id = getSliderId(i, this.curType);
+            if (id == -1) continue;
             let name = sliders[id].name.charAt(0).toUpperCase() + sliders[id].name.slice(1).replace(/_/g, " ");
             if (sliders[id].display) name = sliders[id].display;
             let html = `<div class="input_slider slider_${i}">`;
@@ -235,10 +297,13 @@ export default class ObjEditor {
                 let preset = sliders[id].presets[x];
                 html += `<button class="input_slider_preset" onclick="scene.objEditor.preset('${i}',${x})" id="preset_${i}">${preset.name}</button>`;
             }
+            let inputType = sliders[id].type;
             html += "</div>";
-            html += `<div class="input_slider_display">
-                <span class="slider_value" id="slider_value${i}">${prettyToString(this.curState[i])}</span>
-                <span class="slider_units">${sliders[id].unit}</span></div>`;
+            html += `<div class="input_slider_display">`;
+            if (inputType == "number" || inputType == "vector")
+                html += `<span class="slider_value" id="slider_value${i}">${prettyToString(this.curState[i])}</span>`;
+            if (sliders[id].unit)
+                html += ` <span class="slider_units">${sliders[id].unit}</span></div>`;
             let uncorrect = sliders[id].correction.uncorrect;
             //Number sliders
             if (sliders[id].type == "number") {
@@ -267,7 +332,31 @@ export default class ObjEditor {
                     </div>
                 `;
             }
-            //Add value and units
+            else if (sliders[id].type == "color") {
+                html += `
+                    <div class="input_slider_color">
+                        <label id="slider_value${i}" style="background: ${this.curState[i]}" for="slider_color_${i}">${this.curState[i]}</label>
+                        <input id="slider_color_${i}" class="color_input" type="color" value="${(this.curState[i] as string).slice(0, 7)}" oninput="scene.objEditor.input('${i}',this.value)"/>
+                        <input id="slider_transparency_${i}" class="transparency_slider ${sliders[id].min == 1 ? "hidden" : ""}" type="range" min="0" max="1" step="0.002" value="${parseInt((this.curState[i] as string).slice(7, 9), 16) / 255}" oninput="scene.objEditor.input('${i}',this.value)"/>
+                    </div>`;
+            }
+            else if (sliders[id].type == "string") {
+                html += `
+                    <div class="input_slider_color">
+                        <input id="slider_string_${i}" type="text" value="${this.curState[i]}" oninput="scene.objEditor.input('${i}',this.value)"/>
+                    </div>`;
+            }
+            else if (sliders[id].type == "boolean") {
+                html += `
+                    <div class="input_slider_boolean">
+                        <label class="checkbox-wrapper">
+                            <input type="checkbox" ${this.curState[i] ? "checked" : ""} oninput="scene.objEditor.input('${i}',this.checked)">
+                            <div class="checkbox-slider">
+                                <div class="checkbox-knob"></div>
+                            </div>
+                        </label>
+                    </div>`;
+            }
             html += "</div>";
 
             elements.push({ html, id });
@@ -277,9 +366,11 @@ export default class ObjEditor {
         //Compile to single html string
         let outHtml = "";
         elements.forEach(v => outHtml += v.html);
-        outHtml += `<div class="action_buttons">
+        if (!(this.curObj instanceof Scene)) {
+            outHtml += `<div class="action_buttons">
                 <button class="delete_button" onclick="scene.objEditor.deleteElement()">&times; Destroy</button>
-        </div>`;
+            </div>`;
+        }
         this.element.innerHTML = outHtml;
     }
     preset = (name: string, index: number) => {
@@ -297,56 +388,73 @@ export default class ObjEditor {
     input = (name: string, value: number | string, direction?: "x" | "y") => {
         if (!this.curObj) return;
         let slider = sliders[getSliderId(name, this.curType)];
-        value = slider.correction.correct(Number(value));
-        value = Math.round(value * 100) / 100;
-        if (name == "position") {
-            if (direction == "x") this.curObj.position.x = value;
-            if (direction == "y") this.curObj.position.y = value;
-            this.updateDisplay("position", this.curObj.position, false);
-            this.curObj.updateProperty("position", this.curObj.position);
-            return;
+        if (!isNaN(Number(value))) {
+            value = slider.correction.correct(Number(value));
+            value = Math.round(value * 100) / 100;
         }
-        else if (name == "velocity") {
-            if (direction == "x") this.curObj.velocity.x = value;
-            if (direction == "y") this.curObj.velocity.y = value;
-            this.updateDisplay("velocity", this.curObj.velocity, false);
-            return;
+        if (slider.type == "vector") {
+            if (direction == "x") this.curObj[name].x = value;
+            if (direction == "y") this.curObj[name].y = value;
+            this.updateDisplay(name, this.curObj[name], false);
+            this.curObj.updateProperty(name, this.curObj[name]);
         }
-        else this.curObj.updateProperty(name, value);
+        else if (slider.type == "color") {
+            let trans = Number(document.querySelector<HTMLInputElement>("#slider_transparency_" + name).value);
+            let col = document.querySelector<HTMLInputElement>("#slider_color_" + name).value;
+            let combined = col + Math.floor(trans * 255).toString(16).padStart(2, "0");
+            this.updateDisplay(name, combined, false);
+            this.curObj.updateProperty(name, combined);
+        }
+        else {
+            this.updateDisplay(name, value, false);
+            this.curObj.updateProperty(name, value as number);
+        }
         this.scene.updateObjects();
-        this.updateDisplay(name, value, false);
     }
-    updateDisplay = (name: string, value: number | Vector, setInput: boolean = true) => {
+    updateDisplay = (name: string, value: number | Vector | boolean | string, setInput: boolean = true) => {
         let slider = sliders[getSliderId(name, this.curType)]
         if (slider == null) return;
         let uncorrect = slider.correction.uncorrect;
         //Update interface display
-        if (value instanceof Vector) {
-            document.querySelector("#slider_value" + name).innerHTML = prettyToString(value);
-            let valx = uncorrect(value.x);
-            let valy = uncorrect(value.y);
+        if (slider.type == "vector") {
+            document.querySelector("#slider_value" + name).textContent = prettyToString(value as Vector);
+            let valx = uncorrect((value as Vector).x);
+            let valy = uncorrect((value as Vector).y);
             if (setInput) document.querySelector<HTMLInputElement>("#range_x" + name).value = valx.toString();
             if (setInput) document.querySelector<HTMLInputElement>("#range_y" + name).value = valy.toString();
         }
-        else if (typeof value == "number") {
-            let roundedValue = Math.round(value * 100) / 100;
-            document.querySelector("#slider_value" + name).innerHTML = prettyToString(roundedValue);
+        else if (slider.type == "number") {
+            let roundedValue = Math.round(value as number * 100) / 100;
+            document.querySelector("#slider_value" + name).textContent = prettyToString(roundedValue);
             value = uncorrect(value);
             if (value == Infinity) value = 10000;
             if (setInput) document.querySelector<HTMLInputElement>("#slider_range" + name).value = value.toString();
         }
+        else if (slider.type == "boolean") {
+            if (setInput) document.querySelector<HTMLInputElement>("#slider_boolean_" + name).checked = value as boolean;
+        }
+        else if (slider.type == "string") {
+            if (setInput) document.querySelector<HTMLInputElement>("#slider_string_" + name).value = value as string;
+        }
+        else if (slider.type == "color") {
+            let sliderDisplay = document.querySelector("#slider_value" + name);
+            sliderDisplay.textContent = value as string;
+            //@ts-ignore
+            sliderDisplay.style.backgroundColor = value as string;
+            if (typeof value == "number") {
+                if (setInput) document.querySelector<HTMLInputElement>("#slider_transparency_" + name).value = value.toString();
+            }
+            else if (setInput) {
+                document.querySelector<HTMLInputElement>("#slider_color_" + name).value = value as string;
+            }
+        }
+
     }
 
     setObj = (obj: Object) => {
         this.curObj = obj;
         this.curType = obj.getType();
-        this.curState = {};
-        //Update curState to match sliders
-        for (let i = 0; i < sliders.length; i++) {
-            let slider = sliders[i];
-            if (slider.for == "all" || slider.for.includes(this.curType))
-                this.curState[slider.name] = obj[slider.name];
-        }
+        this.curState = obj.getProperties();
         this.generateHTML();
         this.show();
     }

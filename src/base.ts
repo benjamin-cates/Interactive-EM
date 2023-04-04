@@ -1,5 +1,5 @@
 import Vector from "./vector";
-export type ObjectTypes = "point_charge" | "infinite_plane" | "conductor" | "finite_line" | "triangle_charge" | "ring_conductor" | "line_conductor" | "all";
+export type ObjectTypes = "point_charge" | "infinite_plane" | "conductor" | "finite_line" | "triangle_charge" | "ring_conductor" | "line_conductor" | "all" | "scene";
 export class Object {
     //Physical properties
     mass: number;
@@ -18,7 +18,11 @@ export class Object {
     }
 
     clone = () => {
-        return new Object({ mass: this.mass, position: this.position.copy(), rotation: this.rotation, angularVelocity: this.angularVelocity });
+        //@ts-ignore
+        return new this.constructor(this.getProperties());
+    }
+    getProperties = (): { [key: string]: any } => {
+        return { mass: this.mass, position: this.position.copy(), velocity: this.velocity.copy(), rotation: this.rotation, angularVelocity: this.angularVelocity };
     }
 
     render = (ctx: CanvasRenderingContext2D) => {
@@ -26,7 +30,7 @@ export class Object {
     }
     getType: () => ObjectTypes = () => "all";
     //Implemented for each class
-    updateProperty = (property: string, value: number | Vector) => {
+    updateProperty = (property: string, value: number | Vector | string) => {
 
     }
     updateBaseProperty = (property: string, value: number | Vector) => {
