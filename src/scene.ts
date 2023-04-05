@@ -367,10 +367,13 @@ export default class Scene {
         this.selected.isGrab = false;
         if (this.selected.obj.getType() == "infinite_plane") return;
         let pos = this.getCursorPosition(event);
-        if (new Date().getTime() - this.selected.dragTime[this.selected.dragTime.length - 1] < 60) {
+        if (new Date().getTime() - this.selected.dragTime[this.selected.dragTime.length - 1] < 40) {
             let dt = new Date().getTime() - this.selected.dragTime[0];
             let dx = Vector.add(pos, Vector.multiply(this.selected.dragPositions[0], -1));
-            this.selected.obj.updateProperty("velocity", Vector.multiply(dx, 1000 / dt));
+            //Set new velocity if greater than 0.6 m/s
+            if (dx.magnitude() / (dt / 1000) > 0.6) this.selected.obj.updateProperty("velocity", Vector.multiply(dx, 1000 / dt));
+            //Else set to zero
+            else this.selected.obj.updateProperty("velocity", Vector.origin());
         }
         else this.selected.obj.updateProperty("velocity", Vector.origin());
         this.objEditor.updateDisplay("velocity", this.selected.obj.velocity);
