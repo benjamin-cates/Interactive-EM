@@ -12,7 +12,7 @@ export default class RingConductor extends Conductor {
         let testRadiuses = [radius - 0.1, radius - 0.2];
         let points = [];
         let testPoints = [];
-        let detail = Math.floor(radius * 6);
+        let detail = Math.floor(radius * 8);
         for (let i = 0; i < detail; i++) {
             let angle = i / detail * 2 * Math.PI;
             points.push(new Vector(pointRadius * Math.cos(angle), pointRadius * Math.sin(angle)));
@@ -22,7 +22,7 @@ export default class RingConductor extends Conductor {
         }
         properties.points = points;
         properties.testPoints = testPoints;
-        properties.zPoints = 3;
+        properties.zPoints = 4;
         properties.zSpacing = (radius + 2) * 0.4 / 2;
         super(properties);
         this.radius = radius;

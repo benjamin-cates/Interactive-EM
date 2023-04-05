@@ -127,7 +127,7 @@ export default class Conductor extends Object {
             let dist = delta.magnitude();
             let charge = this.charges[i];
             //Treat charges in the z plane as the same when far away
-            if (i % this.zPoints == 0 && dist > this.zSpacing * 4) {
+            if (i % this.zPoints == 0 && dist > this.zSpacing * 9) {
                 for (let j = 1; j < this.zPoints; j++) {
                     charge += this.charges[i + j];
                 }
