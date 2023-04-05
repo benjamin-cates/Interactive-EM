@@ -9,18 +9,26 @@ export default class InfinitePlane extends Object {
     normal: Vector;
 
     fieldAt = (pos: Vector) => {
+        //Field at is parallel to normal facing away from the plane
         let deltaPos = Vector.subtract(pos, this.position);
-        return Vector.multiply(this.normal, Math.sign(Vector.dot(this.normal, deltaPos)) * 2 * (this.chargeDensity / 1000) * constants.K * Math.PI);
+        let direction = Math.sign(Vector.dot(this.normal, deltaPos));
+        //Convert nC/m^2 to μC/m^2
+        let density = this.chargeDensity / 1000;
+        // E = 2πKσ away from plane
+        return Vector.multiply(this.normal, direction * 2 * constants.K * Math.PI * density);
     }
 
     voltageAt = (pos: Vector) => {
+        //Convert nC/m^2 to μC/m^2
+        let density = this.chargeDensity / 1000;
         //V = C - 2πKσr
-        return 20 - 2 * (this.chargeDensity / 1000) * constants.K * Math.PI * this.distanceFrom(pos);
+        return 20 - 2 * Math.PI * constants.K * density * this.distanceFrom(pos);
     }
 
     constructor(properties: { [key: string]: number | Vector }) {
         super(properties);
         this.chargeDensity = properties.chargeDensity as number || 0;
+        //Calculate normal vector
         this.updateProperty("rotation", this.rotation);
     }
     getProperties = (): { [key: string]: any } => {
@@ -37,6 +45,7 @@ export default class InfinitePlane extends Object {
     getType: () => ObjectTypes = () => "infinite_plane";
 
     distanceFrom = (pos: Vector) => {
+        //Distance from the plane is the dot product of the difference in position and the normal vector
         let deltaPos = Vector.subtract(pos, this.position);
         return Math.abs(Vector.dot(deltaPos, this.normal));
     }
@@ -45,15 +54,18 @@ export default class InfinitePlane extends Object {
     }
 
     render = (ctx: CanvasRenderingContext2D) => {
-        //Line width is non linear wrt to charge density
+        //Calculate thickness
         let lineWidth = Math.abs(this.chargeDensity / 1000) * 6 / (Math.abs(this.chargeDensity / 1000) + 0.03) + 2;
-        ctx.beginPath();
         let dir = new Vector(50 * Math.cos(this.rotation), 50 * Math.sin(this.rotation));
+        //Create line path
+        ctx.beginPath();
         ctx.moveTo((this.position.x + dir.x) * 100, (this.position.y + dir.y) * 100);
         ctx.lineTo((this.position.x - dir.x) * 100, (this.position.y - dir.y) * 100);
+        //Stoke black background
         ctx.lineWidth = lineWidth + 6;
         ctx.strokeStyle = "black";
         ctx.stroke();
+        //Stroke colored interior
         ctx.lineWidth = lineWidth;
         ctx.strokeStyle = Scene.getChargeColor(this.chargeDensity);
         ctx.stroke();

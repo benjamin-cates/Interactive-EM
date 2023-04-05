@@ -9,24 +9,37 @@ const zPointsDefault = 3;
 const zSpacingDefault = 0.8;
 
 export default class Conductor extends Object {
+    //List of charge and test points in 2d
     points: Vector[];
     testPoints: Vector[];
+
+    //Number of points in each z direction
+    zPoints: number;
+    //Distance between each point in the z direction
+    zSpacing: number;
+    //Charge and test points extruded into 3d
+    //Stored as [p0, p0 + zSpacing, p0 + zSpacing * 2,..., p1, p1 + zSpacing, p1 + zSpacing*2] where the number of points for each original point is zPoints
     chargePoints3D: Vector[];
     testPoints3D: Vector[];
-    zPoints: number;
-    zSpacing: number;
+    //List of charges on each point, matches 1-to-1 with chargePoints3D
     charges: number[];
+    //Net charge on the conductor
     netCharge: number;
+    //Reference to the scene to test voltage
     sceneRef: Scene;
+    //chargePoints3D in world space
     worldSpacePoints: Vector[];
+    //testPoints3D in world space
     worldSpaceTestPoints: Vector[];
+    //Cache of voltage testing points
     voltageCache: number[];
+    //See latex document for explanation of matrix
     matrix: math.Matrix;
-    private voltage: number;
 
     constructor(properties: { [key: string]: number | Vector | Vector[] | Scene }) {
         //mass: number, position: Vector, rotation: number, points: Vector[], testPoints: Vector[], scene: Scene, netCharge: number = 0) {
         super(properties as { [key: string]: number | Vector });
+        //Set properties
         if (!properties.points) throw new Error("Conductor must have charge points");
         if (!properties.testPoints) throw new Error("Conductor must have test points");
         if (!properties.scene) throw new Error("Conductor properties must reference a scene");
@@ -57,43 +70,52 @@ export default class Conductor extends Object {
             this.testPoints[i].z = 0;
         }
         this.voltageCache = [];
-        this.charges = new Array(this.chargePoints3D.length).fill(this.netCharge / 2 / this.chargePoints3D.length);
+        this.charges = new Array(this.chargePoints3D.length).fill(0);
         let mat = [[]];
         mat[0] = new Array(this.chargePoints3D.length).fill(2);
         mat[0][this.chargePoints3D.length] = 0;
         for (let j = 0; j < this.testPoints3D.length; j++) {
             mat[j + 1] = [];
             for (let i = 0; i < this.chargePoints3D.length; i++) {
+                //Dist1 is the distance to the positive z-axis charge point
                 let dist1 = Vector.subtract(this.chargePoints3D[i], this.testPoints3D[j]).magnitude();
                 this.chargePoints3D[i].z = -this.chargePoints3D[i].z;
+                //Dist2 is the distance to the negative z-axis charge point
                 let dist2 = Vector.subtract(this.chargePoints3D[i], this.testPoints3D[j]).magnitude();
                 this.chargePoints3D[i].z = -this.chargePoints3D[i].z;
+                //Set matrix cell to K/r1 + K/r2
                 mat[j + 1][i] = Constants.K * (1 / dist1 + 1 / dist2);
             }
             mat[j + 1][this.chargePoints3D.length] = 1;
         }
         let matObj = math.matrix(mat);
         let matObjTranspose = math.transpose(matObj);
+        //Formula for the least squares regression inverse matrix
         this.matrix = math.multiply(math.inv(math.multiply(matObjTranspose, matObj)), matObjTranspose);
         this.updateWorldSpace();
     }
     updateWorldSpace = () => {
+        //Calculates world space points when the conductor moves
         let rotationMatrix = Vector.rotationMatrix(this.rotation);
+        //Transformation function
         let transform = (point: Vector) => {
             let out = Vector.transform2D(point, rotationMatrix);
             out.add(this.position);
             out.z = point.z;
             return out;
         };
+
         this.worldSpacePoints = this.chargePoints3D.map(transform);
         this.worldSpaceTestPoints = this.testPoints3D.map(transform);
     }
 
     decompose = (detail: number) => {
+        //Decompose into it's charge points
         return this.worldSpacePoints.map((point: Vector, i: number) => new PointCharge({ charge: this.charges[i], position: point }));
     }
 
     getChargeAt = (index: number) => {
+        //Returns the charge at the index indicated by where it would be in the 2d points array, basically sums up the charges in the z direction
         let sum = 0;
         for (let i = 0; i < this.zPoints; i++) {
             sum += this.charges[index * this.zPoints + i];
@@ -107,14 +129,13 @@ export default class Conductor extends Object {
             let delta = Vector.subtract(pos, this.worldSpacePoints[i]);
             let dist = delta.magnitude();
             let charge = this.charges[i];
-            //Treat z charges as at the same point when far away
-            if (i % this.zPoints == 0 && dist > this.zSpacing * 4) {
+            //Treat z charges as flat when lowest point is far enough away
+            if (i % this.zPoints == 0 && dist > this.zSpacing * 7) {
                 for (let j = 1; j < this.zPoints; j++) {
                     charge += this.charges[i + j];
                 }
                 i += this.zPoints - 1;
             }
-            //See overleaf document for the derivation of this approximation
             volts += charge / dist;
         }
         return 2 * Constants.K * volts;
@@ -126,7 +147,7 @@ export default class Conductor extends Object {
             let delta = Vector.subtract(pos, this.worldSpacePoints[i]);
             let dist = delta.magnitude();
             let charge = this.charges[i];
-            //Treat charges in the z plane as the same when far away
+            //Treat charges in the z plane flat when lowest point is far enough away
             if (i % this.zPoints == 0 && dist > this.zSpacing * 9) {
                 for (let j = 1; j < this.zPoints; j++) {
                     charge += this.charges[i + j];
@@ -138,13 +159,13 @@ export default class Conductor extends Object {
             field.y += delta.y * scale;
         }
         field.z = 0;
+        //Scale by 2 because it's mirrored
         field.scale(2 * Constants.K)
         return field;
     }
 
     conductCount: number = 0;
     conduct = () => {
-        //See the overleaf document for details on how this works
         let volts = this.worldSpaceTestPoints.map((point: Vector, i: number) => {
             let cache = this.voltageCache[i];
             if (this.conductCount % 4 != 0)
@@ -153,11 +174,14 @@ export default class Conductor extends Object {
             this.voltageCache[i] = -this.sceneRef.voltageAt(point, this)
             return this.voltageCache[i];
         });
+        //See the overleaf document for details on how this works
+        //Put net charge on front of voltage array
         volts.unshift(this.netCharge);
         let charges = math.multiply(this.matrix, volts);
         this.charges = charges.toArray().map(v => Number(v));
+        let conductorVoltage = this.charges[this.charges.length - 1];
+        //Remove last element of charges array, which is the conductor voltage
         this.charges.length--;
-        this.voltage = Number(charges.get([this.chargePoints3D.length - 1]));
         this.conductCount++;
     }
 }

@@ -1,11 +1,4 @@
-import PointCharge from "./charges/point_charge";
-import InfinitePlane from "./charges/infinite_plane";
-import Conductor from "./conductors/conductor";
-import FiniteLine from "./charges/finite_line";
-import Triangle from "./charges/triangle";
-import RingConductor from "./conductors/ring";
 import Vector from "./vector";
-import constants from "./constants";
 import { Object, ObjectTypes } from "./base";
 import Scene from "./scene";
 
@@ -15,6 +8,9 @@ interface Correction {
     uncorrect: (number) => number;
 };
 
+//Different corrections provide different scalings for the sliders
+//correct converts from slider value to actual value
+//uncorrect converts from actual value to slider value
 const noCorrection = {
     correct: (x) => x,
     uncorrect: (x) => x,
@@ -39,6 +35,7 @@ interface Slider {
     correction: Correction;
     presets?: Preset[];
 }
+//Preset is a button on a property that does an action
 interface Preset {
     name: string;
     replacementFunc: (x: number | Vector) => (number | Vector);
@@ -244,6 +241,7 @@ const sliders: Slider[] = [
 function getSliderId(name: string, type: ObjectTypes) {
     return sliders.findIndex((slider) => (slider.name == name && (slider.for == "all" || slider.for.includes(type))));
 }
+//Converts to string that has 2 decimal places
 function prettyToString(val: number | Vector | string) {
     if (typeof val == "number") {
         return val.toFixed(2);
@@ -252,14 +250,6 @@ function prettyToString(val: number | Vector | string) {
 
 }
 export default class ObjEditor {
-    static correction(value: number, isNonLinear: boolean = false): number {
-        if (isNonLinear) return Math.sign(value) * Math.pow(Math.abs(value), 2.6);
-        else return value;
-    }
-    static unCorrection(value: number, isNonLinear: boolean = false): number {
-        if (isNonLinear) return Math.sign(value) * Math.pow(Math.abs(value), 1 / 2.6);
-        else return value;
-    }
     element: HTMLElement;
     curObj?: Object;
     curType?: ObjectTypes;
@@ -275,11 +265,13 @@ export default class ObjEditor {
     show = () => {
         window.clearTimeout(this.hideTimeout);
         this.element.style.display = "block";
+        //Froce calculation of bounding box
         this.element.clientWidth;
         this.element.classList.add("show");
     }
     hide = () => {
         this.element.classList.remove("show");
+        //Hide after 400 ms unless cancelled
         this.hideTimeout = setTimeout(_ => this.element.style.display = "none", 400);
     }
     generateHTML = () => {
@@ -289,27 +281,31 @@ export default class ObjEditor {
         for (let i in this.curState) {
             let id = getSliderId(i, this.curType);
             if (id == -1) continue;
-            let name = sliders[id].name.charAt(0).toUpperCase() + sliders[id].name.slice(1).replace(/_/g, " ");
+            let name = sliders[id].name.charAt(0).toUpperCase() + sliders[id].name.slice(1);
             if (sliders[id].display) name = sliders[id].display;
             let html = `<div class="input_slider slider_${i}">`;
+            //Put name of slider
             html += `<div class="input_slider_name">${name}`;
+            //Generate preset buttons
             if (sliders[id].presets) for (let x = 0; x < sliders[id].presets.length; x++) {
                 let preset = sliders[id].presets[x];
                 html += `<button class="input_slider_preset" onclick="scene.objEditor.preset('${i}',${x})" id="preset_${i}">${preset.name}</button>`;
             }
-            let inputType = sliders[id].type;
             html += "</div>";
+
+
+            let inputType = sliders[id].type;
+            //Display value if number or vector
             html += `<div class="input_slider_display">`;
             if (inputType == "number" || inputType == "vector")
                 html += `<span class="slider_value" id="slider_value${i}">${prettyToString(this.curState[i])}</span>`;
+            //Show unit if it has one
             if (sliders[id].unit)
                 html += ` <span class="slider_units">${sliders[id].unit}</span></div>`;
+
             let uncorrect = sliders[id].correction.uncorrect;
             //Number sliders
             if (sliders[id].type == "number") {
-                //Do not display angular velocity or rotation for point charges
-                if ((sliders[id].name == "angular_velocity" || sliders[id].name == "rotation") && this.curObj instanceof PointCharge) continue;
-                if (sliders[id].name == "mass" && this.curObj instanceof InfinitePlane) continue;
                 //Calculate corrected min and max values according to non-linear input
                 let min = uncorrect(sliders[id].min as number);
                 let max = uncorrect(sliders[id].max as number);
@@ -367,10 +363,12 @@ export default class ObjEditor {
         let outHtml = "";
         elements.forEach(v => outHtml += v.html);
         if (!(this.curObj instanceof Scene)) {
+            //Add delete button if it's not a scene
             outHtml += `<div class="action_buttons">
                 <button class="delete_button" onclick="scene.objEditor.deleteElement()">&times; Destroy</button>
             </div>`;
         }
+        //Set property editor html
         this.element.innerHTML = outHtml;
     }
     preset = (name: string, index: number) => {
@@ -386,18 +384,23 @@ export default class ObjEditor {
         this.updateDisplay(name, next);
     }
     input = (name: string, value: number | string, direction?: "x" | "y") => {
+        //Called when the slider is adjusted by the user
         if (!this.curObj) return;
         let slider = sliders[getSliderId(name, this.curType)];
+        //Apply correction to number values
         if (!isNaN(Number(value))) {
             value = slider.correction.correct(Number(value));
             value = Math.round(value * 100) / 100;
         }
+
+        //Set property if it's a vector
         if (slider.type == "vector") {
             if (direction == "x") this.curObj[name].x = value;
             if (direction == "y") this.curObj[name].y = value;
             this.updateDisplay(name, this.curObj[name], false);
             this.curObj.updateProperty(name, this.curObj[name]);
         }
+        //Set property if it's a color
         else if (slider.type == "color") {
             let trans = Number(document.querySelector<HTMLInputElement>("#slider_transparency_" + name).value);
             let col = document.querySelector<HTMLInputElement>("#slider_color_" + name).value;
@@ -405,17 +408,21 @@ export default class ObjEditor {
             this.updateDisplay(name, combined, false);
             this.curObj.updateProperty(name, combined);
         }
+        //Else set property like normal
         else {
             this.updateDisplay(name, value, false);
             this.curObj.updateProperty(name, value as number);
         }
+        //Update voltage canvas objects
         this.scene.updateObjects();
     }
+    //Changes the display of the slider and the input if setInput is true
     updateDisplay = (name: string, value: number | Vector | boolean | string, setInput: boolean = true) => {
         let slider = sliders[getSliderId(name, this.curType)]
         if (slider == null) return;
         let uncorrect = slider.correction.uncorrect;
-        //Update interface display
+
+        //Update vector display
         if (slider.type == "vector") {
             document.querySelector("#slider_value" + name).textContent = prettyToString(value as Vector);
             let valx = uncorrect((value as Vector).x);
@@ -423,6 +430,7 @@ export default class ObjEditor {
             if (setInput) document.querySelector<HTMLInputElement>("#range_x" + name).value = valx.toString();
             if (setInput) document.querySelector<HTMLInputElement>("#range_y" + name).value = valy.toString();
         }
+        //Update number display
         else if (slider.type == "number") {
             let roundedValue = Math.round(value as number * 100) / 100;
             document.querySelector("#slider_value" + name).textContent = prettyToString(roundedValue);
@@ -430,12 +438,15 @@ export default class ObjEditor {
             if (value == Infinity) value = 10000;
             if (setInput) document.querySelector<HTMLInputElement>("#slider_range" + name).value = value.toString();
         }
+        //Update boolean display
         else if (slider.type == "boolean") {
             if (setInput) document.querySelector<HTMLInputElement>("#slider_boolean_" + name).checked = value as boolean;
         }
+        //Update string display
         else if (slider.type == "string") {
             if (setInput) document.querySelector<HTMLInputElement>("#slider_string_" + name).value = value as string;
         }
+        //Update color display
         else if (slider.type == "color") {
             let sliderDisplay = document.querySelector("#slider_value" + name);
             sliderDisplay.textContent = value as string;
@@ -451,6 +462,7 @@ export default class ObjEditor {
 
     }
 
+    //Set the property editor to show properties of obj
     setObj = (obj: Object) => {
         this.curObj = obj;
         this.curType = obj.getType();
@@ -459,6 +471,7 @@ export default class ObjEditor {
         this.show();
     }
 
+    //Called when delete button is pressed
     deleteElement = () => {
         if (!this.curObj) return;
         this.scene.removeObject(this.curObj);

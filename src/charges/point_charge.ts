@@ -40,6 +40,7 @@ export default class PointCharge extends Object {
     getType: () => ObjectTypes = () => "point_charge";
 
     render = (ctx: CanvasRenderingContext2D) => {
+        //Draw circle with colored fill style and black outline
         ctx.fillStyle = Scene.getChargeColor(this.charge);
         ctx.strokeStyle = "black";
         ctx.lineWidth = 3;

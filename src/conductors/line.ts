@@ -9,6 +9,7 @@ export default class LineConductor extends Conductor {
     private startPoint: Vector;
     private endPoint: Vector;
     constructor(properties: { [key: string]: number | Vector | Vector[] | Scene }) {
+        //Generate charge points and test points in 3d
         let length = properties.length as number || 1;
         let pointCount = Math.floor(length * 3.5);
         let separation = length / (pointCount - 1);
@@ -29,15 +30,14 @@ export default class LineConductor extends Conductor {
         properties.zSpacing = 0.8;
         super(properties);
         this.length = length;
-        let dir = new Vector(Math.cos(this.rotation), Math.sin(this.rotation));
-        this.startPoint = Vector.add(this.position, Vector.multiply(dir, -this.length / 2));
-        this.endPoint = Vector.add(this.position, Vector.multiply(dir, this.length / 2));
+        //Precalculate end points and direction
+        if(!properties.skipMatrixCreation) this.updateProperty("position",this.position);
     }
     getProperties = (): { [key: string]: any } => {
         return { mass: this.mass, position: this.position.copy(), rotation: this.rotation, length: this.length, scene: this.sceneRef, angularVelocity: this.angularVelocity, velocity: this.velocity.copy() };
     }
     render = (ctx: CanvasRenderingContext2D) => {
-        //Draw ring
+        //Draw grey line
         ctx.strokeStyle = "grey";
         ctx.lineWidth = 30;
         ctx.lineCap = "round";
@@ -53,6 +53,7 @@ export default class LineConductor extends Conductor {
         ctx.lineCap = "butt";
         let step = this.length / this.points.length;
         for (let i = 0; i < this.points.length; i++) {
+            //TODO: possibly batch the stroke calls?
             ctx.strokeStyle = Scene.chargeColor(this.getChargeAt(i) * this.points.length * 1.0);
             ctx.beginPath();
             ctx.moveTo((this.position.x - dir.x * this.length / 2 + dir.x * step * i) * 100, (this.position.y - dir.y * this.length / 2 + dir.y * step * i) * 100);
@@ -65,6 +66,7 @@ export default class LineConductor extends Conductor {
     updateProperty = (property: string, value: number | Vector) => {
         let updateEndPoints = false;
         if (property == "length") {
+            //Create a new object and set properties that would change
             this.length = value as number;
             let next = this.clone();
             this.charges = next.charges;
@@ -98,7 +100,9 @@ export default class LineConductor extends Conductor {
             this.endPoint = Vector.add(this.position, Vector.multiply(dir, this.length / 2));
         }
     }
+    //Moment of inertia of a line about its center is m*l^2/12
     momentOfInertia = () => this.mass * this.length * this.length / 12;
+    //Calulate the distance from the line segment
     distanceFrom = (pos: Vector) => {
         if (this.length == 0) return Vector.distance(pos, this.position);
         let t = Vector.dot(Vector.subtract(pos, this.endPoint), Vector.subtract(this.startPoint, this.endPoint)) / this.length / this.length;

@@ -2,13 +2,18 @@ import Scene from "./scene";
 import Vector from "./vector";
 import { Object, ObjectTypes } from "./base";
 
+//This class contains static methods for converting properties objects (implemented as javascript objects) to and from strings.
 export default class Properties {
 
+    //Stringify different types
     private static itemStringify = (item: any) => {
+        //Stringify scene
         if (item instanceof Vector) {
             return "\"!" + item.toString() + "\"";
         }
+        //Stringify scene
         else if (item instanceof Scene) return `"!scene"`;
+        //Stringify array
         if (Array.isArray(item)) {
             let out = "[";
             for (let i = 0; i < item.length; i++) {
@@ -17,13 +22,17 @@ export default class Properties {
             if (out.at(-1) == ",") out = out.substring(0, out.length - 1);
             return out + "]";
         }
+        //Stringify object
         else if (item instanceof Object) {
             return `{"!type":"${item.getType()}","!props":${Properties.stringify(item.getProperties())}}`;
         }
+        //Stringify javascript object
         else if (typeof item == "object") return Properties.stringify(item);
+        //Stringify string
         else if (typeof item == "string") return `"${item}"`;
         else return item;
     }
+    //Converts properties object to a string
     static stringify = (obj: { [key: string]: any }) => {
         let out = "{";
         for (let key in obj) {
@@ -63,6 +72,7 @@ export default class Properties {
         }
         return props;
     }
+    //Converts string to properties object
     static parse = (props: string): { [key: string]: any } => {
         let out = JSON.parse(props);
         out = Properties.fix(out);

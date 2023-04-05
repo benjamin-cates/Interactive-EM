@@ -42,7 +42,6 @@ export default class Scene {
         if (property == "viewportHeight") {
             Scene.parameters.viewportHeight = value as number;
             this.updateAspectRatio();
-            this.sceneDefaults();
         }
         else if (property == "vectorGridSpacing") Scene.parameters.vectorGridSpacing = value as number;
         else if (property == "vectorGridLength") Scene.parameters.vectorGridLength = value as number;
@@ -111,36 +110,40 @@ export default class Scene {
         this.context = element.getContext("2d");
         this.voltCanvas = new Equipotential(voltCanvas);
         this.updateAspectRatio();
-        this.sceneDefaults();
         this.render();
+        //Create physics interval
         this.physicsInterval = window.setInterval(this.physics, 1000 / Scene.parameters.physicsPerSecond, 1 / Scene.parameters.physicsPerSecond);
+        //Create object editor
         this.objEditor = new ObjEditor(objectEditor, this);
     }
     getType = () => "scene";
 
     updateAspectRatio = () => {
+        //Resize object canvas
         let aspectRatio = window.innerWidth / window.innerHeight;
         this.height = Scene.parameters.viewportHeight * 2;
         this.width = aspectRatio * this.height;
         this.element.width = window.innerWidth;
         this.element.height = window.innerHeight;
         this.context.resetTransform();
+        //Translate and scale object canvas
         this.context.translate(window.innerWidth / 2, window.innerHeight / 2);
         let scale = window.innerHeight / 2 / Scene.parameters.viewportHeight / 100;
         this.context.scale(scale, scale);
+        //Resize voltage canvas
         this.voltCanvas.resize(this.width, this.height);
-    }
-
-    sceneDefaults = () => {
+        //Fix font settings
         this.context.font = "bold 30px Lato";
         this.context.textAlign = "center";
         this.context.textBaseline = "middle";
     }
 
     getCursorPosition = (event: MouseEvent): Vector => {
+        //Adjust relative to center of canvas
         let rect = this.element.getBoundingClientRect();
         let x = event.clientX - rect.left - rect.width / 2;
         let y = event.clientY - rect.top - rect.height / 2;
+        //Adjust for scaling between screen space and canvas space
         let aspectRatio = rect.width / rect.height;
         return new Vector(x / rect.width * 2 * Scene.parameters.viewportHeight * aspectRatio, y / rect.height * 2 * Scene.parameters.viewportHeight);
     }
@@ -148,6 +151,7 @@ export default class Scene {
         this.objects.push(object);
         this.updateObjects();
     }
+    //Default objects defined in onload at the bottom
     static defaultObjects: { [key: string]: Object };
     pushDefaultObject = (type: ObjectTypes) => {
         this.pushObject(Scene.defaultObjects[type].clone());
@@ -161,8 +165,9 @@ export default class Scene {
     }
     render = () => {
         this.renderIndex++;
+        //Setup next render frame
         requestAnimationFrame(this.render);
-
+        //Clear screen
         this.context.clearRect(-100 * this.width, -100 * this.height, this.width * 200, this.height * 200);
 
         this.voltCanvas.fullscreenRender();
@@ -172,6 +177,7 @@ export default class Scene {
         if (Scene.parameters.showVectorGrid)
             this.renderVectorField();
 
+        //Render each object
         this.objects.forEach((object) => {
             object.render(this.context);
         });
@@ -180,10 +186,12 @@ export default class Scene {
         this.context.lineWidth = 4.0;
         this.context.strokeStyle = Scene.colors.gridLines;
         this.context.beginPath();
+        //Draw vertical lines
         for (let i = Math.floor(-this.width); i < this.width; i++) {
             this.context.moveTo(i * 100, -this.height * 100);
             this.context.lineTo(i * 100, this.height * 100);
         }
+        //Draw horizontal lines
         for (let i = Math.floor(-this.height); i < this.height; i++) {
             this.context.moveTo(-this.width * 100, i * 100);
             this.context.lineTo(this.width * 100, i * 100);
@@ -199,7 +207,7 @@ export default class Scene {
         this.context.lineCap = "round";
         let horArrowCount = Math.floor((this.width / 2) / Scene.parameters.vectorGridSpacing);
         let verArrowCount = Math.floor((this.height / 2) / Scene.parameters.vectorGridSpacing);
-        //Iterate over grid with step size 2
+        //Determine whether to use cache
         let useCache = this.renderIndex % 2 == 0 && this.vectorFieldCache.length > 0;
         if (!useCache) this.vectorFieldCache = [];
 
@@ -208,24 +216,26 @@ export default class Scene {
         for (let i = -horArrowCount; i <= horArrowCount; i++) {
             if (!useCache) this.vectorFieldCache[i + horArrowCount] = [];
             for (let j = -verArrowCount; j <= verArrowCount; j++) {
-                //Get field at grid point
+                //Determine position of grid point
                 let pos = new Vector(i * Scene.parameters.vectorGridSpacing, j * Scene.parameters.vectorGridSpacing);
-                let field: Vector;
+                //If not using cache, update cache
                 if (!useCache) this.vectorFieldCache[i + horArrowCount][j + verArrowCount] = this.fieldAt(pos);
-                field = this.vectorFieldCache[i + horArrowCount][j + verArrowCount];
+                //Set field to cache
+                let field = this.vectorFieldCache[i + horArrowCount][j + verArrowCount];
                 let fieldMag = field.magnitude();
                 //If field is large enough, add to batch by thickness
                 if (fieldMag > 0.0003) {
                     let len = Scene.parameters.vectorGridLength * (1 / (1 + Math.exp(-fieldMag * 1000)) - 0.5);
                     if (Scene.parameters.debugField) len = 1;
-                    let size = Math.abs(len) * 20;
+                    //Thickness = 0.2 * length
+                    let size = Math.abs(len) * 0.2 * 100;
                     byThickness[Math.floor(size)].push({ pos: pos, field: field, fieldMag: fieldMag, len: len });
                 }
             }
         }
         //Draw each set of vectors by their thickness
         for (let i = 0; i < byThickness.length; i++) {
-            if(byThickness[i].length == 0) continue;
+            if (byThickness[i].length == 0) continue;
             this.context.lineWidth = i;
             this.context.beginPath();
             for (let j = 0; j < byThickness[i].length; j++) {
@@ -272,6 +282,7 @@ export default class Scene {
     physicsFrameCount: number = 0;
     physics = (dt: number) => {
         this.physicsFrameCount++;
+        //Apply forces every 4 physics updates
         let isFullPhysics = this.physicsFrameCount % 4 == 0;
         this.objects.forEach((object) => {
             if (object instanceof Conductor) {
@@ -299,22 +310,23 @@ export default class Scene {
                     this.removeObject(object);
                     return;
                 }
+                //Update object editor if selected
                 if (object == this.selected.obj) {
                     this.objEditor.updateDisplay("position", object.position);
                     this.objEditor.updateDisplay("rotation", object.rotation);
                 }
-
             }
         });
+        //Update objects in the voltage canvas
         this.updateObjects();
     }
 
     private selected: {
         obj?: Object;
 
-        //History of the past ten mouse events for dragging
+        //History of the past five mouse events for dragging
         dragPositions: Vector[];
-        //History of the past ten mouse event times
+        //History of the past five mouse event times
         dragTime: number[];
         posOffset: Vector;
         //If being dragged
@@ -327,9 +339,10 @@ export default class Scene {
         let objEditorRect = this.objEditor.element.getBoundingClientRect();
         if (event.clientX > objEditorRect.left && event.clientY < objEditorRect.bottom && event.clientY > objEditorRect.top) return;
         //Get drag position of current cursor
-        this.selected.pointerId = event.pointerId;
         this.selected.dragPositions = [this.getCursorPosition(event)];
         this.selected.dragTime = [new Date().getTime()];
+        this.selected.pointerId = event.pointerId;
+        //Test if each object is being clicked
         for (let i = 0; i < this.objects.length; i++) {
             if (this.objects[i].distanceFrom(this.selected.dragPositions[0]) < 0.5) {
                 this.selected.obj = this.objects[i];
@@ -350,13 +363,16 @@ export default class Scene {
         let pos = this.getCursorPosition(event);
         this.selected.dragPositions.push(pos);
         pos = Vector.add(pos, this.selected.posOffset);
-        if (this.selected.dragPositions.length >= 10) {
+        if (this.selected.dragPositions.length >= 5) {
             this.selected.dragPositions.shift();
             this.selected.dragTime.shift();
         }
+        //Update position
         this.selected.obj.updateProperty("position", pos);
+        this.selected.obj.updateProperty("velocity", Vector.origin());
         this.objEditor.updateDisplay("position", pos);
         this.updateObjects();
+        //Push most recent drag time
         this.selected.dragTime.push(new Date().getTime());
     }
 
@@ -407,7 +423,6 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 window.addEventListener("resize", () => {
     scene.updateAspectRatio();
-    scene.sceneDefaults();
 });
 
 //Export classes

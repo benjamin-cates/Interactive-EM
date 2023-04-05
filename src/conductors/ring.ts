@@ -8,6 +8,7 @@ export default class RingConductor extends Conductor {
     radius: number;
     constructor(properties: { [key: string]: number | Vector | Vector[] | Scene }) {
         let radius = properties.radius as number || 1;
+        //Construct charge points and test points
         let pointRadius = radius - 0.05;
         let testRadiuses = [radius - 0.1, radius - 0.2];
         let points = [];
@@ -22,9 +23,12 @@ export default class RingConductor extends Conductor {
         }
         properties.points = points;
         properties.testPoints = testPoints;
+        //Set point spacing
         properties.zPoints = 4;
         properties.zSpacing = (radius + 2) * 0.4 / 2;
+        //Generate matrix
         super(properties);
+
         this.radius = radius;
     }
 
@@ -43,6 +47,7 @@ export default class RingConductor extends Conductor {
         ctx.lineWidth = 10;
         let step = 2 * Math.PI / this.points.length;
         for (let i = 0; i < this.points.length; i++) {
+            //Todo: possibly batch the stroke calls?
             ctx.strokeStyle = Scene.chargeColor(this.getChargeAt(i) * this.points.length * 1.0);
             ctx.beginPath();
             ctx.arc(this.position.x * 100, this.position.y * 100, this.radius * 100 - 15, this.rotation + step * (i - 0.5), this.rotation + step * (i + 0.5));
@@ -53,6 +58,7 @@ export default class RingConductor extends Conductor {
 
     updateProperty = (property: string, value: number | Vector) => {
         if (property == "radius") {
+            //Create a new object and set properties that would change
             this.radius = value as number;
             let next = this.clone();
             this.charges = next.charges;
@@ -63,10 +69,6 @@ export default class RingConductor extends Conductor {
             this.matrix = next.matrix;
             this.updateWorldSpace();
             this.conduct();
-        }
-        else if (property == "detail") {
-            this.points.length = value as number;
-            window.Object.assign(this, this.clone());
         }
         else if (property == "netCharge") {
             this.netCharge = value as number;
@@ -84,6 +86,7 @@ export default class RingConductor extends Conductor {
     }
     momentOfInertia = () => Infinity;
     distanceFrom = (pos: Vector) => {
+        //Distance from anywhere on the ring is |x-r|
         let dist = Vector.distance(this.position, pos);
         return Math.abs(dist - this.radius);
     }

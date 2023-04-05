@@ -3,6 +3,7 @@ import Vector from "../vector";
 import Scene from "../scene";
 import constants from "../constants";
 
+//Currently not implemented
 export default class RingCharge extends Object {
     //in microcolumbs
     charge: number;
