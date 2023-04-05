@@ -197,11 +197,14 @@ export default class Scene {
         if (Scene.colors.fieldLines.slice(7, 9) == "00") return;
         this.context.strokeStyle = Scene.colors.fieldLines;
         this.context.lineCap = "round";
-        let horArrowCount = Math.floor((this.width / 2) / Scene.parameters.vectorGridSpacing);;
-        let verArrowCount = Math.floor((this.height / 2) / Scene.parameters.vectorGridSpacing);;
+        let horArrowCount = Math.floor((this.width / 2) / Scene.parameters.vectorGridSpacing);
+        let verArrowCount = Math.floor((this.height / 2) / Scene.parameters.vectorGridSpacing);
         //Iterate over grid with step size 2
         let useCache = this.renderIndex % 2 == 0 && this.vectorFieldCache.length > 0;
         if (!useCache) this.vectorFieldCache = [];
+
+        //Sort field vectors by thickness so they can be batch drawn
+        let byThickness = [[], [], [], [], [], [], [], [], [], [], [], []];
         for (let i = -horArrowCount; i <= horArrowCount; i++) {
             if (!useCache) this.vectorFieldCache[i + horArrowCount] = [];
             for (let j = -verArrowCount; j <= verArrowCount; j++) {
@@ -211,29 +214,43 @@ export default class Scene {
                 if (!useCache) this.vectorFieldCache[i + horArrowCount][j + verArrowCount] = this.fieldAt(pos);
                 field = this.vectorFieldCache[i + horArrowCount][j + verArrowCount];
                 let fieldMag = field.magnitude();
+                //If field is large enough, add to batch by thickness
                 if (fieldMag > 0.0003) {
                     let len = Scene.parameters.vectorGridLength * (1 / (1 + Math.exp(-fieldMag * 1000)) - 0.5);
                     if (Scene.parameters.debugField) len = 1;
                     let size = Math.abs(len) * 20;
-                    this.context.lineWidth = size;
-                    pos.scale(100);
-                    let fieldEnd = Vector.add(pos, Vector.multiply(field, 100 * len / fieldMag));
-                    let scale = size / fieldMag;
-                    let normal = new Vector(-field.y * scale, field.x * scale);
-                    let along = new Vector(field.x * scale, field.y * scale);
-                    //Draw arrow shape
-                    this.context.beginPath();
-                    this.context.moveTo(pos.x, pos.y);
-                    this.context.lineTo(fieldEnd.x, fieldEnd.y);
-                    this.context.moveTo(fieldEnd.x, fieldEnd.y);
-                    this.context.lineTo(fieldEnd.x - along.x + normal.x, fieldEnd.y - along.y + normal.y);
-                    this.context.moveTo(fieldEnd.x, fieldEnd.y);
-                    this.context.lineTo(fieldEnd.x - along.x - normal.x, fieldEnd.y - along.y - normal.y);
-                    this.context.stroke();
-                    this.context.closePath();
+                    byThickness[Math.floor(size)].push({ pos: pos, field: field, fieldMag: fieldMag, len: len });
                 }
             }
         }
+        //Draw each set of vectors by their thickness
+        for (let i = 0; i < byThickness.length; i++) {
+            if(byThickness[i].length == 0) continue;
+            this.context.lineWidth = i;
+            this.context.beginPath();
+            for (let j = 0; j < byThickness[i].length; j++) {
+                let arrow = byThickness[i][j];
+                this.drawFieldArrow(arrow.pos, arrow.field, arrow.fieldMag, arrow.len);
+            }
+            this.context.stroke();
+            this.context.closePath();
+        }
+    }
+    private drawFieldArrow(pos: Vector, field: Vector, fieldMag: number, len: number) {
+        pos.scale(100);
+        let fieldEnd = Vector.add(pos, Vector.multiply(field, 100 * len / fieldMag));
+        //Calculate vectors along and perpendicular to the field (to get position of head tips)
+        let scale = len / fieldMag * 100 / 5;//One fifth of a unit long
+        let normal = new Vector(-field.y * scale, field.x * scale);
+        let along = new Vector(field.x * scale, field.y * scale);
+        //Body of arrow
+        this.context.moveTo(pos.x, pos.y);
+        this.context.lineTo(fieldEnd.x, fieldEnd.y);
+        //Head of arrow
+        this.context.moveTo(fieldEnd.x, fieldEnd.y);//Prevents asymmetrical arrow head
+        this.context.lineTo(fieldEnd.x - along.x + normal.x, fieldEnd.y - along.y + normal.y);
+        this.context.moveTo(fieldEnd.x, fieldEnd.y);
+        this.context.lineTo(fieldEnd.x - along.x - normal.x, fieldEnd.y - along.y - normal.y);
     }
     fieldAt = (pos: Vector, ignored?: Object): Vector => {
         let out = Vector.origin();
@@ -329,7 +346,7 @@ export default class Scene {
     mouseMove = (event: PointerEvent) => {
         if (this.selected.isGrab == false)
             return;
-        if(event.pointerId != this.selected.pointerId) return;
+        if (event.pointerId != this.selected.pointerId) return;
         let pos = this.getCursorPosition(event);
         this.selected.dragPositions.push(pos);
         pos = Vector.add(pos, this.selected.posOffset);
@@ -346,7 +363,7 @@ export default class Scene {
     mouseUp = (event: PointerEvent) => {
         if (this.selected.isGrab == false)
             return;
-        if(event.pointerId != this.selected.pointerId) return;
+        if (event.pointerId != this.selected.pointerId) return;
         this.selected.isGrab = false;
         if (this.selected.obj.getType() == "infinite_plane") return;
         let pos = this.getCursorPosition(event);
