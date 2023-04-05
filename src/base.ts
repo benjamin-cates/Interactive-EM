@@ -30,7 +30,7 @@ export class Object {
         //Should return object type
         return "all";
     }
-    updateProperty = (property: string, value: number | Vector | string): void => {
+    updateProperty = (property: string, value: any): void => {
         //Create function for each property change
         //Or calls updateBaseProperty as fallback
     }

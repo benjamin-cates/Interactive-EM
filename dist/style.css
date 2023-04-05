@@ -31,6 +31,7 @@ canvas {
     pointer-events: none;
     position: absolute;
     top:70%;
+    z-index:50;
 }
 
 #message {

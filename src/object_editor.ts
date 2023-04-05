@@ -368,6 +368,12 @@ export default class ObjEditor {
                 <button class="delete_button" onclick="scene.objEditor.deleteElement()">&times; Destroy</button>
             </div>`;
         }
+        if( this.curObj instanceof Scene) {
+            outHtml += `<div class="action_buttons">
+                <button class="input_slider_preset" onclick="navigator.clipboard.writeText(scene.getSceneURL());showMessage('Copied to clipboard');">Copy Scene URL</button>
+            </div>`;
+
+        }
         //Set property editor html
         this.element.innerHTML = outHtml;
     }
