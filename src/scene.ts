@@ -425,6 +425,21 @@ window.addEventListener("resize", () => {
     scene.updateAspectRatio();
 });
 
+//@ts-ignore
+window.showMessage = (message: string) => {
+    let messageElement = document.querySelector("#message");
+    //@ts-ignore
+    messageElement.style.transition="none";
+    //@ts-ignore
+    messageElement.style.opacity="1";
+    messageElement.textContent = message;
+    messageElement.clientWidth;
+    //@ts-ignore
+    messageElement.style.transition="opacity 500ms ease 0.6s";
+    //@ts-ignore
+    messageElement.style.opacity="0";
+}
+
 //Export classes
 //@ts-ignore
 window.Scene = Scene;
