@@ -45,7 +45,7 @@ export default class RingConductor extends Conductor {
         for (let i = 0; i < this.points.length; i++) {
             ctx.strokeStyle = Scene.chargeColor(this.getChargeAt(i) * this.points.length * 1.0);
             ctx.beginPath();
-            ctx.arc(this.position.x * 100, this.position.y * 100, this.radius * 100 - 15, this.rotation + step * i, this.rotation + step * (i + 1));
+            ctx.arc(this.position.x * 100, this.position.y * 100, this.radius * 100 - 15, this.rotation + step * (i - 0.5), this.rotation + step * (i + 0.5));
             ctx.stroke();
             ctx.closePath();
         }
