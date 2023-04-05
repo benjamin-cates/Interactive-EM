@@ -10,7 +10,7 @@ export default class LineConductor extends Conductor {
     private endPoint: Vector;
     constructor(properties: { [key: string]: number | Vector | Vector[] | Scene }) {
         //Generate charge points and test points in 3d
-        let length = properties.length as number || 1;
+        let length = properties.length as number ?? 1;
         let pointCount = Math.floor(length * 3.5);
         let separation = length / (pointCount - 1);
         let points = [];

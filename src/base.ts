@@ -9,11 +9,11 @@ export class Object {
     angularVelocity: number;
 
     constructor(properties: { [key: string]: number | Vector }) {
-        this.velocity = properties.velocity as Vector || new Vector(0, 0);
-        this.position = (properties.position as Vector) || Vector.origin();
-        this.mass = properties.mass as number || 1;
-        this.rotation = properties.rotation as number || 0;
-        this.angularVelocity = properties.angularVelocity as number || 0;
+        this.velocity = properties.velocity as Vector ?? new Vector(0, 0);
+        this.position = (properties.position as Vector) ?? Vector.origin();
+        this.mass = properties.mass as number ?? 1;
+        this.rotation = properties.rotation as number ?? 0;
+        this.angularVelocity = properties.angularVelocity as number ?? 0;
     }
 
 

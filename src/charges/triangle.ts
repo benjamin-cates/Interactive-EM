@@ -10,11 +10,10 @@ export default class Triangle extends Object {
     tip: Vector;
     halfWidth: number;
     constructor(properties: { [key: string]: number | Vector }) {
-        //mass: number, position: Vector, rotation: number, chargeDensity: number, p1: Vector, p2: Vector, p3: Vector) {
         super(properties);
         if (!properties.p1 || !properties.p2 || !properties.p3) throw new Error("Triangle must have 3 points in properties constructor");
         this.points = [properties.p1 as Vector, properties.p2 as Vector, properties.p3 as Vector];
-        this.chargeDensity = properties.chargeDensity as number || 1;
+        this.chargeDensity = properties.chargeDensity as number ?? 1;
         //Find lengths
         let d1 = Vector.distance(this.points[0], this.points[1]);
         let d2 = Vector.distance(this.points[1], this.points[2]);

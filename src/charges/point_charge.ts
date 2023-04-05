@@ -28,7 +28,7 @@ export default class PointCharge extends Object {
 
     constructor(properties: { [key: string]: number | Vector }) {
         super(properties);
-        this.charge = properties.charge as number || 1;
+        this.charge = properties.charge as number ?? 1;
     }
     updateProperty = (property: string, value: number | Vector) => {
         if (property == "charge") this.charge = value as number;

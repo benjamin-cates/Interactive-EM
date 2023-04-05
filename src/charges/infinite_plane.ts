@@ -27,7 +27,7 @@ export default class InfinitePlane extends Object {
 
     constructor(properties: { [key: string]: number | Vector }) {
         super(properties);
-        this.chargeDensity = properties.chargeDensity as number || 0;
+        this.chargeDensity = properties.chargeDensity as number ?? 0;
         //Calculate normal vector
         this.updateProperty("rotation", this.rotation);
     }

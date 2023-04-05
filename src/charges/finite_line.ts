@@ -45,8 +45,8 @@ export default class FiniteLine extends Object {
     constructor(properties: { [key: string]: number | Vector }) {
         //chargeDensity: number, mass: number, position: Vector, rotation: number, length: number}) {
         super(properties);
-        this.chargeDensity = properties.chargeDensity as number || 0;
-        this.length = properties.length as number || 5;
+        this.chargeDensity = properties.chargeDensity as number ?? 0;
+        this.length = properties.length as number ?? 5;
         this.updateProperty("rotation", this.rotation);
     }
     getProperties = (): { [key: string]: any } => {

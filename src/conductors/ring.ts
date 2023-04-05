@@ -7,7 +7,7 @@ import Scene from "../scene";
 export default class RingConductor extends Conductor {
     radius: number;
     constructor(properties: { [key: string]: number | Vector | Vector[] | Scene }) {
-        let radius = properties.radius as number || 1;
+        let radius = properties.radius as number ?? 1;
         //Construct charge points and test points
         let pointRadius = radius - 0.05;
         let testRadiuses = [radius - 0.1, radius - 0.2];
