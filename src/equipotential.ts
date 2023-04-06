@@ -14,6 +14,7 @@ export default class VoltCanvas {
     equipProgram: WebGLProgram;
     framebuffer: WebGLFramebuffer;
     texture: WebGLTexture;
+    maxUniforms: number;
     static voltUniforms = [
         "point_count",
         "line_count",
@@ -118,6 +119,7 @@ export default class VoltCanvas {
         this.gl.attachShader(this.equipProgram, vertexShader);
         //Get maximum uniform storage space
         let uniformCount = this.gl.getParameter(this.gl.MAX_FRAGMENT_UNIFORM_VECTORS);
+        this.maxUniforms = uniformCount - 25;
         //Create fragment shaders
         const voltShader = VoltCanvas.createShader(this.gl, this.gl.FRAGMENT_SHADER, VoltCanvas.makeVoltageShader(uniformCount));
         const equipShader = VoltCanvas.createShader(this.gl, this.gl.FRAGMENT_SHADER, VoltCanvas.makeEquipotentialShader(true));
@@ -172,6 +174,11 @@ export default class VoltCanvas {
 
         //Create uniform array
         let data = new Float32Array(points.length * 4 + lines.length * 8 + planes.length * 4 + tris.length * 8 + conductorSize * 4);
+        if (data.length > this.maxUniforms) {
+            //@ts-ignore
+            window.showMessage("Error: too many objects in scene");
+            return;
+        }
         let offset = 0;
         points.forEach((point, i) => {
             data[offset + i * 4] = point.position.x;
