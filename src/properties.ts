@@ -30,6 +30,12 @@ export default class Properties {
         else if (typeof item == "object") return Properties.stringify(item);
         //Stringify string
         else if (typeof item == "string") return `"${item}"`;
+        else if (typeof item == "number") {
+            let out = item.toFixed(2);
+            if (out == "Infinity") return `"inf"`;
+            if (out == "-Infinity") return `"-inf"`;
+            return out;
+        }
         else return item;
     }
     //Converts properties object to a string
@@ -52,7 +58,9 @@ export default class Properties {
             }
             //Replace vectors and scene with real conterpart
             if (typeof props[key] == "string") {
-                if (props[key].startsWith("!<")) {
+                if (props[key] == "inf") props[key] = Infinity;
+                else if (props[key] == "-inf") props[key] = -Infinity;
+                else if (props[key].startsWith("!<")) {
                     props[key] = Vector.parseVector(props[key].substring(1));
                 }
                 else if (props[key] == "!scene") {
