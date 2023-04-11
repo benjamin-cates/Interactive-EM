@@ -22,7 +22,7 @@ The Interactive EM Webapp is a dynamic simulator for the electric field. This pr
 ## Example images
 ![Ring Conductor](dist/img/ring_conductor.png)
 ![Infinite Plane](dist/img/infinite_plane.png)
-![Coupled Conductors](dist/img/coupled_conductors.png)
+![Two Oppositely Charged Lines](dist/img/two_lines.png)
 
 ## Math
 Simulating the electric field is a difficult task. Either it is computationally expensive, or requires hard integrals to be solved. We decided to solve integrals and present our math in a LaTeX document. The work-in-progress document can be [viewed here](https://www.overleaf.com/read/zzwffshvmbrb).
