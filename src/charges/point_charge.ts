@@ -28,7 +28,7 @@ export default class PointCharge extends Object {
 
     constructor(properties: { [key: string]: number | Vector }) {
         super(properties);
-        this.charge = properties.charge as number || 1;
+        this.charge = properties.charge as number ?? 1;
     }
     updateProperty = (property: string, value: number | Vector) => {
         if (property == "charge") this.charge = value as number;
@@ -40,6 +40,7 @@ export default class PointCharge extends Object {
     getType: () => ObjectTypes = () => "point_charge";
 
     render = (ctx: CanvasRenderingContext2D) => {
+        //Draw circle with colored fill style and black outline
         ctx.fillStyle = Scene.getChargeColor(this.charge);
         ctx.strokeStyle = "black";
         ctx.lineWidth = 3;

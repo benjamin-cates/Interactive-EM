@@ -45,8 +45,8 @@ export default class FiniteLine extends Object {
     constructor(properties: { [key: string]: number | Vector }) {
         //chargeDensity: number, mass: number, position: Vector, rotation: number, length: number}) {
         super(properties);
-        this.chargeDensity = properties.chargeDensity as number || 0;
-        this.length = properties.length as number || 5;
+        this.chargeDensity = properties.chargeDensity as number ?? 0;
+        this.length = properties.length as number ?? 5;
         this.updateProperty("rotation", this.rotation);
     }
     getProperties = (): { [key: string]: any } => {
@@ -76,12 +76,14 @@ export default class FiniteLine extends Object {
         }
     }
     momentOfInertia = () => {
+        //Moment of inertia is m * l^2 / 12
         return this.mass * this.length * this.length / 12;
     }
 
     getType: () => ObjectTypes = () => "finite_line";
 
     distanceFrom = (pos: Vector) => {
+        //Distance from line segment
         if (this.length == 0) return Vector.distance(pos, this.position);
         let t = Vector.dot(Vector.subtract(pos, this.endPoint), Vector.subtract(this.startPoint, this.endPoint)) / this.length / this.length;
         t = Math.max(0, Math.min(1, t));
@@ -114,12 +116,12 @@ export default class FiniteLine extends Object {
 
     }
     decompose = (detail: number): Object[] => {
+        //Decompose into list of points along length of line
         let objs: Object[] = [];
-        let step = Vector.multiply(Vector.subtract(this.endPoint, this.startPoint), 1 / detail);
+        let step = Vector.multiply(Vector.subtract(this.endPoint, this.startPoint), 1 / (detail - 1));
         let charge = this.chargeDensity / detail;
-        for (let i = 0; i < detail; i++) {
+        for (let i = 0; i < detail; i++)
             objs.push(new PointCharge({ charge: charge, position: Vector.add(this.startPoint, Vector.multiply(step, i)) }));
-        }
         return objs;
     }
 }

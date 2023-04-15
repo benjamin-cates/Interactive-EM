@@ -1,6 +1,7 @@
 import { Object, ObjectTypes } from "../base";
 import Vector from "../vector";
 
+//Currently not implemented
 export default class Composition extends Object {
 
     //All coordinate systems of the elements in objs are relative to the center of mass and default rotation of the composition

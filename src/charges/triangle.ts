@@ -10,11 +10,10 @@ export default class Triangle extends Object {
     tip: Vector;
     halfWidth: number;
     constructor(properties: { [key: string]: number | Vector }) {
-        //mass: number, position: Vector, rotation: number, chargeDensity: number, p1: Vector, p2: Vector, p3: Vector) {
         super(properties);
         if (!properties.p1 || !properties.p2 || !properties.p3) throw new Error("Triangle must have 3 points in properties constructor");
         this.points = [properties.p1 as Vector, properties.p2 as Vector, properties.p3 as Vector];
-        this.chargeDensity = properties.chargeDensity as number || 1;
+        this.chargeDensity = properties.chargeDensity as number ?? 1;
         //Find lengths
         let d1 = Vector.distance(this.points[0], this.points[1]);
         let d2 = Vector.distance(this.points[1], this.points[2]);
@@ -88,7 +87,8 @@ export default class Triangle extends Object {
         t = Math.max(0, Math.min(1, t));
         return Vector.distance(pos, Vector.add(p2, Vector.multiply(Vector.subtract(p1, p2), t)));
     }
-    private pointInside(pos: Vector) {
+    //Returns whether point is inside the triangle
+    private pointInside(pos: Vector): boolean {
         //Calculate barycentric coordinates s and t
         let s = (this.points[0].x - this.points[2].x) * (pos.y - this.points[2].y) - (this.points[0].y - this.points[2].y) * (pos.x - this.points[2].x);
         let t = (this.points[1].x - this.points[0].x) * (pos.y - this.points[0].y) - (this.points[1].y - this.points[0].y) * (pos.x - this.points[0].x);
@@ -99,6 +99,7 @@ export default class Triangle extends Object {
 
     }
 
+    //Return the distance from the triangle
     distanceFrom = (pos: Vector): number => {
         let translatedPosition = Vector.add(pos, Vector.multiply(this.position, -1));
         translatedPosition.rotate(-this.rotation);
@@ -115,12 +116,14 @@ export default class Triangle extends Object {
     }
     getType = (): ObjectTypes => "triangle_charge";
 
+    //TODO: implement moment of inertia
     momentOfInertia = (): number => Infinity;
 
     updateProperty = (property: string, value: number | Vector) => {
         if (property == "chargeDensity") {
             this.chargeDensity = value as number;
         }
+        //If any tip positions change, recreate the object
         else if (property == "p1" || property == "p2" || property == "p3") {
             if (property == "p1") this.points[0] = value as Vector;
             if (property == "p2") this.points[1] = value as Vector;
@@ -131,16 +134,21 @@ export default class Triangle extends Object {
     }
 
     render = (ctx: CanvasRenderingContext2D) => {
+        //Save canvas transformation
         ctx.save();
         ctx.fillStyle = Scene.getChargeColor(this.chargeDensity);
         ctx.beginPath();
+        //Add on translation
         ctx.translate(this.position.x * 100, this.position.y * 100)
+        //Add on rotation
         ctx.rotate(this.rotation);
+        //Draw triangle path
         ctx.moveTo(this.points[0].x * 100, this.points[0].y * 100);
         ctx.lineTo(this.points[1].x * 100, this.points[1].y * 100);
         ctx.lineTo(this.points[2].x * 100, this.points[2].y * 100);
         ctx.fill();
         ctx.closePath();
+        //Restore canvas transformation
         ctx.restore();
     }
 
