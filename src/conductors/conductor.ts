@@ -125,6 +125,28 @@ export default class Conductor extends Object {
 
     voltageAt = (pos: Vector): number => {
         let volts = 0;
+        if (pos.z != 0) {
+            for (let i = 0; i < this.worldSpacePoints.length; i++) {
+                let delta = Vector.subtract(pos, this.worldSpacePoints[i]);
+                let dist = delta.magnitude();
+                let charge = this.charges[i];
+                //Treat z charges as flat when lowest point is far enough away
+                if (i % this.zPoints == 0 && dist > this.zSpacing * 7) {
+                    for (let j = 1; j < this.zPoints; j++) {
+                        charge += this.charges[i + j];
+                    }
+                    i += this.zPoints - 1;
+                    volts += charge / dist;
+                }
+                else {
+                    let mirrored = this.worldSpacePoints[i].copy();
+                    mirrored.z = -mirrored.z;
+                    let mirDist = Vector.subtract(pos, mirrored).magnitude();
+                    volts += charge * (1/dist + 1 / mirDist);
+                }
+            }
+            return volts * Constants.K;
+        }
         for (let i = 0; i < this.worldSpacePoints.length; i++) {
             let delta = Vector.subtract(pos, this.worldSpacePoints[i]);
             let dist = delta.magnitude();
