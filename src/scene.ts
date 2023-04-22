@@ -159,7 +159,9 @@ export default class Scene {
     //Default objects defined in onload at the bottom
     static defaultObjects: { [key: string]: Object };
     pushDefaultObject = (type: ObjectTypes) => {
-        this.pushObject(Scene.defaultObjects[type].clone());
+        let obj = Scene.defaultObjects[type].clone();
+        obj.updateProperty("position", new Vector(Math.random() * 6 - 3, Math.random() * 6 - 3));
+        this.pushObject(obj);
     }
     updateObjects() {
         this.voltCanvas.updateObjects(this.objects);
@@ -330,7 +332,7 @@ export default class Scene {
         let baseURL = window.location.href;
         if (baseURL.includes("?")) baseURL = baseURL.substring(0, baseURL.indexOf("?"));
         if (baseURL.includes("#")) baseURL = baseURL.substring(0, baseURL.indexOf("#"));
-        let scene = Properties.stringify({ objects: this.objects , timeSpeed: Scene.parameters.timeSpeed, viewportHeight: Scene.parameters.viewportHeight });
+        let scene = Properties.stringify({ objects: this.objects, timeSpeed: Scene.parameters.timeSpeed, viewportHeight: Scene.parameters.viewportHeight });
         return baseURL + "?scene=" + encodeURIComponent(scene);
     }
 
@@ -346,8 +348,8 @@ export default class Scene {
             if (name == "scene") {
                 let newScene = Properties.parse(decodeURIComponent(value));
                 this.objects = newScene.objects as Object[];
-                if(newScene.timeSpeed != undefined) Scene.parameters.timeSpeed = newScene.timeSpeed as number;
-                if(newScene.viewportHeight != undefined) Scene.parameters.viewportHeight = newScene.viewportHeight as number;
+                if (newScene.timeSpeed != undefined) Scene.parameters.timeSpeed = newScene.timeSpeed as number;
+                if (newScene.viewportHeight != undefined) Scene.parameters.viewportHeight = newScene.viewportHeight as number;
                 this.updateAspectRatio();
                 this.selected.obj = null;
             }
@@ -467,15 +469,15 @@ window.addEventListener("resize", () => {
 window.showMessage = (message: string) => {
     let messageElement = document.querySelector("#message");
     //@ts-ignore
-    messageElement.style.transition="none";
+    messageElement.style.transition = "none";
     //@ts-ignore
-    messageElement.style.opacity="1";
+    messageElement.style.opacity = "1";
     messageElement.textContent = message;
     messageElement.clientWidth;
     //@ts-ignore
-    messageElement.style.transition="opacity 500ms ease 0.6s";
+    messageElement.style.transition = "opacity 500ms ease 0.6s";
     //@ts-ignore
-    messageElement.style.opacity="0";
+    messageElement.style.opacity = "0";
 }
 
 //Export classes
