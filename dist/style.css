@@ -30,8 +30,8 @@ canvas {
     width: 100vw;
     pointer-events: none;
     position: absolute;
-    top:70%;
-    z-index:50;
+    top: 70%;
+    z-index: 50;
 }
 
 #message {
@@ -142,6 +142,21 @@ input[type="range"] {
 
 .delete_button {
     background-color: #d01414bb;
+}
+
+.delete_button:hover {
+    background-color: #ab1414bb;
+}
+
+.clone_button {
+    background-color: #2b1ee8bb;
+}
+.clone_button:hover {
+    background-color: #1414d0bb;
+}
+
+.delete_button,
+.clone_button {
     color: white;
     font-size: 1.2rem;
     border: 0;
@@ -149,9 +164,7 @@ input[type="range"] {
     padding: 0.3rem;
 }
 
-.delete_button:hover {
-    background-color: #ab1414bb;
-}
+
 
 button:focus {
     outline: #ffffff 0.1rem solid;

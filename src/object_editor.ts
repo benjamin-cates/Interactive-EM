@@ -366,9 +366,10 @@ export default class ObjEditor {
             //Add delete button if it's not a scene
             outHtml += `<div class="action_buttons">
                 <button class="delete_button" onclick="scene.objEditor.deleteElement()">&times; Destroy</button>
+                <button class="clone_button" onclick="scene.objEditor.cloneElement()">Clone</button>
             </div>`;
         }
-        if( this.curObj instanceof Scene) {
+        if (this.curObj instanceof Scene) {
             outHtml += `<div class="action_buttons">
                 <button class="input_slider_preset" onclick="navigator.clipboard.writeText(scene.getSceneURL());showMessage('Copied to clipboard');">Copy Scene URL</button>
             </div>`;
@@ -482,6 +483,13 @@ export default class ObjEditor {
         if (!this.curObj) return;
         this.scene.removeObject(this.curObj);
         this.hide();
+    }
+    cloneElement = () => {
+        if (!this.curObj) return;
+        let newObj = this.curObj.clone();
+        newObj.updateProperty("position", Vector.add(this.curObj.position, new Vector(Math.random() * 4 - 2, Math.random() * 4 - 2)));
+        this.scene.pushObject(newObj);
+        this.setObj(newObj);
     }
 
 }
