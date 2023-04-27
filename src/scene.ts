@@ -168,6 +168,10 @@ export default class Scene {
         this.voltCanvas.updateObjects(this.objects);
     }
     removeObject(object: Object) {
+        if (this.selected.obj == object) {
+            this.selected.obj = null;
+            this.objEditor.hide();
+        }
         this.objects.splice(this.objects.indexOf(object), 1);
         this.updateObjects();
     }
@@ -431,6 +435,12 @@ export default class Scene {
         this.objEditor.updateDisplay("velocity", this.selected.obj.velocity);
         this.updateObjects();
     }
+    keyDown = (event: KeyboardEvent) => {
+        if (event.key == "Backspace" || event.key == "Delete") {
+            if (this.selected.obj == null) return;
+            this.removeObject(this.selected.obj);
+        }
+    }
 
 }
 
@@ -457,6 +467,7 @@ document.addEventListener("DOMContentLoaded", () => {
     window.addEventListener("pointerdown", scene.mouseDown);
     window.addEventListener("pointerup", scene.mouseUp);
     window.addEventListener("pointermove", scene.mouseMove);
+    window.addEventListener("keydown", scene.keyDown);
     if (window.location.href.includes("?")) {
         let url = window.location.href;
         scene.parseURLArguments(url.substring(url.indexOf("?") + 1))
@@ -468,7 +479,7 @@ window.addEventListener("resize", () => {
 });
 
 //@ts-ignore
-window.showMessage = (message: string,len: number=500) => {
+window.showMessage = (message: string, len: number = 500) => {
     let messageElement = document.querySelector("#message");
     //@ts-ignore
     messageElement.style.transition = "none";
@@ -476,7 +487,7 @@ window.showMessage = (message: string,len: number=500) => {
     messageElement.style.opacity = "1";
     messageElement.textContent = message;
     messageElement.clientWidth;
-    if(len == Infinity) return;
+    if (len == Infinity) return;
     //@ts-ignore
     messageElement.style.transition = `opacity ${len}ms ease 0.6s`;
     //@ts-ignore
