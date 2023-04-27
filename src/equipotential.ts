@@ -150,6 +150,8 @@ export default class VoltCanvas {
         console.log("Shader compilation error");
         console.log(gl.getShaderInfoLog(shader));
         gl.deleteShader(shader);
+        //@ts-ignore
+        window.showMessage("Shader compilation error",Infinity);
     }
     //Update the uniforms for the object data
     updateObjects = (objects: Object[]) => {

@@ -466,7 +466,7 @@ window.addEventListener("resize", () => {
 });
 
 //@ts-ignore
-window.showMessage = (message: string) => {
+window.showMessage = (message: string,len: number=500) => {
     let messageElement = document.querySelector("#message");
     //@ts-ignore
     messageElement.style.transition = "none";
@@ -474,8 +474,9 @@ window.showMessage = (message: string) => {
     messageElement.style.opacity = "1";
     messageElement.textContent = message;
     messageElement.clientWidth;
+    if(len == Infinity) return;
     //@ts-ignore
-    messageElement.style.transition = "opacity 500ms ease 0.6s";
+    messageElement.style.transition = `opacity ${len}ms ease 0.6s`;
     //@ts-ignore
     messageElement.style.opacity = "0";
 }
