@@ -3,6 +3,7 @@ import FiniteLine from "./charges/finite_line";
 import InfinitePlane from "./charges/infinite_plane";
 import Triangle from "./charges/triangle";
 import Conductor from "./conductors/conductor";
+import Composition from "./compositions/composition";
 import { Object, ObjectTypes } from "./base";
 
 const voltUpscale = 3;
@@ -151,27 +152,39 @@ export default class VoltCanvas {
         console.log(gl.getShaderInfoLog(shader));
         gl.deleteShader(shader);
         //@ts-ignore
-        window.showMessage("Shader compilation error",Infinity);
+        window.showMessage("Shader compilation error", Infinity);
     }
     //Update the uniforms for the object data
     updateObjects = (objects: Object[]) => {
         this.gl.useProgram(this.voltProgram);
         //Get array of each type of object
         let points = objects.filter((obj) => obj instanceof PointCharge) as PointCharge[];
-        this.gl.uniform1i(this.uniLoc.point_count, points.length);
         let lines = objects.filter((obj) => obj instanceof FiniteLine) as FiniteLine[];
-        this.gl.uniform1i(this.uniLoc.line_count, lines.length);
         let planes = objects.filter((obj) => obj instanceof InfinitePlane) as InfinitePlane[];
-        this.gl.uniform1i(this.uniLoc.plane_count, planes.length);
         let tris = objects.filter((obj) => obj instanceof Triangle) as Triangle[];
-        this.gl.uniform1i(this.uniLoc.tri_count, tris.length);
         let conductors = objects.filter((obj) => obj instanceof Conductor) as Conductor[];
+        let compositions = objects.filter((obj) => obj instanceof Composition) as Composition[];
+        compositions.forEach((comp) => {
+            let decomp = comp.decompose(10);
+            decomp.forEach((obj) => {
+                if (obj instanceof PointCharge) points.push(obj);
+                else if (obj instanceof FiniteLine) lines.push(obj);
+                else if (obj instanceof InfinitePlane) planes.push(obj);
+                else if (obj instanceof Triangle) tris.push(obj);
+                else if (obj instanceof Conductor) conductors.push(obj);
+                else if (obj instanceof Composition) compositions.push(obj);
+            });
+        })
         //Calculate size the conductors will take in the uniform array
         let conductorSize = 0;
         for (let i = 0; i < conductors.length; i++) {
             conductorSize += 1;
             conductorSize += Math.ceil((conductors[i].zPoints + 1) / 2) * conductors[i].charges.length / conductors[i].zPoints;
         }
+        this.gl.uniform1i(this.uniLoc.point_count, points.length);
+        this.gl.uniform1i(this.uniLoc.line_count, lines.length);
+        this.gl.uniform1i(this.uniLoc.plane_count, planes.length);
+        this.gl.uniform1i(this.uniLoc.tri_count, tris.length);
         this.gl.uniform1i(this.uniLoc.conductor_count, conductors.length);
 
         //Create uniform array

@@ -28,6 +28,16 @@ export default class Composition extends Object {
         });
         this.objs = objs;
     }
+    momentOfInertia = (): number => {
+        let I = 0;
+        this.objs.forEach((obj, i) => {
+            I += obj.momentOfInertia() + obj.mass * Vector.dot(this.relPos[i], this.relPos[i]);
+        });
+        return I;
+    }
+    getProperties = (): { [key: string]: number | Vector | Object[] } => {
+        return { position: this.position.copy(), rotation: this.rotation, objs: this.objs };
+    }
 
     sumForces = (forces: { force: Vector, torque: number }[]): { force: Vector, torque: number } => {
         //Torque is the sum of torques plus the sum of the cross products of the position vectors and the forces
@@ -42,7 +52,7 @@ export default class Composition extends Object {
         }
         return { force: netForce, torque: netTorque };
     }
-    updateProperty = (property: string, value: number | Vector) => {
+    compositionUpdateProperty = (property: string, value: number | Vector) => {
         if (property == "position" || property == "rotation") {
             if (property == "position") this.position = value as Vector;
             else if (property == "rotation") this.rotation = value as number;
@@ -57,20 +67,33 @@ export default class Composition extends Object {
         else this.updateBaseProperty(property, value);
     }
 
+    distanceFrom = (pos: Vector): number => {
+        let dist = Infinity;
+        this.objs.forEach(obj => {
+            dist = Math.min(dist, obj.distanceFrom(pos));
+        });
+        return dist;
+    }
+
     render = (ctx: CanvasRenderingContext2D) => {
         this.objs.forEach(obj => obj.render(ctx));
     }
 
     fieldAt = (pos: Vector): Vector => {
         let field = Vector.origin();
-        this.objs.forEach(obj => field.add(obj.fieldAt(pos)));
+        this.objs.forEach(obj => {
+            field.add(obj.fieldAt(pos))
+        });
         return field;
     }
     voltageAt = (pos: Vector): number => {
         let volt = 0;
-        this.objs.forEach(obj => volt += obj.voltageAt(pos));
+        this.objs.forEach(obj => {
+            volt += obj.voltageAt(pos);
+        });
         return volt;
     }
-
-
+    decompose = (detail: number): Object[] => {
+        return this.objs;
+    }
 }

@@ -1,5 +1,5 @@
 import Vector from "./vector";
-export type ObjectTypes = "point_charge" | "infinite_plane" | "conductor" | "finite_line" | "triangle_charge" | "ring_conductor" | "line_conductor" | "all" | "scene";
+export type ObjectTypes = "point_charge" | "infinite_plane" | "conductor" | "finite_line" | "triangle_charge" | "ring_conductor" | "line_conductor" | "electric_dipole" | "all" | "scene";
 export class Object {
     mass: number;
     position: Vector;
@@ -41,7 +41,7 @@ export class Object {
         return Vector.origin();
     }
     momentOfInertia = (): number => {
-        return Infinity;
+        return 0.00001;
     }
     distanceFrom(pos: Vector): number {
         //Generic distance from center

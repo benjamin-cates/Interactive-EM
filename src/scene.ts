@@ -6,6 +6,7 @@ import PointCharge from "./charges/point_charge";
 import Triangle from "./charges/triangle";
 import RingConductor from "./conductors/ring";
 import LineConductor from "./conductors/line";
+import ElectricDipole from "./compositions/electric_dipole";
 import Vector from "./vector";
 import Equipotential from "./equipotential";
 import ObjEditor from "./object_editor";
@@ -450,6 +451,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "ring_conductor": new RingConductor({ radius: 2, scene: window.scene, skipMatrixCreation: true }),
         //@ts-ignore
         "line_conductor": new LineConductor({ length: 5, scene: window.scene, skipMatrixCreation: true }),
+        "electric_dipole": new ElectricDipole({})
     };
     scene.updateObjects();
     window.addEventListener("pointerdown", scene.mouseDown);

@@ -40,8 +40,8 @@ interface Preset {
     name: string;
     replacementFunc: (x: number | Vector) => (number | Vector);
 }
-const canMove: ObjectTypes[] = ["point_charge", "finite_line", "triangle_charge", "ring_conductor", "line_conductor"];
-const canRotate: ObjectTypes[] = ["finite_line", "infinite_plane", "triangle_charge", "conductor", "line_conductor"];
+const canMove: ObjectTypes[] = ["point_charge", "finite_line", "triangle_charge", "ring_conductor", "line_conductor", "electric_dipole"];
+const canRotate: ObjectTypes[] = ["finite_line", "infinite_plane", "triangle_charge", "conductor", "line_conductor", "electric_dipole"];
 const conductor: ObjectTypes[] = ["conductor", "ring_conductor", "line_conductor"];
 const sliders: Slider[] = [
 
@@ -98,7 +98,7 @@ const sliders: Slider[] = [
         name: "charge",
         type: "number", unit: "μC",
         min: -3, max: 3,
-        for: ["point_charge"],
+        for: ["point_charge", "electric_dipole"],
         correction: powerCorrection,
         presets: [
             { name: "flip", replacementFunc: (x: number | Vector) => -(x as number) },
@@ -174,6 +174,15 @@ const sliders: Slider[] = [
         min: 1, max: 10,
         for: ["line_conductor"],
         correction: logCorrection,
+    },
+    //Electric dipole
+    {
+        name: "dist",
+        type: "number", "unit": "m",
+        min: 0,
+        max: 5,
+        for: ["electric_dipole"],
+        correction: powerCorrection
     },
     //Scene
     {
