@@ -40,8 +40,8 @@ interface Preset {
     name: string;
     replacementFunc: (x: number | Vector) => (number | Vector);
 }
-const canMove: ObjectTypes[] = ["point_charge", "finite_line", "triangle_charge", "ring_conductor", "line_conductor", "electric_dipole"];
-const canRotate: ObjectTypes[] = ["finite_line", "infinite_plane", "triangle_charge", "conductor", "line_conductor", "electric_dipole"];
+const canMove: ObjectTypes[] = ["point_charge", "finite_line", "ring_conductor", "line_conductor", "electric_dipole"];
+const canRotate: ObjectTypes[] = ["finite_line", "infinite_plane", "conductor", "line_conductor", "electric_dipole"];
 const conductor: ObjectTypes[] = ["conductor", "ring_conductor", "line_conductor"];
 const sliders: Slider[] = [
 
@@ -132,19 +132,6 @@ const sliders: Slider[] = [
         type: "number", unit: "nC/m²",
         min: -40, max: 40,
         for: ["infinite_plane"],
-        correction: powerCorrection,
-        presets: [
-            { name: "flip", replacementFunc: (x: number | Vector) => -(x as number) },
-        ],
-    },
-
-    //Triangle
-    {
-        name: "chargeDensity",
-        display: "Charge Density",
-        type: "number", unit: "μC/m²",
-        min: -1.5, max: 1.5,
-        for: ["triangle_charge"],
         correction: powerCorrection,
         presets: [
             { name: "flip", replacementFunc: (x: number | Vector) => -(x as number) },

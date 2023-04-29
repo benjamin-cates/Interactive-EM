@@ -71,64 +71,7 @@ WRITE HERE
 \subsection{Torque}
 The moment of inertia of a finite line about the center is well known to be $\frac{1}{12}ML^2$.
 
-\section{Triangle}
-For this section, we will split the "shape" class into several triangles. We will make several assumptions about the positioning of the triangle to make the initial integration easier, and we can apply those linear transformations later. To start, we will assume the hypotenuse of the triangle is along the x-axis, it's center is at the origin, and the other tip has a positive y co-ordinate. We can assume these because every triangle can be translated and rotated into this state.
-\begin{align*}
-    \text{Let } w &= \text{Half the width of the triangle}\\
-    \text{Let } h &= \text{The height of the triangle}\\
-    \text{Let } x_0 &= \text{The x coordinate of the tip relative to the center of the hypotenuse}\\
-\end{align*}
-\includegraphics[scale=0.25]{triangle_setup.jpg}
-\subsection{Voltage}
-Let's start with the following integral. We will do dx slices first so it doesn't have to be split into two integrals.
-\begin{align*}
-V(\vec{p}) &= K\sigma\int_0^h \int_{\frac{y}{h}(x_0-w)+w}^{\frac{y}{h}(x_0+w)-w} \frac{dxdy}{\sqrt{(x-p_x)^2+(y-p_y)^2}}\\
-V(\vec{p}) &= K\sigma\int_{-p_y}^{h-p_y} \int_{\frac{y+p_y}{h}(x_0-w+w)-p_x}^{\frac{y+p_y}{h}(x_0+w)-w-p_x} \frac{dxdy}{\sqrt{x^2+y^2}}\\
-\text{Given } &\int \frac{dx}{\sqrt{x^2+y^2}} = \operatorname{sgn}(y)\operatorname{sinh}^{-1}\left(\frac{x}{y}\right) \\
-\text{Let } a_1 &= \frac{x_0-w}{h}\\
-\text{Let } b_1 &= \frac{p_y(x_0-w)}{h}+w-p_x\\
-\text{Let } a_2 &= \frac{x_0+w}{h}\\
-\text{Let } b_2 &= \frac{p_y(x_0+w)}{h}-w-p_x\\
-V(\vec{p}) &= K\sigma\int_{-p_y}^{h-p_y} \operatorname{sgn}(y)\left[\operatorname{sinh}^{-1}\left(a_1+\frac{b_1}{y}\right)-\operatorname{sinh}^{-1}\left(a_2+\frac{b_2}{y}\right)\right]dy\\
-\end{align*}
-The following integral is done courtesy of integral-calculator.com.
-\begin{align*}
-g(y,a,b) &= \frac{a\sqrt{\left(a+\frac{b}{y}\right)^2+1}-a}{a+\frac{b}{y}}\\
-AD(y,a,b) &= \int \operatorname{sinh}^{-1}\left(a+\frac{b}{y}\right)dx\\
-&= y\operatorname{sinh}^{-1}\left(a+\frac{b}{y}\right)+\frac{b}{\sqrt{a^2+1}}\ln\left(\left|\frac{g(y,a,b)+\sqrt{a^2+1}+1}{g(y,a,b)-\sqrt{a^2+1}+1}\right|\right) \\
-\end{align*}
-Since there is a discontinuity, we will consider two cases. First, the two limits could be on the same side of zero, or the limits could cross zero. In the first case, the answer is simply:
-\begin{align*}
-    V(\vec{p}) = K\sigma\operatorname{sgn}(-p_y)\left[AD(y,a_1,b_1)-AD(y,a_2,b_2)\right]_{y=-p_y}^{y=h-p_y}\\
-\end{align*}
-If the limits are on opposite sides of zero, then we have to take the improper integral of both sides.
-\begin{align*}
-\text{Let } AD_0^+ &= \lim_{y\to0^+} AD(y,a,b) = \frac{b}{\sqrt{a^2+1}}\ln\left(\left|\frac{a+\sqrt{a^2+1}+1}{a-\sqrt{a^2+1}+1}\right|\right)\\
-\text{Let } AD_0^- &= \lim_{y\to0^-
-} AD(y,a,b) = \frac{b}{\sqrt{a^2+1}}\ln\left(\left|\frac{-a+\sqrt{a^2+1}+1}{-a-\sqrt{a^2+1}+1}\right|\right)\\
-\text{Let } AD_0 &= -AD_0^+-AD_0^- = \frac{-b}{\sqrt{a^2+1}}\ln\left(\left|\frac{2\sqrt{a^2+1}+2}{-2\sqrt{a^2+1}+2}\right|\right)\\
-&= \frac{b}{\sqrt{a^2+1}}\ln\left(\frac{\sqrt{a^2+1}+a^2}{\sqrt{a^2+1}+1}\right)\\
-V &= K\sigma\left[AD(h-p_y,a_1,b_1)+AD_0(a_1,b_1)+AD(-p_y,a_1,b_1)\right]\\
-&- K\sigma\left[AD(h-p_y,a_2,b_2)+AD_0(a_2,b_2)+AD(-p_y,a_2,b_2)\right]\\
-\end{align*}
 
-\subsection{Electric Field}
-Since the calculations for a charged triangle are really complicated, we will split the x and y directions separately.
-\subsubsection{Field in the $\hat{x}$ direction}
-\subsubsection{Field in the $\hat{y}$ direction}
-
-\begin{align*}
-\text{Let } f &= h-a\\
-\text{Let } n &= m\left(p-hm\right)-a\\
-\text{Let } j &= \sqrt{n\frac{m\left(p\left(mp-2a\right)+h^2m\right)+a^2}{a-m\left(p-hm\right)}}\\
-\text{Let } k &= \sqrt{m^2+1}\sqrt{\left(m^2+1\right)u^2-2m\left(mp+f\right)u+m^2p^2+2fmp+h^2-2ah+a^2}\\
-\text{Let } l &= mp+h-a\\
-p &= p_x\ \ \ a = p_y\\
-V &= \dfrac{\ln\left(\left|k+\left(m^2+1\right)u-m^2p+fm\right|\right)}{m\sqrt{m^2+1}}\\
-&+\dfrac{2\left(mp-a\right)\arctan\left(\frac{nk+m\left(m^2+1\right)lu-n\left|l\right|-m^4p^2-2fm^3p-f^2m^2}{\sqrt{m^2+1}j\left(\left(m^2+1\right)u-m^2p-fm\right)}\right)}{mj}
-\end{align*}
-\subsection{Moment of inertia}
-For ease of calculation, we will choose a simple origin (in this case, the center of the hypotenuse) to do the integration around, then use the parallel axis theorem to move that axis. In order to continue with the common theme, I have decided to put the origin at
 
 \section{Conductors}
 For this entire program, we are working in 2d, so there is no obvious way to have conductors. We could either have sheets of conductor that

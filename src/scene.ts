@@ -3,7 +3,6 @@ import Conductor from "./conductors/conductor";
 import FiniteLine from "./charges/finite_line";
 import InfinitePlane from "./charges/infinite_plane";
 import PointCharge from "./charges/point_charge";
-import Triangle from "./charges/triangle";
 import RingConductor from "./conductors/ring";
 import LineConductor from "./conductors/line";
 import ElectricDipole from "./compositions/electric_dipole";
@@ -456,7 +455,6 @@ document.addEventListener("DOMContentLoaded", () => {
         "point_charge": new PointCharge({}),
         "infinite_plane": new InfinitePlane({ chargeDensity: 20 }),
         "finite_line": new FiniteLine({ chargeDensity: 0.4, length: 10 }),
-        "triangle": new Triangle({ chargeDensity: 1, p1: new Vector(0, 0), p2: new Vector(0, 1), p3: new Vector(1, 0) }),
         //@ts-ignore
         "ring_conductor": new RingConductor({ radius: 2, scene: window.scene, skipMatrixCreation: true }),
         //@ts-ignore
