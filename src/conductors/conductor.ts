@@ -128,7 +128,7 @@ export default class Conductor extends Object {
         if (pos.z != 0) {
             for (let i = 0; i < this.worldSpacePoints.length; i++) {
                 let delta = Vector.subtract(pos, this.worldSpacePoints[i]);
-                let dist = delta.magnitude();
+                let dist = Math.max(delta.magnitude(), 0.2);
                 let charge = this.charges[i];
                 //Treat z charges as flat when lowest point is far enough away
                 if (i % this.zPoints == 0 && dist > this.zSpacing * 7) {
@@ -136,20 +136,20 @@ export default class Conductor extends Object {
                         charge += this.charges[i + j];
                     }
                     i += this.zPoints - 1;
-                    volts += charge / dist;
+                    volts += charge / Math.max(dist, 0.2);
                 }
                 else {
                     let mirrored = this.worldSpacePoints[i].copy();
                     mirrored.z = -mirrored.z;
-                    let mirDist = Vector.subtract(pos, mirrored).magnitude();
-                    volts += charge * (1/dist + 1 / mirDist);
+                    let mirDist = Math.max(Vector.subtract(pos, mirrored).magnitude(), 0.2);
+                    volts += charge * (1 / dist + 1 / mirDist);
                 }
             }
             return volts * Constants.K;
         }
         for (let i = 0; i < this.worldSpacePoints.length; i++) {
             let delta = Vector.subtract(pos, this.worldSpacePoints[i]);
-            let dist = delta.magnitude();
+            let dist = Math.max(delta.magnitude(), 0.2);
             let charge = this.charges[i];
             //Treat z charges as flat when lowest point is far enough away
             if (i % this.zPoints == 0 && dist > this.zSpacing * 7) {
@@ -167,7 +167,7 @@ export default class Conductor extends Object {
         let field = new Vector(0, 0);
         for (let i = 0; i < this.worldSpacePoints.length; i++) {
             let delta = Vector.subtract(pos, this.worldSpacePoints[i]);
-            let dist = delta.magnitude();
+            let dist = Math.max(delta.magnitude(), 0.2);
             let charge = this.charges[i];
             //Treat charges in the z plane flat when lowest point is far enough away
             if (i % this.zPoints == 0 && dist > this.zSpacing * 9) {

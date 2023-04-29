@@ -13,7 +13,7 @@ export default class PointCharge extends Object {
         let dist = delta.magnitude();
         if (dist < ballRadius) {
             //Derived from field of a solid ball charge
-            return delta.scale(constants.K * this.charge / (ballRadius * ballRadius))
+            return delta.scale(constants.K * this.charge / (ballRadius * ballRadius * dist))
         }
         return delta.scale(constants.K * this.charge / (dist * dist * dist));
     }
