@@ -17,8 +17,8 @@ export default class LineConductor extends Conductor {
         let testPoints = [];
         for (let i = 0; i < pointCount; i++) {
             points.push(new Vector(i * separation - length / 2, 0));
-            testPoints.push(new Vector((i + 0.00) * separation - length / 2, -0.1));
-            testPoints.push(new Vector((i + 0.00) * separation - length / 2, 0.1));
+            testPoints.push(new Vector((i + 0.00) * separation - length / 2, 0.05));
+            testPoints.push(new Vector((i + 0.00) * separation - length / 2, -0.05));
             if (i != pointCount - 1) {
                 testPoints.push(new Vector((i + 0.33) * separation - length / 2, -0.05));
                 testPoints.push(new Vector((i + 0.66) * separation - length / 2, 0.05));
@@ -26,12 +26,12 @@ export default class LineConductor extends Conductor {
         }
         properties.points = points;
         properties.testPoints = testPoints;
-        properties.zPoints = 2;
-        properties.zSpacing = 0.8;
+        properties.zPoints = 4;
+        properties.zSpacing = 0.5;
         super(properties);
         this.length = length;
         //Precalculate end points and direction
-        if(!properties.skipMatrixCreation) this.updateProperty("position",this.position);
+        if (!properties.skipMatrixCreation) this.updateProperty("position", this.position);
     }
     getProperties = (): { [key: string]: any } => {
         return { mass: this.mass, position: this.position.copy(), rotation: this.rotation, length: this.length, scene: this.sceneRef, angularVelocity: this.angularVelocity, velocity: this.velocity.copy() };
