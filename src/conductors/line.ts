@@ -32,7 +32,7 @@ export default class LineConductor extends Conductor {
         super(properties);
         this.length = length;
         //Precalculate end points and direction
-        if(!properties.skipMatrixCreation) this.updateProperty("position",this.position);
+        if (!properties.skipMatrixCreation) this.updateProperty("position", this.position);
     }
     getProperties = (): { [key: string]: any } => {
         return { mass: this.mass, position: this.position.copy(), rotation: this.rotation, length: this.length, scene: this.sceneRef, angularVelocity: this.angularVelocity, velocity: this.velocity.copy() };
