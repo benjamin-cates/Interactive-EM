@@ -11,23 +11,24 @@ export default class LineConductor extends Conductor {
     constructor(properties: { [key: string]: number | Vector | Vector[] | Scene }) {
         //Generate charge points and test points in 3d
         let length = properties.length as number ?? 1;
-        let pointCount = Math.floor(length * 3.5);
+        let pointCount = Math.floor(length * 2.5);
         let separation = length / (pointCount - 1);
         let points = [];
         let testPoints = [];
+
         for (let i = 0; i < pointCount; i++) {
-            points.push(new Vector(i * separation - length / 2, 0));
-            testPoints.push(new Vector((i + 0.00) * separation - length / 2, -0.1));
-            testPoints.push(new Vector((i + 0.00) * separation - length / 2, 0.1));
+            let alternate = (1 - 2*(i%2));
+            points.push(new Vector((i + 0.00) * separation - length / 2, 0.008 * alternate));
+            testPoints.push(new Vector((i + 0.00) * separation - length / 2, -0.008 * alternate));
+            testPoints.push(new Vector((i + 0.00) * separation - length / 2, 0));
             if (i != pointCount - 1) {
-                testPoints.push(new Vector((i + 0.33) * separation - length / 2, -0.05));
-                testPoints.push(new Vector((i + 0.66) * separation - length / 2, 0.05));
+                testPoints.push(new Vector((i + 0.5) * separation - length / 2, 0));
             }
         }
         properties.points = points;
         properties.testPoints = testPoints;
-        properties.zPoints = 2;
-        properties.zSpacing = 0.8;
+        properties.zPoints = 4;
+        properties.zSpacing = 0.4;
         super(properties);
         this.length = length;
         //Precalculate end points and direction
