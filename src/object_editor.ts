@@ -219,8 +219,8 @@ const sliders: Slider[] = [
     },
     {
         name: "timeScale",
-        display: "Force Scaling",
-        type: "number", unit: "N/N",
+        display: "Simulation Speed",
+        type: "number", unit: "",
         for: ["scene"],
         min: 0, max: 300,
         correction: powerCorrection,
