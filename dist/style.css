@@ -57,6 +57,35 @@ canvas {
     backdrop-filter: blur(1px);
 }
 
+#welcome_screen_wrapper {
+    box-sizing: border-box;
+    padding: auto;
+    z-index:5;
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+    margin: auto;
+    pointer-events: none;
+    align-items: center;
+    justify-content: center;
+    display:flex;
+}
+
+#welcome_screen {
+    display: inline-block;
+    text-align: center;
+    width: 40vw;
+    border-radius: 1rem;
+    box-shadow: 2px 2px 6px 0px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(1px);
+    background: #ffffff55;
+    padding: 2rem;
+    position: absolute;
+    left: calc(50% - 20vw);
+    font-size: 1.3rem;
+    pointer-events: all;
+}
+
 #add_menu>button {
     font-family: inherit;
     width: 100%;

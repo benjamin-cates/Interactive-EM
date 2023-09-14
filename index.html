@@ -11,7 +11,7 @@
         <meta name="author" content="Interactive EM">
     </head>
 
-    <body>
+    <body onclick="document.querySelector('#welcome_screen_wrapper').style.display='none';">
         <canvas id="canvas"></canvas>
         <canvas id="volt_canvas"></canvas>
         <div id="add_menu">
@@ -22,6 +22,17 @@
             <button onclick="scene.pushDefaultObject('ring_conductor')">+ Ring Conductor</button>
             <button onclick="scene.pushDefaultObject('line_conductor')">+ Line Conductor</button>
             <button onclick="scene.pushDefaultObject('electric_dipole')">+ Electric Dipole</button>
+        </div>
+        <div id="welcome_screen_wrapper">
+            <div id="welcome_screen">
+                <h1>Welcome to Interactive EM</h1>
+                <p>It's is a tool to visualize the electric field</p>
+                <p>Summon an object on the left</p>
+                <p>Click objects to change their properties</p>
+                <p><b>White arrows</b> represent electric field vectors</p>
+                <p><b>Green lines</b> represent equipotential surfaces</p>
+                <h3>Visit our <a href="https://github.com/benjamin-cates/Interactive-EM">GitHub page</a></h3>
+            </div>
         </div>
         <div id="properties_wrapper">
             <div id="properties"></div>
